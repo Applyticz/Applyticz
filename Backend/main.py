@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from models import User
+from models.database_models import User
 from routers import test_router
 
 app = FastAPI()
