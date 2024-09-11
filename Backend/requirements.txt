@@ -3,3 +3,9 @@ uvicorn
 sqlalchemy
 pymysql
 python-dotenv
+bcrypt
+httpx
+pyjwt
+requests
+pytest
+psycopg2
