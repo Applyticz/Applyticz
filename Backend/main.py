@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from fastapi.encoders import jsonable_encoder
 from database import get_db, engine, Base
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -47,17 +46,3 @@ app.include_router(auth_router.router, prefix='/auth')
 def test():
     return {"message": "Hello, World!"}
 
-@app.get("/test-db")
-def test_db_connection(db: Session = Depends(get_db)):
-    try:
-        # Fetch the first user from the 'users' table
-        user = db.query(User).first()
-
-        if user:
-            # Convert the SQLAlchemy model to a dictionary
-            user_data = jsonable_encoder(user)
-            return {"status": "Database connected successfully!", "user": user_data}
-        else:
-            return {"status": "Database connected successfully!", "message": "No users found in the database."}
-    except Exception as e:
-        return {"status": "Database connection failed", "error": str(e)}

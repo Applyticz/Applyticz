@@ -9,8 +9,14 @@ This is a basic FastAPI backend setup inside the `Backend` directory.
 Backend/
 │
 ├── .venv/             # Virtual environment (not committed to Git)
+├── models/            # Contains the database models of tables and the pydantic models for validation
+├── routes/            # Contains routes file grouped by endpoint prefixes 
+├── tests/             # Contains files associated with PyTest
+├── database.py        # Creates a conncetion to the database
 ├── main.py            # Main FastAPI application
 ├── .gitignore         # Git ignore file to exclude unnecessary files
+├── .requirements.txt  # Contains all python packages required 
+├── .env               # Contain environment variables ans secrets (not committed to Git)
 └── README.md          # Project documentation
 ```
 
