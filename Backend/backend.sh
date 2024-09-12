@@ -3,10 +3,10 @@
 # Detect the OS
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "darwin"* ]]; then
     # For Linux and macOS (use the correct activate path for these platforms)
-    source ./venv/bin/activate
+    source .venv/bin/activate
 elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     # For Git Bash on Windows or PowerShell (Windows uses Scripts folder)
-    source ./venv/Scripts/activate
+    source .venv\Scripts\activate
 else
     echo "Unsupported OS: $OSTYPE"
     exit 1
