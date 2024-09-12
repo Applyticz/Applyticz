@@ -1,15 +1,16 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os 
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from typing import Annotated
+from fastapi import Depends
+import os
 from dotenv import load_dotenv
 
-
+# Load environment variables
 load_dotenv()
 
-
-# SQLAlchemy Database URL
+# SQLAlchemy Database URL from environment
 DATABASE_URL = os.getenv('DATABASE_URL')
+
 # Create the SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
 
@@ -26,6 +27,9 @@ def get_db():
         yield db
     finally:
         db.close()
-        
+
+db_dependency = Annotated[Session, Depends(get_db)]
+
+# Create tables (if needed) when this script is run directly
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

@@ -33,7 +33,7 @@ app.add_middleware(
     #     pass  # Placeholder for actual dependency injection logic
     #     return {"message": "Hello, World!"}
 
-@app.get("/test")
+@app.get("/")
 def test():
     return {"message": "Hello, World!"}
 
