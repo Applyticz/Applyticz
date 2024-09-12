@@ -8,16 +8,16 @@ from database import db_dependency
 
 router = APIRouter()
 
-@router.get('/testing_route')
+@router.get('/testing_route', tags=['test'])
 async def test():
   return {'message': 'Testing Route'}
 
-@router.post('/create_test/', status_code=status.HTTP_201_CREATED)
+@router.post('/create_test/', tags=['test'], status_code=status.HTTP_201_CREATED)
 async def create_test(test:TestBase, db:db_dependency):
   db_test = Test(**test.model_dump())
   db.add(db_test)
   db.commit()
 
-@router.get('/get-all-tests', status_code=status.HTTP_200_OK)
+@router.get('/get-all-tests', tags=['test'], status_code=status.HTTP_200_OK)
 async def get_all_tests(db:db_dependency):
   return db.query(Test).all()

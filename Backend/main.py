@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from models.database_models import User
-from routers import test_router
+from routers import test_router, auth_router
 from contextlib import asynccontextmanager
 
 
@@ -35,6 +35,7 @@ app.add_middleware(
 
 # Include the test router, assuming it's defined in routers/test_router.py
 app.include_router(test_router.router, prefix='/test')
+app.include_router(auth_router.router, prefix='/auth')
 
 # Example endpoint template
 # @app.get('/test')
