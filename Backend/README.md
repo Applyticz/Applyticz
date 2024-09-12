@@ -23,6 +23,19 @@ git clone <your-repo-url>
 cd Backend
 ```
 
+### 2a. Use the backend Script
+
+#### Run the backend script to automate the process of steps 2-4:
+
+#### Grant executable permissions: Run the following command to allow execution of the script:
+```bash
+chmod +x backend.sh
+```
+
+```bash
+./backend.sh
+```
+
 ### 2. Create and activate the virtual environment
 
 #### Create the virtual environment:
@@ -44,7 +57,7 @@ python3 -m venv .venv
 
 ```bash
 python -m pip install --upgrade pip
-pip install "fastapi[standard]" uvicorn
+pip || pip3 install install -r requirements.txt
 ```
 
 ### 4. Running the FastAPI Application
@@ -161,6 +174,22 @@ After updating the models or routes, always ensure to:
 
 2. Run the tests to ensure everything works correctly:
 
+#### Activate the virtual environment:
+- **Linux/MacOS:**
+  ```bash
+  source .venv/bin/activate
+  ```
+- **Windows:**
+  ```bash
+  source .venv\Scripts\activate
+  ```
+
+#### If dependencies aren't already installed:
 ```bash
-pytest
+python -m pip install --upgrade pip
+pip || pip3 install install -r requirements.txt
+```
+
+```bash
+pytest tests/test_suite.py
 ```

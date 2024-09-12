@@ -18,6 +18,6 @@ async def create_test(test:TestBase, db:db_dependency):
   db.add(db_test)
   db.commit()
 
-@router.get('/get-all-tests', tags=['test'], status_code=status.HTTP_200_OK)
+@router.get('/get_all_tests', tags=['test'], status_code=status.HTTP_200_OK)
 async def get_all_tests(db:db_dependency):
   return db.query(Test).all()

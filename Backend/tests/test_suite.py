@@ -8,3 +8,8 @@ def test_create_test(testClient, dbSession, overrideDbDepend):
     })
 
     assert res.status_code == 201
+
+def test_get_all_tests(testClient, dbSession, overrideDbDepend):
+    res = testClient.get('/test/get_all_tests')
+
+    assert res.status_code == 200
