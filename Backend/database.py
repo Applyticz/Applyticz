@@ -28,8 +28,10 @@ def get_db():
     finally:
         db.close()
 
-db_dependency = Annotated[Session, Depends(get_db)]
 
 # Create tables (if needed) when this script is run directly
+  
+db_dependency = Annotated[Session, Depends(get_db)]
+        
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

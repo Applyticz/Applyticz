@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from fastapi.encoders import jsonable_encoder
-from database import get_db
+from database import get_db, engine, Base
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -9,13 +9,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from models.database_models import User
 from routers import test_router
-
-app = FastAPI()
-
-# if you want to create new routes for specific endpoints (e.g. /admin, /users, /items, etc) use app.include_routers(<filename>.router, '/<prefix>')
-app.include_router(test_router.router, prefix='/test')
+from contextlib import asynccontextmanager
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # This runs at startup
+    Base.metadata.create_all(bind=engine)
+    yield  # This allows the app to continue running
+    # This runs on shutdown (if needed)
+    # Add any cleanup code here if necessary
+
+app = FastAPI(lifespan=lifespan)
+
+# CORS Middleware configuration
 origins = ["*"]
 
 app.add_middleware(
@@ -26,6 +33,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include the test router, assuming it's defined in routers/test_router.py
+app.include_router(test_router.router, prefix='/test')
 
 # Example endpoint template
 # @app.get('/test')
