@@ -31,7 +31,7 @@ def test_db_connection(db: Session = Depends(get_db)):
 
 @router.post('/create_test/', tags=['test'], status_code=status.HTTP_201_CREATED)
 async def create_test(test:TestBase, db:db_dependency):
-  db_test = Test(**test.model_dump())
+  db_test = Test(**test.model_dump()) #.model_dump() is a method in TestBase class that converts the Pydantic model to a dictionary without the need to specify each field or convert it manually.
   db.add(db_test)
   db.commit()
 
@@ -223,3 +223,23 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         "email": new_user.email,
         "created_at": new_user.created_at
     }
+
+# Example of a route with optional query parameters
+# The route receives optional query parameters from the client
+# The query parameters are used to filter the results
+@router.get('/users', tags=['test'], status_code=status.HTTP_200_OK)
+async def get_users(
+    name: str = None,
+    email: str = None,
+    db: Session = Depends(get_db)
+):
+    # Initialize a query to retrieve all users
+    query = db.query(User)
+    # Filter the results based on the query parameters
+    if name:
+        query = query.filter(User.name == name)
+    if email:
+        query = query.filter(User.email == email)
+    # Retrieve the filtered results
+    users = query.all()
+    return users

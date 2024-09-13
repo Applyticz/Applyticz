@@ -88,9 +88,123 @@ Include the following in `.gitignore` to avoid committing unnecessary files:
 __pycache__/
 ```
 
-## Endpoints
 
-- **GET /**: Returns a welcome message.
+## FastAPI Backend - Route Guide
+
+## Overview
+
+This guide explains how to create various routes in FastAPI using the `APIRouter()` class. The examples cover basic routes, database-connected routes, query/path parameters, authentication, and response customization.
+
+### 1. **Basic Route Example**
+A simple GET route that returns a message:
+```python
+@router.get('/testing_route', tags=['test'])
+async def test():
+    return {'message': 'Testing Route'}
+```
+
+### 2. **Database Connection Test**
+A route to test the connection to the database by fetching the first user:
+```python
+@router.get("/test-db", tags=["test"])
+def test_db_connection(db: Session = Depends(get_db)):
+    user = db.query(User).first()
+    if user:
+        return {"status": "Database connected!", "user": user}
+    else:
+        return {"status": "No users found in the database."}
+```
+
+### 3. **Creating a Resource via POST**
+A POST route to create a resource (e.g., a test record in the database):
+```python
+@router.post('/create_test/', tags=['test'], status_code=status.HTTP_201_CREATED)
+async def create_test(test: TestBase, db: Session = Depends(get_db)):
+    db_test = Test(**test.dict())
+    db.add(db_test)
+    db.commit()
+    return {"message": "Test created successfully!"}
+```
+
+### 4. **Query and Path Parameters**
+You can handle both query and path parameters with FastAPI:
+- Query parameters:
+```python
+@router.get('/greet/', tags=['test'])
+async def greet(name: str):
+    return {'message': f'Hello {name}'}
+```
+
+- Path parameters:
+```python
+@router.get('/greet/{name}', tags=['test'])
+async def greet_path(name: str):
+    return {'message': f'Hello {name}'}
+```
+
+- Path + Query parameters:
+```python
+@router.get('/greet/{name}', tags=['test'])
+async def greet_path_query(name: str, age: int):
+    return {'message': f'Hello {name}, you are {age} years old'}
+```
+
+### 5. **Authentication with API Key**
+A route that requires authentication via an API key:
+```python
+def get_token(token: str = Header(...)):
+    valid_token = "1234567890"
+    if token != valid_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    return token
+
+@router.get('/protected_route', tags=['test'])
+async def protected_route(token: str = Depends(get_token)):
+    return {'message': 'Access granted', 'token': token}
+```
+
+### 6. **Custom Responses**
+FastAPI allows you to customize the response type and status codes:
+```python
+@router.get('/html_response', tags=['test'])
+async def html_response():
+    return HTMLResponse(content='<h1>This is an HTML response</h1>', status_code=200)
+```
+
+You can also return custom responses with custom headers:
+```python
+@router.get('/custom_response_headers', tags=['test'])
+async def custom_response_headers():
+    return 'Custom response', {'X-Custom-Header': 'Custom Value'}
+```
+
+### 7. **Working with Databases and Models**
+For routes that interact with database models and Pydantic models, here’s an example:
+```python
+@router.post('/create_user', tags=['test'])
+async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    new_user = User(name=user_data.name, email=user_data.email)
+    db.add(new_user)
+    db.commit()
+    return {"id": new_user.id, "name": new_user.name, "email": new_user.email}
+```
+
+### 8. **Filtering with Optional Query Parameters**
+A route that filters results based on optional query parameters:
+```python
+@router.get('/users', tags=['test'])
+async def get_users(name: str = None, email: str = None, db: Session = Depends(get_db)):
+    query = db.query(User)
+    if name:
+        query = query.filter(User.name == name)
+    if email:
+        query = query.filter(User.email == email)
+    return query.all()
+```
+
+---
+
+This guide provides a basic summary of creating routes with FastAPI. For further details, refer to the FastAPI documentation.
 
 
 ## Updating Pydantic Models
@@ -136,12 +250,60 @@ class User(Base):
     hashed_password = Column(String)
 ```
 
-3. If you're adding a new model, you may need to create a migration using Alembic or your chosen migration tool.
+This guide provides a basic summary of creating routes with FastAPI. For further details, refer to the FastAPI documentation.
+
+### 3. **Adding a New Model and Creating Database Migrations**
+
+When you add a new model to your FastAPI project, you need to ensure that your database schema is updated accordingly. To handle this, we use Alembic, a lightweight database migration tool.
+
+Follow these steps to create and apply a new migration:
+
+#### **Step 1: Update Your Models**
+First, update or add your new model in the `models.py` or relevant file. For example, let's say you add the following `User` model:
+
+```python
+from sqlalchemy import Column, Integer, String
+from app.database import Base
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+```
+
+#### **Step 2: Generate a New Migration**
+Once you've added or modified the model, you need to create a migration to reflect these changes in the database schema. Use the following Alembic command to autogenerate the migration:
 
 ```bash
 alembic revision --autogenerate -m "Add new User model"
+```
+
+This command will:
+- **Autogenerate** the migration script based on the changes you've made to your SQLAlchemy models.
+- The `-m` flag allows you to specify a meaningful message (e.g., "Add new User model").
+
+#### **Step 3: Review the Migration Script**
+Alembic will create a new migration script in the `migrations/versions` folder. It’s a good practice to review this script to ensure it accurately reflects the changes you want to apply to the database.
+
+#### **Step 4: Apply the Migration**
+Once you're satisfied with the migration script, apply the migration to your database by running:
+
+```bash
 alembic upgrade head
 ```
+
+This command will update your database schema to the latest version (i.e., apply the migration you just created).
+
+---
+
+### **Quick Commands for Migrations:**
+- **Autogenerate a migration**: `alembic revision --autogenerate -m "Your migration message"`
+- **Apply the migration**: `alembic upgrade head`
+- **Downgrade to a previous version** (if needed): `alembic downgrade -1`
+
+By following these steps, you ensure that your database schema stays in sync with your models, reducing the chances of database errors or inconsistencies.
 
 
 ## Updating Routes

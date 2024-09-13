@@ -8,3 +8,12 @@ httpx
 pyjwt
 requests
 pytest
+alembic
+databases
+pydantic
+jijna2
+aiomysql
+loguru
+passlib[bcrypt]
+coverage
+
