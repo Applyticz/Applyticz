@@ -177,4 +177,49 @@ async def get_secure_data(
         "token": auth_token
     }
     return secure_data
+
+
+# Suppose you are working with a database model for a User that has fields like id, created_at, and updated_at, 
+# which should be automatically managed by the database. However, when creating a new user, 
+# the client only needs to provide the name and email.
   
+# To achieve this, you can define a Pydantic model that includes only the fields that the client needs to provide,
+# and then use a function to create a new user instance with the required fields.
+
+# Define a Pydantic model for creating a new user
+# Defined in Backend/models/pydantic_models.py:
+class UserCreate(BaseModel):
+     name: str
+     email: str
+
+# Define a function to create a new user instance
+# The function takes the user data from the client and creates a new user instance with the required fields
+def create_new_user(user_data: UserCreate):
+    new_user = User(
+        name=user_data.name,
+        email=user_data.email
+    )
+    return new_user
+
+# Example of a route that creates a new user
+# The route receives the user data from the client and creates a new user instance
+@router.post('/create_user', tags=['test'], status_code=status.HTTP_201_CREATED)
+async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    # Check if a user with the same email already exists
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
+        )
+    # Create a new user instance with the required fields
+    new_user = create_new_user(user_data)
+    # Save the new user instance to the database
+    # db.add(new_user)
+    # db.commit()
+    return {
+       "id": new_user.id,
+        "name": new_user.name,
+        "email": new_user.email,
+        "created_at": new_user.created_at
+    }
