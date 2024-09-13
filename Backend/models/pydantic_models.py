@@ -6,3 +6,6 @@ class TestBase(BaseModel):
   email: str
   password: str
   
+class GreetResponse(BaseModel):
+    message: str
+    name: str
