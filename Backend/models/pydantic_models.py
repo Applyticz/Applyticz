@@ -9,3 +9,8 @@ class TestBase(BaseModel):
 class GreetResponse(BaseModel):
     message: str
     name: str
+
+class UserBase(BaseModel):
+  username: str
+  email: str
+  password: str
