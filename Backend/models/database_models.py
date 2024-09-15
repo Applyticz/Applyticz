@@ -15,6 +15,7 @@ class Test(Base):
     username = Column(String(255), nullable=False, unique=True)
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=True)
+    age = Column(Integer, nullable=True)
 
 class User(Base):
     __tablename__ = "users"

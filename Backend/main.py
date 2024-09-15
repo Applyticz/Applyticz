@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from database import get_db, engine, Base
+from database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -9,6 +9,8 @@ from sqlalchemy import text
 from models.database_models import User
 from routers import test_router, auth_router
 from contextlib import asynccontextmanager
+from typing import Annotated
+from fastapi import status
 
 
 @asynccontextmanager
@@ -41,8 +43,4 @@ app.include_router(auth_router.router, prefix='/auth')
 # def test_(dependencies):
     #     pass  # Placeholder for actual dependency injection logic
     #     return {"message": "Hello, World!"}
-
-@app.get("/")
-def test():
-    return {"message": "Hello, World!"}
 

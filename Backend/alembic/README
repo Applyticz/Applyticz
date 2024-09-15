@@ -67,6 +67,15 @@ alembic downgrade -1
 
 This command will revert the database schema to the previous version.
 
+### Step 6: Upgrade Migration (if needed)
+If you need to undo the downgrade migration, you can upgrade it with:
+
+```bash
+alembic upgrade +1
+```
+
+This command will revert the database schema to the previous version prior to the downgrade.
+
 ## Managing Alembic Files
 
 ### Files to Include in Version Control
