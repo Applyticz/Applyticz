@@ -13,18 +13,18 @@ from models.database_models import User
 
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def overrideDbDepend(dbSession):
     app.dependency_overrides[get_db] = lambda: dbSession
     yield
     app.dependency_overrides.pop(get_db, None)
     
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def testClient():
     with TestClient(app) as client:
         yield client
         
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def dbSession():
     engine = create_engine(DATABASE_URL.replace('@db', '@localhost'))
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

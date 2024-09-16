@@ -9,8 +9,9 @@ from typing import Annotated
 from datetime import timedelta, datetime, timezone
 import os
 from dotenv import load_dotenv
-from passlib.context import CryptContext
-from jose import JWTError, jwt
+import bcrypt
+import jwt
+from jwt import PyJWTError
 
 
 router = APIRouter()
@@ -19,8 +20,14 @@ SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
@@ -31,7 +38,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
         
         return {'username': username, 'id': user_id }
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
@@ -46,7 +53,7 @@ async def test():
 async def create_user( db: db_dependency, create_user_request: CreateUserRequest):
     create_user_model = User(
         username=create_user_request.username,
-        password=pwd_context.hash(create_user_request.password),
+        password=hash_password(create_user_request.password),
         email=create_user_request.email
     )
     
@@ -81,7 +88,7 @@ def authenticate_user(username: str, password: str, db):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         return False
-    if not pwd_context.verify(password, user.password):
+    if not verify_password(password, user.password):
         return False
     return user
 
@@ -137,4 +144,11 @@ async def delete_account(user: user_dependency, db: db_dependency):
 
     return {"message": "User account successfully deleted"}
 
+@router.get("/get_account", tags=['auth'], status_code=status.HTTP_200_OK)
+async def get_account(user: user_dependency, db: db_dependency):
+    user_to_get = db.query(User).filter(User.id == user['id']).first()
+    if not user_to_get:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return {"username": user_to_get.username, "email": user_to_get.email}
 

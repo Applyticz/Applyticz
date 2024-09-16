@@ -2,6 +2,8 @@ FROM python:3.12
 
 WORKDIR /Backend
 
+COPY Backend/.env /config/.env
+
 COPY Backend/requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
