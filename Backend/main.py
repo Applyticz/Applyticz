@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import declarative_base
@@ -11,7 +11,7 @@ from routers import test_router, auth_router
 from contextlib import asynccontextmanager
 from typing import Annotated
 from fastapi import status
-
+from routers.auth_router import get_current_user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +34,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 # Include the test router, assuming it's defined in routers/test_router.py
 app.include_router(test_router.router, prefix='/test')
 app.include_router(auth_router.router, prefix='/auth')
@@ -43,4 +45,10 @@ app.include_router(auth_router.router, prefix='/auth')
 # def test_(dependencies):
     #     pass  # Placeholder for actual dependency injection logic
     #     return {"message": "Hello, World!"}
+    
+@app.get("/", status_code=status.HTTP_200_OK, tags=["auth"])
+async def user(user: user_dependency, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication fail")
+    return {"User": user}
 
