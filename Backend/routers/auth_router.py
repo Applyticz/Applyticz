@@ -56,7 +56,12 @@ async def create_user( db: db_dependency, create_user_request: CreateUserRequest
         password=hash_password(create_user_request.password),
         email=create_user_request.email
     )
-    
+    existig_user = db.query(User).filter(User.username == create_user_request.username).first()
+    if existig_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
+    if existing_email := db.query(User).filter(User.email == create_user_request.email).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+
     db.add(create_user_model)
     db.commit()
     db.refresh(create_user_model)
@@ -98,33 +103,6 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     encode.update({'exp': expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
-
-    
-
-@router.post('/login', status_code=status.HTTP_200_OK)
-async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
-    # Authenticate the user with the provided username and password
-    user = authenticate_user(form_data.username, form_data.password, db)
-    
-    # If user is not found or password is invalid, raise HTTP 401 error
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    
-    # Create the access token with an expiration time
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        username=user.username, user_id=user.id, expires_delta=access_token_expires
-    )
-    
-    # Return the access token and token type (bearer)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
     
 
 @router.delete("/delete_account", status_code=status.HTTP_200_OK, tags=['auth'])
@@ -152,3 +130,35 @@ async def get_account(user: user_dependency, db: db_dependency):
     
     return {"username": user_to_get.username, "email": user_to_get.email}
 
+
+@router.post('/login', status_code=status.HTTP_200_OK, tags=['auth'])
+async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
+    # Authenticate the user with the provided username and password
+    user = authenticate_user(form_data.username, form_data.password, db)
+    
+    # If user is not found or password is invalid, raise HTTP 401 error
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    # Create the access token with an expiration time
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        username=user.username, user_id=user.id, expires_delta=access_token_expires
+    )
+    
+    # Return the access token and token type (bearer)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
+@router.post('/logout', status_code=status.HTTP_200_OK, tags=['auth'])
+async def logout_user(db: db_dependency, user: user_dependency):
+    return {
+        "access_token": "null",
+        "token_type": "null"
+    }    
