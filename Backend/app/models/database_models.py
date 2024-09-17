@@ -1,6 +1,6 @@
 from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR
 from sqlalchemy.dialects.postgresql import UUID
-from database import Base
+from app.db.database import get_db, engine, Base, db_dependency
 import uuid
 
 

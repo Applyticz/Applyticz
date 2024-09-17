@@ -1,5 +1,5 @@
-from conftest import testClient, dbSession, overrideDbDepend
-from models.database_models import User
+from app.tests.conftest import testClient, dbSession, overrideDbDepend
+from app.models.database_models import User
 
 def test_create_user(testClient, dbSession, overrideDbDepend):
     res = testClient.post('/auth/register_account', json={
@@ -136,7 +136,7 @@ def test_user_data(testClient, dbSession, overrideDbDepend):
     assert user_data['username'] == 'test_user'
 
     # Get the user id from the database
-    from models.database_models import User  # Adjust the import according to your project structure
+    from app.models.database_models import User  # Adjust the import according to your project structure
     user_in_db = dbSession.query(User).filter_by(username='test_user').first()
     assert user_in_db is not None, "User not found in the database"
 

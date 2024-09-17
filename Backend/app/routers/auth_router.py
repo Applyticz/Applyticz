@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from database import get_db, db_dependency
+from app.db.database import get_db, db_dependency
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from models.pydantic_models import Token, CreateUserRequest, UpdateUserRequest
-from models.database_models import User
+from app.models.pydantic_models import Token, CreateUserRequest, UpdateUserRequest
+from app.models.database_models import User
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from datetime import timedelta, datetime, timezone
@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import bcrypt
 import jwt
 from jwt import PyJWTError
-from utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 router = APIRouter()

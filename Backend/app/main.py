@@ -1,17 +1,17 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database import get_db, engine, Base, db_dependency
+from app.db.database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from models.database_models import User
-from routers import test_router, auth_router
+from app.routers import test_router, auth_router
+from app.models.database_models import Test, User
 from contextlib import asynccontextmanager
 from typing import Annotated
 from fastapi import status
-from routers.auth_router import get_current_user
+from app.routers.auth_router import get_current_user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

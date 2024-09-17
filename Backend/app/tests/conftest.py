@@ -7,9 +7,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')  # Adjust this path if necessary
 
-from main import app
-from database import Base, get_db, DATABASE_URL
-from models.database_models import User
+from app.main import app
+from app.db.database import Base, get_db, DATABASE_URL
+from app.models.database_models import User
 
 
 

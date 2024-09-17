@@ -7,7 +7,7 @@ import os
 import dotenv
 import bcrypt
 from datetime import timedelta, datetime, timezone
-from models.database_models import User
+from app.models.database_models import User
 
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = 'HS256'

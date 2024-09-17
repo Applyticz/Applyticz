@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Body, Header
-from database import get_db
+from app.db.database import get_db
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
-from models.database_models import Test, User
-from models.pydantic_models import TestBase, GreetResponse
-from database import db_dependency
+from app.models.database_models import Test, User
+from app.models.pydantic_models import TestBase, GreetResponse
+from app.db.database import db_dependency
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
