@@ -11,15 +11,20 @@ import Settings from "./Pages/HomePage/HomePageComponents/Settings";
 import Profile from "./Pages/HomePage/HomePageComponents/Profile";
 import SignOut from "./Pages/HomePage/HomePageComponents/SignOut";
 import HomePage from "./Pages/HomePage/HomePage";
+import ProtectedRoute from "./ProtectedRoutes";
 
 
 function App() {
   return (
     <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/home" element={<HomePage />} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<HomePage />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/applications" element={<Applications />} />
             <Route path="/resumes" element={<Resumes />} />
@@ -27,7 +32,9 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/sign-out" element={<SignOut />} />
-          </Routes>
+          </Route>
+        </Route>
+      </Routes>
     </Router>
   );
 }

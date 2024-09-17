@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../authContext";
+import NavBar from "./HomePageComponents/NavBar";
 
 function Header() {
   return (
@@ -10,37 +11,6 @@ function Header() {
   );
 }
 
-function NavBar() {
-  return (
-    <nav className="NavBar">
-      <ul className="left-nav">
-        <li>
-          <Link to="/">Dashboard</Link>
-        </li>
-        <li>
-          <Link to="/applications">Applications</Link>
-        </li>
-        <li>
-          <Link to="/resumes">Resumes</Link>
-        </li>
-        <li>
-          <Link to="/analytics">Analytics</Link>
-        </li>
-        <li>
-          <Link to="/settings">Settings</Link>
-        </li>
-      </ul>
-      <ul className="right-nav">
-        <li>
-          <Link to="/profile">Profile</Link>
-        </li>
-        <li>
-          <Link to="/sign-out">Sign Out</Link>
-        </li>
-      </ul>
-    </nav>
-  );
-}
 
 function HomePage() {
   const { authTokens } = useContext(AuthContext);

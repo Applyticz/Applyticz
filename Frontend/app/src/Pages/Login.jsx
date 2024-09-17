@@ -25,7 +25,7 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         loginUser(data.access_token); // Update authentication context
-        navigate("/home"); // Redirect to the home page or dashboard
+        navigate("/"); // Redirect to the home page or dashboard
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.detail || "Failed to login.");
