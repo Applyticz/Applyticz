@@ -11,7 +11,7 @@ import Settings from "./Pages/HomePage/HomePageComponents/Settings";
 import Profile from "./Pages/HomePage/HomePageComponents/Profile";
 import SignOut from "./Pages/HomePage/HomePageComponents/SignOut";
 import HomePage from "./Pages/HomePage/HomePage";
-import ProtectedRoute from "./ProtectedRoutes";
+import ProtectedRoutes from "./ProtectedRoutes";
 
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoutes />}>
           <Route path="/" element={<HomePage />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/applications" element={<Applications />} />

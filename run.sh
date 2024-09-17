@@ -31,28 +31,44 @@ source .venv/bin/activate
 echo "Installing required packages..."
 $PIP_EXEC install -r requirements.txt
 
-# Ask the user if they want to use Docker
-echo -n "Do you want to use Docker to run the backend? (y/n): "
+# Ask the user if they want to use Docker and Docker Compose
+echo -n "Do you want to use Docker and Docker Compose to run the full stack? (y/n): "
 read -r USE_DOCKER
 
 if [[ "$USE_DOCKER" =~ ^[Yy]$ ]]; then
-    cd ..
+    # Check if docker-compose.yml exists
+    if [ -f "../docker-compose.yml" ]; then
+        echo "docker-compose.yml found. Checking if services are already running..."
+        
+        # Check if Docker containers are running
+        if [ "$(docker ps -q -f name=applyticz-backend)" ] || [ "$(docker ps -q -f name=applyticz-frontend)" ]; then
+            echo "Docker containers are already running. Restarting the services..."
+            docker compose down  # Stop the running services
+        fi
 
-    # Run the FastAPI application using Docker
-    if [ -f "./docker_backend.sh" ]; then
-        chmod u+rwx "./docker_backend.sh"
-        dos2unix "./docker_backend.sh"
-        echo "Starting the backend server using Docker..."
-        ./docker_backend.sh
+        echo "Starting Docker Compose services with a rebuild..."
+        cd ..
+        docker compose up --build -d  # Start Docker Compose services in detached mode
+        
+        # Open backend and frontend in the browser
+        echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            xdg-open "http://localhost:8000"
+            xdg-open "http://localhost:3000"
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            open "http://localhost:8000"
+            open "http://localhost:3000"
+        elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+            start "http://localhost:8000"
+            start "http://localhost:3000"
+        fi
+
     else
-        echo "Could not find docker_backend.sh file. Please ensure the script exists."
+        echo "Could not find docker-compose.yml. Please ensure the file exists."
         exit 1
     fi
 else
     echo "Skipping Docker setup. Starting the backend server directly..."
-
-    # Ensure you are in the backend directory
-    cd backend
 
     # Check if port 8000 is in use
     PORT=8000
@@ -68,16 +84,28 @@ else
 
     # Start the backend server directly on port 8000
     uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 &
-    cd ..
+    
+    # Change to the frontend directory
+    cd ../Frontend/app
+
+    # Install dependencies if they haven't been installed yet or if new ones have been added
+    echo "Ensuring dependencies are up-to-date..."
+    npm install
+
+    # Start the React development server
+    echo "Starting the React development server..."
+    npm start &
+    
+    # Open backend and frontend in the browser
+    echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        xdg-open "http://localhost:8000"
+        xdg-open "http://localhost:3000"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        open "http://localhost:8000"
+        open "http://localhost:3000"
+    elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        start "http://localhost:8000"
+        start "http://localhost:3000"
+    fi
 fi
-
-# Change to the frontend directory
-cd Frontend/app
-
-# Install dependencies if they haven't been installed yet or if new ones have been added
-echo "Ensuring dependencies are up-to-date..."
-npm install
-
-# Start the React development server
-echo "Starting the React development server..."
-npm start
