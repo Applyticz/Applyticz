@@ -12,42 +12,19 @@ from dotenv import load_dotenv
 import bcrypt
 import jwt
 from jwt import PyJWTError
+from utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 router = APIRouter()
 
-SECRET_KEY = os.getenv('JWT_SECRET_KEY')
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get('sub')
-        user_id: int = payload.get('id')
-        if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
-        
-        return {'username': username, 'id': user_id }
-    except PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
-
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 @router.get('/auth_route', tags=['auth'])
 async def test():
   return {'message': 'Auth Route'}
-
 
 @router.post("/register_account", status_code=status.HTTP_201_CREATED, tags=['auth'])
 async def create_user( db: db_dependency, create_user_request: CreateUserRequest):
@@ -79,7 +56,6 @@ async def update_user( db: db_dependency, update_user_request: UpdateUserRequest
     db.refresh(user_to_update)
     return "user updated successfully"
 
-
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     user = authenticate_user(form_data.username, form_data.password, db)
@@ -89,22 +65,6 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     
     return {'access_token': token, 'token_type': 'bearer'}
     
-def authenticate_user(username: str, password: str, db):
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        return False
-    if not verify_password(password, user.password):
-        return False
-    return user
-
-def create_access_token(username: str, user_id: int, expires_delta: timedelta):
-    encode = {'sub' : username, 'id': user_id}
-    expires = datetime.now(timezone.utc) + expires_delta
-    encode.update({'exp': expires})
-    return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
-
-    
-
 @router.delete("/delete_account", status_code=status.HTTP_200_OK, tags=['auth'])
 async def delete_account(user: user_dependency, db: db_dependency):
     # Fetch the user by id
@@ -129,7 +89,6 @@ async def get_account(user: user_dependency, db: db_dependency):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     return {"username": user_to_get.username, "email": user_to_get.email}
-
 
 @router.post('/login', status_code=status.HTTP_200_OK, tags=['auth'])
 async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
@@ -162,3 +121,9 @@ async def logout_user(db: db_dependency, user: user_dependency):
         "access_token": "null",
         "token_type": "null"
     }    
+
+@router.get("/", status_code=status.HTTP_200_OK, tags=["auth"])
+async def user(user: user_dependency, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication fail")
+    return {"User": user}

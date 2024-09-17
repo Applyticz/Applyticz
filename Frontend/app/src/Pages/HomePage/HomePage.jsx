@@ -16,6 +16,16 @@ function HomePage() {
   const { authTokens } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
+  const getValidToken = async () => {
+    if (!authTokens) {
+      navigate("/login");
+      console.log("Access token not found.");
+    } else {
+      console.log("Access token found:", authTokens);
+    }
+  }
 
   const getUserData = async () => {
     if (!authTokens) {
@@ -23,7 +33,7 @@ function HomePage() {
       return;
     }
     try {
-      const response = await fetch("http://localhost:8000", {
+      const response = await fetch("http://localhost:8000/auth", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +55,7 @@ function HomePage() {
   };
 
   useEffect(() => {
-    getUserData();
+    getValidToken();
   }, []); // Fetch user data on component mount
 
   return (
@@ -57,8 +67,8 @@ function HomePage() {
         {userData && (
           <div>
             <h2>User Data</h2>
-            <p>Username: {userData.User.id}</p>
-            <p>Email: {userData.User.username}</p>
+            <p>Id: {userData.User.id}</p>
+            <p>Username: {userData.User.username}</p>
           </div>
         )}
         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}

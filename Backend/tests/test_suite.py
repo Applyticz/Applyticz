@@ -96,3 +96,51 @@ def test_get_user(testClient, dbSession, overrideDbDepend):
     # Make the GET request to get the user
     res = testClient.get('/auth/get_account', headers=headers)
     assert res.status_code == 200
+
+def test_user_data(testClient, dbSession, overrideDbDepend):
+    # Register a test user
+    register_response = testClient.post('/auth/register_account', json={
+        'username': 'test_user',
+        'password': 'test_password',
+        'email': 'test@test.com'
+    })
+    assert register_response.status_code == 201
+
+    # Log in to get an access token
+    login_response = testClient.post('/auth/login', data={
+        'username': 'test_user',
+        'password': 'test_password',
+    }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()['access_token']
+
+    # Include the access token in the headers
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    # Make the GET request to get the user data
+    res = testClient.get('/auth/', headers=headers)
+    assert res.status_code == 200
+
+    res_json = res.json()
+
+    # Verify that 'User' key exists
+    assert 'User' in res_json, "Response JSON does not contain 'User' key"
+
+    # Access the user data
+    user_data = res_json['User']
+
+    # Compare the username
+    assert user_data['username'] == 'test_user'
+
+    # Get the user id from the database
+    from models.database_models import User  # Adjust the import according to your project structure
+    user_in_db = dbSession.query(User).filter_by(username='test_user').first()
+    assert user_in_db is not None, "User not found in the database"
+
+    # Compare the user id
+    assert user_data['id'] == user_in_db.id
+
+

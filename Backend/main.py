@@ -46,9 +46,6 @@ app.include_router(auth_router.router, prefix='/auth')
     #     pass  # Placeholder for actual dependency injection logic
     #     return {"message": "Hello, World!"}
     
-@app.get("/", status_code=status.HTTP_200_OK, tags=["auth"])
-async def user(user: user_dependency, db: db_dependency):
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication fail")
-    return {"User": user}
-
+@app.get("/")
+async def entry():
+    return {"message": "Welcome to the backend!"}
