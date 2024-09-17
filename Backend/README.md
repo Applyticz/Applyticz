@@ -7,17 +7,36 @@ This is a basic FastAPI backend setup inside the `Backend` directory.
 
 ```
 Backend/
-│
-├── .venv/             # Virtual environment (not committed to Git)
-├── models/            # Contains the database models of tables and the pydantic models for validation
-├── routes/            # Contains routes file grouped by endpoint prefixes 
-├── tests/             # Contains files associated with PyTest
-├── database.py        # Creates a conncetion to the database
-├── main.py            # Main FastAPI application
-├── .gitignore         # Git ignore file to exclude unnecessary files
-├── .requirements.txt  # Contains all python packages required 
-├── .env               # Contain environment variables ans secrets (not committed to Git)
-└── README.md          # Project documentation
+    app/
+    ├── __init__.py
+    ├── db/
+    │   ├── __init__.py
+    │   ├── database.py
+    ├── models/
+    │   ├── __init__.py
+    │   ├── database_models.py
+    │   ├── pydantic_models.py
+    ├── routers/
+    │   ├── __init__.py
+    │   ├── auth_router.py
+    │   ├── test_router.py
+    ├── tests/
+    │   ├── __init__.py
+    │   ├── conftest.py
+    │   ├── test_suite.py
+    ├── utils/
+    │   ├── __init__.py
+    │   ├── utils.py
+    ├── main.py
+    ├── .venv
+├── alembic
+    ├── versions
+    ├── env.py
+├── .gitignore
+├── alembic.ini
+├── README.md
+├── requirements.txt
+├── .env (Hidden from Github)
 ```
 
 ## Setup Instructions
@@ -71,7 +90,7 @@ pip || pip3 install -r requirements.txt
 To start the FastAPI app with `main.py`:
 
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 Access the app at `http://127.0.0.1:8000`.
@@ -86,6 +105,15 @@ Include the following in `.gitignore` to avoid committing unnecessary files:
 
 # Python bytecode
 __pycache__/
+```
+
+## Docker
+
+If you're using Docker to containerize the app, make sure your `Dockerfile` and `docker-compose.yml` are properly configured. Use the following commands to build and run the containers:
+
+```
+chmod +x docker_backend.sh
+./docker_backend.sh
 ```
 
 
@@ -354,7 +382,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 After updating the models or routes, always ensure to:
 
-1. Write or update tests located in the `tests/` directory.
+1. Write or update tests located in the `app/tests/` directory.
 
 2. Run the tests to ensure everything works correctly:
 

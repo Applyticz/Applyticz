@@ -44,7 +44,7 @@ if container_exists; then
     fi
 else
     echo "Running Docker container"
-    docker run -d --name "$CONTAINER_NAME" -p 80:80 "$IMAGE_NAME:$TAG"
+    docker run -d --name "$CONTAINER_NAME" -p 8000:8000 "$IMAGE_NAME:$TAG"
     if [ $? -ne 0 ]; then
         echo "Error: Failed to run the Docker container."
         exit 1
@@ -56,11 +56,11 @@ sleep 5
 
 # Open localhost/docs in the default browser
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    xdg-open http://localhost/docs
+    xdg-open http://localhost:8000/docs
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    open http://localhost/docs
+    open http://localhost:8000/docs
 elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" ]]; then
-    start http://localhost/docs
+    start http://localhost:8000/docs
 else
-    echo "Cannot automatically open the browser on this OS. Please visit http://localhost/docs manually."
+    echo "Cannot automatically open the browser on this OS. Please visit http://localhost:8000/docs manually."
 fi
