@@ -5,49 +5,13 @@ from app.models.database_models import User
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from datetime import timedelta
+import uuid
 from dotenv import load_dotenv
 from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 router = APIRouter()
 
-
-user_dependency = Annotated[dict, Depends(get_current_user)]
-
-
-@router.get('/auth_route', tags=['auth'])
-async def test():
-  return {'message': 'Auth Route'}
-
-@router.post("/register_account", status_code=status.HTTP_201_CREATED, tags=['auth'])
-async def create_user( db: db_dependency, create_user_request: CreateUserRequest):
-    create_user_model = User(
-        username=create_user_request.username,
-        password=hash_password(create_user_request.password),
-        email=create_user_request.email
-    )
-    existig_user = db.query(User).filter(User.username == create_user_request.username).first()
-    if existig_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
-    if existing_email := db.query(User).filter(User.email == create_user_request.email).first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
-
-    db.add(create_user_model)
-    db.commit()
-    db.refresh(create_user_model)
-    return "user created successfully"
-
-@router.put("/update_account", status_code=status.HTTP_201_CREATED, tags=['auth'])
-async def update_user( db: db_dependency, update_user_request: UpdateUserRequest, user: user_dependency):
-    user_to_update = db.query(User).filter(User.id == user['id']).first()
-    if not user_to_update:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    user_to_update.username = update_user_request.username 
-    
-    db.commit()
-    db.refresh(user_to_update)
-    return "user updated successfully"
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
@@ -57,11 +21,60 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     token = create_access_token(user.username, user.id, timedelta(minutes=20))
     
     return {'access_token': token, 'token_type': 'bearer'}
+   
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
+user = user_dependency
+
+
+@router.get('/auth_route', tags=['auth'])
+async def test():
+  return {'message': 'Auth Route'}
+
+@router.post("/register_account", status_code=status.HTTP_201_CREATED, tags=['auth'])
+async def create_user(db: db_dependency, create_user_request: CreateUserRequest):
+    # Create the new user object
+    create_user_model = User(
+        id=str(uuid.uuid4()),  # Explicitly generate a UUID for the user
+        username=create_user_request.username,
+        password=hash_password(create_user_request.password),
+        email=create_user_request.email
+    )
     
+    # Check if the username or email already exists
+    if db.query(User).filter(User.username == create_user_request.username).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
+    if db.query(User).filter(User.email == create_user_request.email).first():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+    
+    # Add the new user to the database
+    db.add(create_user_model)
+    db.commit()
+    db.refresh(create_user_model)
+    return {"message": "User created successfully"}
+
+@router.put("/update_account", status_code=status.HTTP_201_CREATED, tags=['auth'])
+async def update_user(db: db_dependency, update_user_request: UpdateUserRequest, user: user_dependency):
+    # Fetch the user by ID
+    user_id_str = str(user['id'])
+
+    user_to_update = db.query(User).filter(User.id == user_id_str).first()
+    if not user_to_update:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Update the user fields
+    user_to_update.username = update_user_request.username
+    
+    db.commit()
+    db.refresh(user_to_update)
+    return {"message": "User updated successfully"}
+
 @router.delete("/delete_account", status_code=status.HTTP_200_OK, tags=['auth'])
 async def delete_account(user: user_dependency, db: db_dependency):
     # Fetch the user by id
-    user_to_delete = db.query(User).filter(User.id == user['id']).first()
+    user_id_str = str(user['id'])
+
+    user_to_delete = db.query(User).filter(User.id == user_id_str).first()
     
     # If user not found, raise an error (although this is unlikely because they are authenticated)
     if not user_to_delete:
@@ -77,10 +90,14 @@ async def delete_account(user: user_dependency, db: db_dependency):
 
 @router.get("/get_account", tags=['auth'], status_code=status.HTTP_200_OK)
 async def get_account(user: user_dependency, db: db_dependency):
-    user_to_get = db.query(User).filter(User.id == user['id']).first()
+    # Fetch the user by ID
+    user_id_str = str(user['id'])
+
+    user_to_get = db.query(User).filter(User.id == user_id_str).first()
     if not user_to_get:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
+    # Return user information
     return {"username": user_to_get.username, "email": user_to_get.email}
 
 @router.post('/login', status_code=status.HTTP_200_OK, tags=['auth'])
@@ -113,10 +130,13 @@ async def logout_user(db: db_dependency, user: user_dependency):
     return {
         "access_token": "null",
         "token_type": "null"
-    }    
+    }
 
 @router.get("/", status_code=status.HTTP_200_OK, tags=["auth"])
 async def user(user: user_dependency, db: db_dependency):
+    # Fetch user information for the home route (if needed)
+    pass
+
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication fail")
     return {"User": user}

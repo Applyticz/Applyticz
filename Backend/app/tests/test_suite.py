@@ -11,23 +11,26 @@ def test_create_user(testClient, dbSession, overrideDbDepend):
     assert res.status_code == 201
 
 def test_update_user(testClient, dbSession, overrideDbDepend):
-    # Register a test user
+   # Register a test user
     register_response = testClient.post('/auth/register_account', json={
         'username': 'test_user',
         'password': 'test_password',
-        'email': 'test_user@example.com'
+        'email': 'test@test.com',
     })
     assert register_response.status_code == 201
 
     # Log in to get an access token
+
     login_response = testClient.post('/auth/login', data={
         'username': 'test_user',
         'password': 'test_password',
     }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
     assert login_response.status_code == 200
+
     access_token = login_response.json()['access_token']
 
     # Include the access token in the headers
+
     headers = {
         'Authorization': f'Bearer {access_token}'
     }
@@ -68,7 +71,6 @@ def test_delete_user(testClient, dbSession, overrideDbDepend):
     # Make the DELETE request to delete the user
     res = testClient.delete('/auth/delete_account', headers=headers)
     assert res.status_code == 200
-
 
 def test_get_user(testClient, dbSession, overrideDbDepend):
     # Register a test user
@@ -142,5 +144,85 @@ def test_user_data(testClient, dbSession, overrideDbDepend):
 
     # Compare the user id
     assert user_data['id'] == user_in_db.id
+
+def test_resume_upload(testClient, dbSession, overrideDbDepend):
+    # Register a test user
+    register_response = testClient.post('/auth/register_account', json={
+        'username': 'test_user',
+        'password': 'test_password',
+        'email': 'test@test.com',
+    })
+    assert register_response.status_code == 201
+
+    # Log in to get an access token
+
+    login_response = testClient.post('/auth/login', data={
+        'username': 'test_user',
+        'password': 'test_password',
+    }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()['access_token']
+
+    # Include the access token in the headers
+
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    # Make the POST request to upload a resume
+
+    res = testClient.post('/resume/upload_resume', json={
+        'title': 'Test Resume',
+        'description': 'This is a test resume',
+        'date': '2022-01-01',
+        'pdf_url': 'https://example.com/test_resume.pdf'
+    }, headers=headers)
+    assert res.status_code == 201
+
+def test_get_resumes(testClient, dbSession, overrideDbDepend):
+    # Register a test user
+    register_response = testClient.post('/auth/register_account', json={
+        'username': 'test_user',
+        'password': 'test_password',
+        'email': 'test@test.com',
+    })
+
+    assert register_response.status_code == 201
+
+    # Log in to get an access token
+
+    login_response = testClient.post('/auth/login', data={
+        'username': 'test_user',
+        'password': 'test_password',
+    }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()['access_token']
+
+    # Include the access token in the headers
+
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    # Make the POST request to upload a resume
+
+    upload_resume_response = testClient.post('/resume/upload_resume', json={
+        'title': 'Test Resume',
+        'description': 'This is a test resume',
+        'date': '2022-01-01',
+        'pdf_url': 'https://example.com/test_resume.pdf'
+    }, headers=headers)
+
+    assert upload_resume_response.status_code == 201
+
+    # Make the GET request to get the resumes
+
+    get_resumes_response = testClient.get('/resume/get_resumes', headers=headers)
+
+    assert get_resumes_response.status_code == 200
+
 
 

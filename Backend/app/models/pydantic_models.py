@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from pydantic.dataclasses import ConfigDict
 
 
 class TestBase(BaseModel):
@@ -39,5 +40,7 @@ class UploadResumeRequest(BaseModel):
   date: str
   pdf_url: str
 
-  class Config:
-    orm_mode = True
+  model_config = ConfigDict(from_attributes=True)
+
+class DeleteResumeRequest(BaseModel):
+  title: str

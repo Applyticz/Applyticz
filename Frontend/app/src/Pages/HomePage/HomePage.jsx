@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter as useNavigate } from "react-router-dom";
 import { AuthContext } from "../../authContext";
 import NavBar from "./HomePageComponents/NavBar";
 
@@ -56,7 +56,7 @@ function HomePage() {
 
   useEffect(() => {
     getValidToken();
-  }, []); // Fetch user data on component mount
+  },); // Fetch user data on component mount
 
   return (
     <div className="App">

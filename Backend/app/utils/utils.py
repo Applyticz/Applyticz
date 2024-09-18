@@ -9,40 +9,45 @@ from datetime import timedelta, datetime, timezone
 from app.models.database_models import User
 import uuid
 
+# Load JWT secret key from environment variables
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
+        # Decode JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
-        user_id_str: str = payload.get('id')  # Retrieve user_id as string
+        user_id_str: str = payload.get('id')  # Retrieve user_id as a string
 
-        if username is None or user_id_str is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
+        if not username or not user_id_str:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
         
         # Convert the string back to a UUID
         try:
-            user_id = uuid.UUID(user_id_str)  # Convert the user_id back to UUID
+            user_id = uuid.UUID(user_id_str)
         except ValueError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user ID format")
 
-        return {'username': username, 'id': user_id }
-    
-    except PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user")
- 
+        # Return the user information if valid
+        return {'username': username, 'id': user_id}
+
+    except PyJWTError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
 def hash_password(password: str) -> str:
+    """Hashes the password using bcrypt."""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifies that the provided plain password matches the stored hashed password."""
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def authenticate_user(username: str, password: str, db):
+    """Authenticates a user by verifying their password and checking their existence in the database."""
     user = db.query(User).filter(User.username == username).first()
     if not user:
         return False
@@ -50,17 +55,14 @@ def authenticate_user(username: str, password: str, db):
         return False
     return user
 
-import uuid
-
 def create_access_token(username: str, user_id: uuid.UUID, expires_delta: timedelta):
-    # Ensure user_id (UUID) is converted to a string before encoding
+    """Creates a JWT token with an expiration time."""
     encode = {
         'sub': username, 
-        'id': str(user_id)  # Convert UUID to string
+        'id': str(user_id)  # Convert UUID to string for encoding in JWT
     }
     
     expires = datetime.now(timezone.utc) + expires_delta
     encode.update({'exp': expires})
     
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
-
