@@ -19,7 +19,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import your database models here
-from models.database_models import Base  # Ensure this is the correct path
+from app.models.database_models import Base  # Ensure this is the correct path
 
 # Set the target metadata to your Base's metadata
 target_metadata = Base.metadata

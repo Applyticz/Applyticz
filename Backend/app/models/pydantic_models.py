@@ -32,3 +32,12 @@ class Token(BaseModel):
 class GreetResponse(BaseModel):
     message: str
     name: str
+
+class UploadResumeRequest(BaseModel):
+  title: str
+  description: str
+  date: str
+  pdf_url: str
+
+  class Config:
+    orm_mode = True

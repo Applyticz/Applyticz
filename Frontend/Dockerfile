@@ -1,20 +1,20 @@
-# Use an official Node.js image as a parent image
+# Use the official Node.js image
 FROM node:18-alpine
 
-# Set the working directory inside the container
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the package.json and package-lock.json to install dependencies
+# Copy the package.json and package-lock.json files to the container
 COPY Frontend/app/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the rest of the application code to the container
-COPY ./Frontend/app /app
+# Copy the rest of the frontend code to the working directory in the container
+COPY ./Frontend/app .
 
-# Expose the port the app runs on
+# Expose port 3000 to the host
 EXPOSE 3000
 
-# Start the React development server
+# Command to run the React development server with live reload
 CMD ["npm", "start"]

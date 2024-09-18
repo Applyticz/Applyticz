@@ -1,10 +1,10 @@
-from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR
+from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.database import get_db, engine, Base, db_dependency
+from sqlalchemy.orm import relationship
 import uuid
 
-
-
+# Test Model
 class Test(Base):
     __tablename__ = 'tests'
 
@@ -17,12 +17,27 @@ class Test(Base):
     password = Column(String(255), nullable=True)
     age = Column(Integer, nullable=True)
 
+
 class User(Base):
     __tablename__ = "users"
 
     # Define columns
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True, unique=True)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     username = Column(String(255), nullable=False, unique=True)
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
+    
+    resumes = relationship("Resume", back_populates="user")
 
+class Resume(Base):
+    __tablename__ = "resumes"
+
+    # Define columns
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    user_id = Column(CHAR(36), ForeignKey('users.id'), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
+    date = Column(String(255), nullable=False)
+    pdf_url = Column(String(255), nullable=False)  # Store URL or file path to the PDF
+
+    user = relationship("User", back_populates="resumes")

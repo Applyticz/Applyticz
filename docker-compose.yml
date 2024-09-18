@@ -7,13 +7,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://admin:Applyticz12@applyticzdb.cjsqs004ifhp.us-east-2.rds.amazonaws.com:3311/applytics_db  # Use the RDS endpoint
+      - DATABASE_URL=mysql+pymysql://admin:Applyticz12@applyticzdb.cjsqs004ifhp.us-east-2.rds.amazonaws.com:3311/applytics_db
     volumes:
-      - ./Backend:/usr/src/app
+      - ./Backend:/app  # Mount the Backend folder for live reloading
+      - /app/__pycache__  # Optional: Avoid caching issues by mounting the pycache folder
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   db:
-    image: mysql:8.0  # MySQL version 8.0
+    image: mysql:8.0
     container_name: applyticz-db
     environment:
       MYSQL_ROOT_PASSWORD: Applyticz12
@@ -21,9 +22,9 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: Applyticz12
     ports:
-      - "3311:3311"  # MySQL runs on port 3311 (internally and externally)
+      - "3311:3311"
     volumes:
-      - db_data:/var/lib/mysql  # Persistent storage for the database
+      - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -32,16 +33,16 @@ services:
 
   frontend:
     build:
-      context: .  # Frontend build context is the root directory
-      dockerfile: Frontend/Dockerfile  # Frontend Dockerfile
+      context: .  # Frontend build context
+      dockerfile: Frontend/Dockerfile  # Path to the frontend Dockerfile
     container_name: applyticz-frontend
     ports:
-      - "3000:3000"  # Expose React app on port 3000
+      - "3000:3000"
     volumes:
       - ./Frontend/app:/app  # Bind mount for live reloading
-    command: npm start  # Run the React development server
+    command: npm start
     depends_on:
-      - backend  # Ensure backend is up before starting the frontend
+      - backend
 
 volumes:
-  db_data:  # Docker volume to persist MySQL data
+  db_data:
