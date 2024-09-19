@@ -1,23 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // Correctly import useNavigate
 import { AuthContext } from "../../authContext";
-
-
+import useAuth from "../../utils";
 
 function HomePage() {
-  const { authTokens } = useContext(AuthContext);
+  const { authTokens, getValidToken } = useAuth(); // Use the custom hook to access auth tokens
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-
-  const getValidToken = async () => {
-    if (!authTokens) {
-      navigate("/login");
-      console.log("Access token not found.");
-    } else {
-      console.log("Access token found:", authTokens);
-    }
-  };
 
   const getUserData = async () => {
     if (!authTokens) {
@@ -32,10 +22,21 @@ function HomePage() {
           Authorization: `Bearer ${authTokens}`,
         },
       });
+
       if (response.ok) {
         const data = await response.json();
-        console.log("User data:", data);
-        setUserData(data);
+
+        // Validate the response data against the expected model structure
+        if (
+          data &&
+          typeof data.username === "string" &&
+          typeof data.email === "string"
+        ) {
+          console.log("User data:", data);
+          setUserData(data);
+        } else {
+          setErrorMessage("Invalid data format received.");
+        }
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.detail || "Failed to fetch user data.");
@@ -47,8 +48,8 @@ function HomePage() {
   };
 
   useEffect(() => {
-    getValidToken();
-  }); // Fetch use
+    getValidToken(); // Call getValidToken to check if the token is valid
+  });
 
   return (
     <div className="App">
@@ -56,9 +57,9 @@ function HomePage() {
         <button onClick={getUserData}>Get User Data</button>
         {userData && (
           <div>
-            <h2>User Data</h2>
-            <p>Email: {userData.email}</p>
+            <h2>User Information</h2>
             <p>Username: {userData.username}</p>
+            <p>Email: {userData.email}</p>
           </div>
         )}
         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}

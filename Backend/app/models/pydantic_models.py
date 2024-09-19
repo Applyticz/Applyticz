@@ -29,6 +29,10 @@ class Token(BaseModel):
   access_token: str
   token_type: str
 
+class GetAccountResponse(BaseModel):
+  username: str
+  email: str
+
 # Example for a response message
 class GreetResponse(BaseModel):
     message: str
@@ -44,3 +48,4 @@ class UploadResumeRequest(BaseModel):
 
 class DeleteResumeRequest(BaseModel):
   title: str
+

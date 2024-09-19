@@ -17,6 +17,7 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 @router.post('/upload_resume', tags=['resume'], status_code=status.HTTP_201_CREATED)
 async def upload_resume(resume: UploadResumeRequest, user: user_dependency, db: db_dependency):
+    # Create the resume object with the provided data
     upload_resume_model = Resume(
         user_id=user['id'],
         title=resume.title,
@@ -24,14 +25,21 @@ async def upload_resume(resume: UploadResumeRequest, user: user_dependency, db: 
         date=resume.date,
         pdf_url=resume.pdf_url
     )
-    existing_resume = db.query(Resume).filter(upload_resume_model.title == Resume.title).first()
+    
+    # Check if a resume with the same title already exists for the same user
+    existing_resume = db.query(Resume).filter(Resume.title == resume.title, Resume.user_id == user['id']).first()
+    
+    # If a resume with the same title already exists, return an error
     if existing_resume:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Resume already exists")
     
+    # Add the new resume to the database
     db.add(upload_resume_model)
     db.commit()
     db.refresh(upload_resume_model)
-    return "Resume uploaded successfully"
+    
+    return {"message": "Resume uploaded successfully", "resume_id": upload_resume_model.id}
+
 
 
 @router.get('/get_resumes', tags=['resume'], status_code=status.HTTP_200_OK)
@@ -154,3 +162,4 @@ async def update_resume(resume: UploadResumeRequest, user: user_dependency, db: 
     db.commit()
     
     return "Resume updated successfully"
+

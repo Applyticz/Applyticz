@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from app.db.database import get_db, db_dependency
-from app.models.pydantic_models import Token, CreateUserRequest, UpdateUserRequest
+from app.models.pydantic_models import Token, CreateUserRequest, UpdateUserRequest, GetAccountResponse
 from app.models.database_models import User
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
@@ -88,7 +88,7 @@ async def delete_account(user: user_dependency, db: db_dependency):
 
     return {"message": "User account successfully deleted"}
 
-@router.get("/get_account", tags=['auth'], status_code=status.HTTP_200_OK)
+@router.get("/get_account", response_model=GetAccountResponse, tags=['auth'], status_code=status.HTTP_200_OK)
 async def get_account(user: user_dependency, db: db_dependency):
     # Fetch the user by ID
     user_id_str = str(user['id'])
@@ -98,7 +98,9 @@ async def get_account(user: user_dependency, db: db_dependency):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Return user information
-    return {"username": user_to_get.username, "email": user_to_get.email}
+    return GetAccountResponse(username=user_to_get.username, email=user_to_get.email)
+
+    
 
 @router.post('/login', response_model=Token, status_code=status.HTTP_200_OK, tags=['auth'])
 async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
