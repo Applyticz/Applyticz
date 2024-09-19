@@ -28,6 +28,8 @@ class User(Base):
     password = Column(String(255), nullable=False)
     
     resumes = relationship("Resume", back_populates="user")
+    applications = relationship("Application", back_populates="user")
+    settings = relationship("UserSettings", back_populates="user", uselist=False)
 
 class Resume(Base):
     __tablename__ = "resumes"
@@ -41,3 +43,26 @@ class Resume(Base):
     pdf_url = Column(String(255), nullable=False)  # Store URL or file path to the PDF
 
     user = relationship("User", back_populates="resumes")
+
+class Application(Base):
+    __tablename__ = "applications"
+
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    user_id = Column(CHAR(36), ForeignKey('users.id'), nullable=False)
+    company = Column(String(255), nullable=False)
+    position = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False)
+    applied_date = Column(String(255), nullable=False)
+    notes = Column(String(1000), nullable=True)
+
+    user = relationship("User", back_populates="applications")
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    user_id = Column(String(36), ForeignKey('users.id'), nullable=False, unique=True)
+    theme = Column(String(50), nullable=False, default="light")
+    notification_preferences = Column(String(255), nullable=True)
+
+    user = relationship("User", back_populates="settings")

@@ -49,3 +49,15 @@ class UploadResumeRequest(BaseModel):
 class DeleteResumeRequest(BaseModel):
   title: str
 
+class ApplicationRequest(BaseModel):
+    id: str = None
+    company: str
+    position: str
+    status: str
+    applied_date: str
+    notes: str = None
+
+class UserSettingsRequest(BaseModel):
+    theme: str
+    notification_preferences: str
+

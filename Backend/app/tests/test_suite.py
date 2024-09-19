@@ -201,3 +201,38 @@ def test_delete_resume(testClient, dbSession, overrideDbDepend):
     delete_resume_response = testClient.delete('/resume/delete_resume', params={'title': 'Test Resume'}, headers=headers)
 
     assert delete_resume_response.status_code == 200
+
+def test_create_application(testClient, dbSession, overrideDbDepend):
+    headers = create_user_and_login(dbSession, testClient)
+
+    # Make the POST request to create an application
+    create_application_response = testClient.post('/application/create_application', json={
+        "id": "App",
+        "company": "Pub",
+        "position": "GRS",
+        "status": "New",
+        "applied_date": "09-09-2024",
+        "notes": "No notes"
+    }, headers=headers)
+
+    assert create_application_response.status_code == 201
+
+def test_get_applications(testClient, dbSession, overrideDbDepend):
+    headers = create_user_and_login(dbSession, testClient)
+
+    # Make the POST request to create an application
+    create_application_response = testClient.post('/application/create_application', json={
+        "id": "App",
+        "company": "Pub",
+        "position": "GRS",
+        "status": "New",
+        "applied_date": "09-09-2024",
+        "notes": "No notes"
+    }, headers=headers)
+
+    # Make the GET request to get the applications
+    get_applications_response = testClient.get('/application/get_applications', headers=headers)
+    
+    assert get_applications_response.status_code == 200
+
+

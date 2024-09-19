@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from app.routers import test_router, auth_router, resume_router
+from app.routers import test_router, auth_router, resume_router, application_router, dashboard_router, user_settings_router
 from app.models.database_models import Test, User
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -40,7 +40,9 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 app.include_router(test_router.router, prefix='/test')
 app.include_router(auth_router.router, prefix='/auth')
 app.include_router(resume_router.router, prefix='/resume')
-
+app.include_router(application_router.router, prefix='/application')
+app.include_router(dashboard_router.router, prefix='/dashboard')
+app.include_router(user_settings_router.router, prefix="/settings", tags=["settings"])
 # Example endpoint template
 # @app.get('/test')
 # def test_(dependencies):
