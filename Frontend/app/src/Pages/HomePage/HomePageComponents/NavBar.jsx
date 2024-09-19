@@ -17,7 +17,7 @@ function NavBar() {
       <ul className="left-nav">
         {/* ... your other navigation links ... */}
         <li>
-          <Link to="/">Dashboard</Link>
+          <Link to="/dashboard">Dashboard</Link>
         </li>
         <li>
           <Link to="/applications">Applications</Link>

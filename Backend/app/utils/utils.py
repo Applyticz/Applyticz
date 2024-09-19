@@ -66,3 +66,32 @@ def create_access_token(username: str, user_id: uuid.UUID, expires_delta: timede
     encode.update({'exp': expires})
     
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def create_user_and_login(db, testClient):
+# Register a test user
+    register_response = testClient.post('/auth/register_account', json={
+        'username': 'test_user',
+        'password': 'test_password',
+        'email': 'test_email@test.com',
+    })
+
+    assert register_response.status_code == 201
+
+    # Log in to get an access token
+
+    login_response = testClient.post('/auth/login', data={
+        'username': 'test_user',
+        'password': 'test_password',
+    }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+
+    assert login_response.status_code == 200
+
+    access_token = login_response.json()['access_token']
+
+    # Include the access token in the headers
+
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    return headers

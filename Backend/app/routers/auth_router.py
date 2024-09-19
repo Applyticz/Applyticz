@@ -100,7 +100,7 @@ async def get_account(user: user_dependency, db: db_dependency):
     # Return user information
     return {"username": user_to_get.username, "email": user_to_get.email}
 
-@router.post('/login', status_code=status.HTTP_200_OK, tags=['auth'])
+@router.post('/login', response_model=Token, status_code=status.HTTP_200_OK, tags=['auth'])
 async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     # Authenticate the user with the provided username and password
     user = authenticate_user(form_data.username, form_data.password, db)
@@ -115,9 +115,7 @@ async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     
     # Create the access token with an expiration time
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        username=user.username, user_id=user.id, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(username=user.username, user_id=user.id, expires_delta=access_token_expires)
     
     # Return the access token and token type (bearer)
     return {

@@ -31,21 +31,10 @@ def dbSession():
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     connection = engine.connect()
     transaction = connection.begin()  # Begin a new transaction
-    Base.metadata.bind = engine
-    
-    # Drop all tables and recreate them to ensure a clean state
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    
     db = TestingSessionLocal(bind=connection)
-    
-    # Optional: Delete all data before starting tests (if tables aren't dropped and recreated)
-    db.query(Resume).delete()  # Clean resumes table
-    db.query(User).delete()  # Clean users table
-    db.commit()
-
+    # Make sure the data is rolled back after each test
     yield db  # Yield the test database session
 
     # Rollback the transaction and close the connection after the test
-    transaction.rollback()
+    transaction.rollback()  # Undo all changes made during the test
     connection.close()

@@ -5,6 +5,7 @@ from app.models.pydantic_models import UploadResumeRequest, DeleteResumeRequest
 from app.db.database import get_db, db_dependency
 from app.models.database_models import Resume
 from app.models.database_models import User
+from fastapi import Query
 
 
 
@@ -89,7 +90,7 @@ async def get_resume_by_title(title: str, user: user_dependency, db: db_dependen
     return resume_dict
 
 @router.delete('/delete_resume', tags=['resume'], status_code=status.HTTP_200_OK)
-async def delete_resume(resume_to_delete: DeleteResumeRequest, user: user_dependency, db: db_dependency):
+async def delete_resume(user: user_dependency, db: db_dependency, title: str = Query(..., description="Title of the resume to delete")):
     # Ensure user['id'] is a string
     user_id_str = str(user['id'])
     
@@ -99,15 +100,14 @@ async def delete_resume(resume_to_delete: DeleteResumeRequest, user: user_depend
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Query the Resume associated with the user_id
-    resume_to_delete = db.query(Resume).filter(Resume.user_id == user_id_str, Resume.title == resume_to_delete.title).first()
+    resume_to_delete = db.query(Resume).filter(Resume.user_id == user_id_str, Resume.title == title).first()
     if not resume_to_delete:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
     
     db.delete(resume_to_delete)
-
     db.commit()
     
-    return "Resumes deleted successfully"
+    return {"message": "Resume deleted successfully"}
 
 @router.delete('/delete_all_resumes', tags=['resume'], status_code=status.HTTP_200_OK)
 async def delete_all_resumes(user: user_dependency, db: db_dependency):
