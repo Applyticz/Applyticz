@@ -109,13 +109,6 @@ else
     echo "Ensuring dependencies are up-to-date..."
     npm install
 
-    # Check for outdated packages and update them
-    echo "Checking for outdated packages..."
-    npm outdated
-
-    echo "Updating outdated packages..."
-    npm update
-
     # Start the React development server
     echo "Starting the React development server..."
     npm start &
