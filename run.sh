@@ -21,11 +21,25 @@ fi
 if [[ ! -d .venv ]]; then
     echo "Creating a virtual environment..."
     $PYTHON_EXEC -m venv .venv
+else
+    echo "Virtual environment already exists."
 fi
 
 # Activate the virtual environment
-echo "Activating the virtual environment..."
-source .venv/bin/activate
+# Detect the operating system
+if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "darwin"* ]]; then
+    # For Linux and macOS
+    echo "Activating the virtual environment for Linux/macOS..."
+    source .venv/bin/activate
+elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    # For Windows
+    echo "Activating the virtual environment for Windows..."
+    source .venv/Scripts/activate  # Use proper backslashes for Windows
+else
+    echo "Unknown OS. Cannot activate the virtual environment."
+    exit 1
+fi
+
 
 # Install required packages from requirements.txt
 echo "Installing required packages..."
@@ -71,8 +85,11 @@ else
     echo "Skipping Docker setup. Starting the backend server directly..."
 
     # Check if port 8000 is in use
-    PORT=8000
-    PID=$(lsof -ti tcp:$PORT)  # Find the PID of the process using the port
+    if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        PID=$(netstat -ano | findstr :$PORT | findstr LISTEN | awk '{print $5}')
+    else
+        PID=$(lsof -ti tcp:$PORT)
+    fi
 
     if [ ! -z "$PID" ]; then
         echo "Port $PORT is in use by process $PID. Terminating the process..."
@@ -95,7 +112,7 @@ else
     # Start the React development server
     echo "Starting the React development server..."
     npm start &
-    
+
     # Open backend and frontend in the browser
     echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -108,4 +125,5 @@ else
         start "http://localhost:8000"
         start "http://localhost:3000"
     fi
+
 fi
