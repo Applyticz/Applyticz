@@ -63,7 +63,11 @@ function Dashboard() {
           <ul className="activity-list">
             {dashboardData.recentResumes.map((resume, index) => (
               <li key={index} className="activity-item">
-                {resume.title} ({resume.date})
+                <div>
+                  <strong>{resume.title}</strong>
+                  <div>Uploaded: {new Date(resume.date).toLocaleDateString()}</div>
+                  <div>Last Updated: {new Date(resume.modified_date).toLocaleDateString()}</div>
+                </div>
               </li>
             ))}
           </ul>

@@ -12,7 +12,9 @@ function Resumes() {
     title: '',
     description: '',
     date: '',
-    pdf_url: ''
+    modified_date: '',
+    pdf_url: '',
+    pdf_file: ''
   });
 
   useEffect(() => {
@@ -80,7 +82,7 @@ function Resumes() {
       if (response.ok) {
         fetchResumes();
         setIsCreating(false);
-        setFormData({ title: '', description: '', date: '', pdf_url: '' });
+        setFormData({ title: '', description: '', date: '', modified_date: '', pdf_url: '', pdf_file: '' });
       } else {
         throw new Error('Failed to create resume');
       }
@@ -134,13 +136,6 @@ function Resumes() {
             required
           />
           <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-            required
-          />
-          <input
             type="text"
             name="pdf_url"
             value={formData.pdf_url}
@@ -167,13 +162,6 @@ function Resumes() {
                   required
                 />
                 <input
-                  type="date"
-                  name="date"
-                  value={resume.date}
-                  onChange={(e) => handleInputChange(e, resume.title)}
-                  required
-                />
-                <input
                   type="text"
                   name="pdf_url"
                   value={resume.pdf_url}
@@ -190,6 +178,7 @@ function Resumes() {
               <div className="resume-display">
                 <p className="description">{resume.description}</p>
                 <p className="date">Date: {resume.date}</p>
+                <p className="modified_date">Modified Date: {resume.modified_date}</p>
                 <a href={resume.pdf_url} target="_blank" rel="noopener noreferrer" className="pdf-link">View PDF</a>
                 <div className="button-group">
                   <button onClick={() => setEditingId(resume.title)} className="edit">Edit</button>

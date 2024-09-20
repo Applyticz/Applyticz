@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime
+from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import relationship
@@ -40,6 +40,7 @@ class Resume(Base):
     title = Column(String(255), nullable=False)
     description = Column(String(255), nullable=False)
     date = Column(String(255), nullable=False)
+    modified_date = Column(String(255), nullable=True)
     pdf_url = Column(String(255), nullable=False)  # Store URL or file path to the PDF
 
     user = relationship("User", back_populates="resumes")
@@ -50,9 +51,13 @@ class Application(Base):
     id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
     user_id = Column(CHAR(36), ForeignKey('users.id'), nullable=False)
     company = Column(String(255), nullable=False)
+    location = Column(String(255), nullable=False)
     position = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False)
     applied_date = Column(String(255), nullable=False)
+    last_update = Column(String(255), nullable=False)
+    salary = Column(String(255), nullable=False)
+    job_description = Column(String(1000), nullable=True)
     notes = Column(String(1000), nullable=True)
 
     user = relationship("User", back_populates="applications")

@@ -8,6 +8,8 @@ import bcrypt
 from datetime import timedelta, datetime, timezone
 from app.models.database_models import User
 import uuid
+import pytz
+from datetime import datetime
 
 # Load JWT secret key from environment variables
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
@@ -95,3 +97,15 @@ def create_user_and_login(db, testClient):
     }
 
     return headers
+
+def get_current_time():
+    # Get current time in UTC
+    utc_now = datetime.now(pytz.UTC)
+
+    # Convert to EST
+    est_now = utc_now.astimezone(pytz.timezone('America/New_York'))
+
+    # Format as mm-dd-yyyy hh-mm AM/PM
+    formatted_time = est_now.strftime('%m-%d-%Y %I:%M %p')
+
+    return formatted_time

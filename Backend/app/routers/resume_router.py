@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.utils.utils import get_current_user
 from typing import Annotated
-from app.models.pydantic_models import UploadResumeRequest, DeleteResumeRequest
+import datetime
+from app.models.pydantic_models import UploadResumeRequest, DeleteResumeRequest, EditResumeRequest
 from app.db.database import get_db, db_dependency
 from app.models.database_models import Resume
 from app.models.database_models import User
 from fastapi import Query
-
+from app.utils.utils import get_current_time
 
 
 router = APIRouter()
@@ -22,9 +23,11 @@ async def upload_resume(resume: UploadResumeRequest, user: user_dependency, db: 
         user_id=user['id'],
         title=resume.title,
         description=resume.description,
-        date=resume.date,
-        pdf_url=resume.pdf_url
+        date=get_current_time(),
+        modified_date="",
+        pdf_url=resume.pdf_url,
     )
+    
     
     # Check if a resume with the same title already exists for the same user
     existing_resume = db.query(Resume).filter(Resume.title == resume.title, Resume.user_id == user['id']).first()
@@ -67,7 +70,8 @@ async def get_resume(user: user_dependency, db: db_dependency):
             'title': resume.title,
             'description': resume.description,
             'date': resume.date,
-            'pdf_url': resume.pdf_url
+            'modified_date': resume.modified_date,
+            'pdf_url': resume.pdf_url,
         }
         resume_list.append(resume_dict)
     
@@ -92,7 +96,8 @@ async def get_resume_by_title(title: str, user: user_dependency, db: db_dependen
         'title': resume.title,
         'description': resume.description,
         'date': resume.date,
-        'pdf_url': resume.pdf_url
+        'modified_date': resume.modified_date,
+        'pdf_url': resume.pdf_url,
     }
     
     return resume_dict
@@ -140,7 +145,7 @@ async def delete_all_resumes(user: user_dependency, db: db_dependency):
     return "All resumes deleted successfully"
 
 @router.put('/update_resume', tags=['resume'], status_code=status.HTTP_201_CREATED)
-async def update_resume(resume: UploadResumeRequest, user: user_dependency, db: db_dependency):
+async def update_resume(resume: EditResumeRequest, user: user_dependency, db: db_dependency):
     # Ensure user['id'] is a string
     user_id_str = str(user['id'])
     
@@ -156,9 +161,8 @@ async def update_resume(resume: UploadResumeRequest, user: user_dependency, db: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
     
     resume_to_update.description = resume.description
-    resume_to_update.date = resume.date
+    resume_to_update.modified_date = get_current_time()
     resume_to_update.pdf_url = resume.pdf_url
-    
     db.commit()
     
     return "Resume updated successfully"

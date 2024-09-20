@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 from pydantic.dataclasses import ConfigDict
 from typing import Optional
+from fastapi import UploadFile
 
-
+# Base model for common fields
 class TestBase(BaseModel):
   username: str
   email: str
@@ -42,7 +43,12 @@ class GreetResponse(BaseModel):
 class UploadResumeRequest(BaseModel):
   title: str
   description: str
-  date: str
+  pdf_url: str
+
+class EditResumeRequest(BaseModel):
+  title: str
+  description: str
+  modified_date: str
   pdf_url: str
 
   model_config = ConfigDict(from_attributes=True)

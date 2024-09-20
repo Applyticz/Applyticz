@@ -23,6 +23,6 @@ async def get_dashboard_data(user: user_dependency, db: db_dependency):
     return {
         "totalResumes": total_resumes,
         "totalApplications": total_applications,
-        "recentResumes": [{"title": r.title, "date": r.date} for r in recent_resumes],
+        "recentResumes": [{"title": r.title, "date": r.date, "modified_date": r.modified_date} for r in recent_resumes],
         "recentApplications": [{"company": a.company, "position": a.position, "status": a.status} for a in recent_applications]
     }
