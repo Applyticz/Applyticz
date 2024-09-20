@@ -5,6 +5,13 @@ import "./Settings.css";
 function Settings() {
   const { authTokens } = useAuth();
   const [settings, setSettings] = useState({
+    first_name: '',
+    last_name: '',
+    university: '',
+    email: '',
+    age: '',
+    gender: '',
+    desired_role: '',
     theme: 'light',
     notification_preferences: ''
   });
@@ -23,7 +30,17 @@ function Settings() {
       });
       if (response.ok) {
         const data = await response.json();
-        setSettings(data);
+        setSettings({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          university: data.university || '',
+          email: data.email || '',
+          age: data.age || '',
+          gender: data.gender || '',
+          desired_role: data.desired_role || '',
+          theme: data.theme || 'light',
+          notification_preferences: data.notification_preferences || ''
+        });
       } else {
         throw new Error('Failed to fetch settings');
       }
@@ -63,6 +80,75 @@ function Settings() {
     <div className="settings-container">
       <h2>User Settings</h2>
       <form onSubmit={handleSubmit} className="settings-form">
+        <label>
+          First Name:
+          <input
+            type="text"
+            name="first_name"
+            value={settings.first_name}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Last Name:
+          <input
+            type="text"
+            name="last_name"
+            value={settings.last_name}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          University:
+          <input
+            type="text"
+            name="university"
+            value={settings.university}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Email:
+          <input
+            type="email"
+            name="email"
+            value={settings.email}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Age:
+          <input
+            type="number"
+            name="age"
+            value={settings.age}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Gender:
+          <input
+            type="text"
+            name="gender"
+            value={settings.gender}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Desired Role:
+          <select
+            name="desired_role"
+            value={settings.desired_role}
+            onChange={handleInputChange}
+          >
+            <option value="">Select a role</option>
+            <option value="software_engineer">Software Engineer</option>
+            <option value="data_scientist">Data Scientist</option>
+            <option value="data_analyst">Data Analyst</option>
+            <option value="product_manager">Product Manager</option>
+            <option value="ux_designer">UX Designer</option>
+          </select>
+        </label>
         <label>
           Theme:
           <select

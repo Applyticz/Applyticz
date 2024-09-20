@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from pydantic.dataclasses import ConfigDict
+from typing import Optional
 
 
 class TestBase(BaseModel):
@@ -58,6 +59,13 @@ class ApplicationRequest(BaseModel):
     notes: str = None
 
 class UserSettingsRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    university: Optional[str] = None
+    email: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    desired_role: Optional[str] = None
     theme: str
-    notification_preferences: str
+    notification_preferences: Optional[str] = None
 

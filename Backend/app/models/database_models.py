@@ -60,8 +60,15 @@ class Application(Base):
 class UserSettings(Base):
     __tablename__ = "user_settings"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
-    user_id = Column(String(36), ForeignKey('users.id'), nullable=False, unique=True)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    user_id = Column(CHAR(36), ForeignKey('users.id', name='fk_user_settings_user_id'), nullable=False)
+    first_name = Column(String(255), nullable=True)
+    last_name = Column(String(255), nullable=True)
+    university = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=True)
+    age = Column(Integer, nullable=True)
+    gender = Column(String(50), nullable=True)
+    desired_role = Column(String(100), nullable=True)
     theme = Column(String(50), nullable=False, default="light")
     notification_preferences = Column(String(255), nullable=True)
 

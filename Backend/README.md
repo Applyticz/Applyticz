@@ -29,14 +29,18 @@ Backend/
     │   ├── utils.py
     ├── main.py
     ├── .venv
-├── alembic
-    ├── versions
+├── alembic/
+    ├── versions/
     ├── env.py
 ├── .gitignore
 ├── alembic.ini
 ├── README.md
 ├── requirements.txt
 ├── .env (Hidden from Github)
+├── run.sh
+├── docker_backend.sh
+├── Dockerfile
+├── docker-compose.yml
 ```
 
 ## Setup Instructions
@@ -54,11 +58,11 @@ cd Backend
 
 #### Grant executable permissions: Run the following command to allow execution of the script:
 ```bash
-chmod +x backend.sh
+chmod +x run.sh
 ```
 
 ```bash
-./backend.sh
+./run.sh
 ```
 
 ### 2. Create and activate the virtual environment
@@ -115,7 +119,6 @@ If you're using Docker to containerize the app, make sure your `Dockerfile` and 
 chmod +x docker_backend.sh
 ./docker_backend.sh
 ```
-
 
 ## FastAPI Backend - Route Guide
 
@@ -207,7 +210,7 @@ async def custom_response_headers():
 ```
 
 ### 7. **Working with Databases and Models**
-For routes that interact with database models and Pydantic models, here’s an example:
+For routes that interact with database models and Pydantic models, here's an example:
 ```python
 @router.post('/create_user', tags=['test'])
 async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
@@ -234,7 +237,6 @@ async def get_users(name: str = None, email: str = None, db: Session = Depends(g
 
 This guide provides a basic summary of creating routes with FastAPI. For further details, refer to the FastAPI documentation.
 
-
 ## Updating Pydantic Models
 
 Pydantic models are used to validate data coming into your application. To update or add new Pydantic models:
@@ -256,7 +258,6 @@ class UserCreate(BaseModel):
 3. Ensure that any new fields are validated using Pydantic's built-in validators if necessary.
 
 4. Import your new or updated Pydantic model in the relevant routes or services where you need data validation.
-
 
 # Alembic for Database Migrations in FastAPI
 
@@ -349,7 +350,6 @@ This command will revert the database schema to the previous version.
 
 By following these steps, you can ensure that your database schema stays in sync with your application's models.
 
-
 ## Updating Routes
 
 To update or add new routes in the application:
@@ -377,7 +377,6 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 ```
 
-
 ## Testing the Changes
 
 After updating the models or routes, always ensure to:
@@ -399,7 +398,7 @@ After updating the models or routes, always ensure to:
 #### If dependencies aren't already installed:
 ```bash
 python -m pip install --upgrade pip
-pip || pip3 install install -r requirements.txt
+pip || pip3 install -r requirements.txt
 ```
 
 ```bash

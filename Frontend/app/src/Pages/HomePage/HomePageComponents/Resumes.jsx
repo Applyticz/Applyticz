@@ -141,7 +141,7 @@ function Resumes() {
             required
           />
           <input
-            type="url"
+            type="text"
             name="pdf_url"
             value={formData.pdf_url}
             onChange={(e) => setFormData(prev => ({ ...prev, pdf_url: e.target.value }))}
@@ -174,7 +174,7 @@ function Resumes() {
                   required
                 />
                 <input
-                  type="url"
+                  type="text"
                   name="pdf_url"
                   value={resume.pdf_url}
                   onChange={(e) => handleInputChange(e, resume.title)}

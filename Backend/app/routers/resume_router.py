@@ -58,7 +58,7 @@ async def get_resume(user: user_dependency, db: db_dependency):
     # Query the Resume associated with the user_id
     resumes = db.query(Resume).filter(Resume.user_id == user_id_str).all()
     if not resumes:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resumes not found")
+        return []
     
     # Convert the resumes to a list of dictionaries
     resume_list = []
