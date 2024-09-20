@@ -60,8 +60,10 @@ class ApplicationRequest(BaseModel):
     id: str = None
     company: str
     position: str
+    location: str
     status: str
-    applied_date: str
+    salary: str
+    job_description: str = None
     notes: str = None
 
 class UserSettingsRequest(BaseModel):

@@ -127,8 +127,7 @@ function Resumes() {
             placeholder="Title"
             required
           />
-          <input
-            type="text"
+          <textarea
             name="description"
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -143,8 +142,10 @@ function Resumes() {
             placeholder="PDF URL"
             required
           />
-          <button type="submit">Create</button>
-          <button type="button" onClick={() => setIsCreating(false)}>Cancel</button>
+          <div className="button-group">
+            <button type="submit">Create</button>
+            <button type="button" onClick={() => setIsCreating(false)} className="cancel">Cancel</button>
+          </div>
         </form>
       )}
 

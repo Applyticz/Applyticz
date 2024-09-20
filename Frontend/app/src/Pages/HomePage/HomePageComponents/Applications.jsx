@@ -82,7 +82,7 @@ function Applications() {
       if (response.ok) {
         fetchApplications();
         setIsCreating(false);
-        setFormData({ company: '', position: '', status: '', applied_date: '', notes: '' });
+        setFormData({ company: '', position: '', location: '', status: '', applied_date: '', last_update: '', salary: '', job_description: '', notes: '' });
       } else {
         throw new Error('Failed to create application');
       }
@@ -137,6 +137,14 @@ function Applications() {
           />
           <input
             type="text"
+            name="location"
+            value={formData.location}
+            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            placeholder="Location"
+            required
+          />
+          <input
+            type="text"
             name="status"
             value={formData.status}
             onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
@@ -144,11 +152,18 @@ function Applications() {
             required
           />
           <input
-            type="date"
-            name="applied_date"
-            value={formData.applied_date}
-            onChange={(e) => setFormData(prev => ({ ...prev, applied_date: e.target.value }))}
+            type="text"
+            name="salary"
+            value={formData.salary}
+            onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
+            placeholder="Salary"
             required
+          />
+          <textarea
+            name="job_description"
+            value={formData.job_description}
+            onChange={(e) => setFormData(prev => ({ ...prev, job_description: e.target.value }))}
+            placeholder="Job Description"
           />
           <textarea
             name="notes"
@@ -157,7 +172,7 @@ function Applications() {
             placeholder="Notes"
           />
           <button type="submit">Create</button>
-          <button type="button" onClick={() => setIsCreating(false)}>Cancel</button>
+          <button type="button" className="cancel" onClick={() => setIsCreating(false)}>Cancel</button>
         </form>
       )}
 
@@ -185,6 +200,14 @@ function Applications() {
                 />
                 <input
                   type="text"
+                  name="location"
+                  value={application.location}
+                  onChange={(e) => handleInputChange(e, application.id)}
+                  placeholder="Location"
+                  required
+                />
+                <input
+                  type="text"
                   name="status"
                   value={application.status}
                   onChange={(e) => handleInputChange(e, application.id)}
@@ -192,11 +215,18 @@ function Applications() {
                   required
                 />
                 <input
-                  type="date"
-                  name="applied_date"
-                  value={application.applied_date}
+                  type="text"
+                  name="salary"
+                  value={application.salary}
                   onChange={(e) => handleInputChange(e, application.id)}
+                  placeholder="Salary"
                   required
+                />
+                <textarea
+                  name="job_description"
+                  value={application.job_description}
+                  onChange={(e) => handleInputChange(e, application.id)}
+                  placeholder="Job Description"
                 />
                 <textarea
                   name="notes"
@@ -213,6 +243,7 @@ function Applications() {
               <div className="application-display">
                 <p>Status: {application.status}</p>
                 <p>Applied Date: {application.applied_date}</p>
+                <p>Last Update: {application.last_update}</p>
                 <p>Notes: {application.notes}</p>
                 <div className="button-group">
                   <button onClick={() => setEditingId(application.id)} className="edit">Edit</button>

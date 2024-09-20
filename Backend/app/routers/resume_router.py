@@ -59,7 +59,7 @@ async def get_resume(user: user_dependency, db: db_dependency):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Query the Resume associated with the user_id
-    resumes = db.query(Resume).filter(Resume.user_id == user_id_str).all()
+    resumes = db.query(Resume).filter(Resume.user_id == user_id_str).order_by(Resume.date).all()
     if not resumes:
         return []
     

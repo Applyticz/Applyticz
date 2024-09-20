@@ -5,6 +5,7 @@ from app.models.pydantic_models import ApplicationRequest
 from app.db.database import get_db, db_dependency
 from app.models.database_models import Application, User
 from fastapi import Query
+from app.utils.utils import get_current_time
 
 router = APIRouter()
 
@@ -17,8 +18,12 @@ async def create_application(application: ApplicationRequest, user: user_depende
         user_id=user['id'],
         company=application.company,
         position=application.position,
+        location=application.location,
         status=application.status,
-        applied_date=application.applied_date,
+        applied_date=get_current_time(),
+        last_update="",
+        salary=application.salary,
+        job_description=application.job_description,
         notes=application.notes
     )
     
@@ -50,9 +55,13 @@ async def get_applications(user: user_dependency, db: db_dependency):
         app_dict = {
             'id': app.id,
             'company': app.company,
+            'location': app.location,
             'position': app.position,
             'status': app.status,
             'applied_date': app.applied_date,
+            'last_update': app.last_update,
+            'salary': app.salary,
+            'job_description': app.job_description,
             'notes': app.notes
         }
         application_list.append(app_dict)
@@ -77,8 +86,11 @@ async def update_application(application: ApplicationRequest, user: user_depende
     
     application_to_update.company = application.company
     application_to_update.position = application.position
+    application_to_update.location = application.location
     application_to_update.status = application.status
-    application_to_update.applied_date = application.applied_date
+    application_to_update.last_update = get_current_time()
+    application_to_update.salary = application.salary
+    application_to_update.job_description = application.job_description
     application_to_update.notes = application.notes
     
     db.commit()

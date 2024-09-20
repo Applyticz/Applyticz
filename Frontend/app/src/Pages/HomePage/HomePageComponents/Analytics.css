@@ -1,0 +1,42 @@
+.analytics-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.analytics-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.analytics-section {
+  margin-bottom: 40px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-section h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.chart-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .analytics-page {
+    padding: 10px;
+  }
+
+  .analytics-section {
+    padding: 15px;
+  }
+
+  .chart-container {
+    max-width: 100%;
+  }
+}

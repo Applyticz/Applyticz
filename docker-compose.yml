@@ -40,6 +40,7 @@ services:
       - "3000:3000"
     volumes:
       - ./Frontend/app:/app  # Bind mount for live reloading
+      - /app/node_modules  # Anonymous volume to preserve node_modules in container
     command: npm start
     depends_on:
       - backend

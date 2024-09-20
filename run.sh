@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set the default backend port
+PORT=8000
+
 # Change to the backend directory
 cd backend  # Ensure the directory name matches (case-sensitive)
 
@@ -39,7 +42,6 @@ else
     echo "Unknown OS. Cannot activate the virtual environment."
     exit 1
 fi
-
 
 # Install required packages from requirements.txt
 echo "Installing required packages..."

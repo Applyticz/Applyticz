@@ -1,30 +1,135 @@
 .applications-container {
   padding: 20px;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .applications-list {
-  list-style-type: none;
-  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
 }
 
 .application-item {
-  background-color: #f5f5f5;
+  flex: 0 1 calc(33.333% - 20px);
+  min-width: 250px;
+  max-width: 350px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
   border-radius: 5px;
-  padding: 15px;
-  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
 }
 
+.application-item h3 {
+  margin-bottom: 10px;
+}
+
+.application-display,
+.application-edit-form {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.application-display p,
+.application-edit-form textarea,
+.application-edit-form input {
+  margin-bottom: 10px;
+  flex-grow: 1;
+}
+
+.application-edit-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.application-item button,
+button.create {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  flex: 1;
+  margin: 0 5px;
+}
+
+button.create {
+  background-color: #66bb6a;
+  color: white;
+}
+
+button.create:hover {
+  background-color: #4caf50;
+}
+
+.application-item button.delete {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.application-item button.delete:hover {
+  background-color: #ff4757;
+}
+
+.application-item button.edit {
+  background-color: #feca57;
+  color: #333;
+}
+
+.application-item button.edit:hover {
+  background-color: #ff9ff3;
+}
+
+.application-item button.save {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.application-item button.save:hover {
+  background-color: #45a049;
+}
+
+.application-item button.cancel {
+  background-color: #f44336;
+  color: white;
+}
+
+.application-item button.cancel:hover {
+  background-color: #d32f2f;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+}
+
+/* Styles for the create form */
 .application-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .application-form input,
-.application-form select,
 .application-form textarea {
   padding: 8px;
   border: 1px solid #ccc;
@@ -33,18 +138,26 @@
 
 .application-form button {
   padding: 10px;
-  background-color: #007bff;
-  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.application-form button:hover {
-  background-color: #0056b3;
+.application-form button[type="submit"] {
+  background-color: #66bb6a;
+  color: white;
 }
 
-.error {
-  color: red;
-  margin-top: 10px;
+.application-form button[type="submit"]:hover {
+  background-color: #4caf50;
+}
+
+.application-form button[type="button"] {
+  background-color: #f44336;
+  color: white;
+}
+
+.application-form button[type="button"]:hover {
+  background-color: #d32f2f;
 }
