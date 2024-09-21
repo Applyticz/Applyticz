@@ -7,10 +7,14 @@ from typing import Annotated
 from datetime import timedelta
 import uuid
 from dotenv import load_dotenv
-from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_bearer
+
 
 
 router = APIRouter()
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 
 
 @router.post("/token", response_model=Token)
