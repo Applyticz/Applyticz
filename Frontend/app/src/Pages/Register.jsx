@@ -1,14 +1,13 @@
-// src/Pages/Login.jsx
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../authContext";
+import "./Auth.css"; // Import the CSS file for styling
 
 const Register = () => {
   const navigate = useNavigate();
   const { registerUser } = useContext(AuthContext);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Inside your Register component
   const submitRegister = async (e) => {
     e.preventDefault();
     try {
@@ -34,20 +33,20 @@ const Register = () => {
       } else {
         const errorData = await response.json();
         console.error("Error:", errorData.detail);
-        // Display error message to the user
+        setErrorMessage(errorData.detail || "Failed to register.");
       }
     } catch (error) {
       console.error("Error:", error);
-      // Handle network errors
+      setErrorMessage("An error occurred. Please try again.");
     }
   };
 
   return (
-    <div>
+    <div className="auth-container">
       <h2>Register</h2>
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-      <form onSubmit={submitRegister}>
-        <div>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      <form onSubmit={submitRegister} className="auth-form">
+        <div className="form-group">
           <label>
             Username:
             <input
@@ -58,13 +57,13 @@ const Register = () => {
             />
           </label>
         </div>
-        <div>
+        <div className="form-group">
           <label>
             Email:
             <input type="text" name="email" required autoComplete="email" />
           </label>
         </div>
-        <div>
+        <div className="form-group">
           <label>
             Password:
             <input
@@ -75,8 +74,11 @@ const Register = () => {
             />
           </label>
         </div>
-        <button type="submit">Register</button>
+        <button type="submit" className="auth-button">Register</button>
       </form>
+      <p className="switch-auth">
+        Already have an account? <Link to="/login">Login here</Link>
+      </p>
     </div>
   );
 };

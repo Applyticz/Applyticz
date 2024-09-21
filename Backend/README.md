@@ -49,10 +49,9 @@ Backend/
 
 ```bash
 git clone <your-repo-url>
-cd Backend
 ```
 
-### 2a. Use the backend Script
+### 2a. Use the run.sh Script
 
 #### Run the backend script to automate the process of steps 2-4:
 
@@ -69,6 +68,7 @@ chmod +x run.sh
 
 #### Create the virtual environment:
 ```bash
+cd Backend
 python3 -m venv .venv
 ```
 
@@ -86,7 +86,7 @@ python3 -m venv .venv
 
 ```bash
 python -m pip install --upgrade pip
-pip || pip3 install -r requirements.txt
+pip install -r requirements.txt|| pip3 install -r requirements.txt
 ```
 
 ### 4. Running the FastAPI Application
@@ -94,7 +94,7 @@ pip || pip3 install -r requirements.txt
 To start the FastAPI app with `main.py`:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Access the app at `http://127.0.0.1:8000`.
@@ -109,16 +109,31 @@ Include the following in `.gitignore` to avoid committing unnecessary files:
 
 # Python bytecode
 __pycache__/
+
+# .env file
+.env
+```
+
+### 6. Add the .env file
+
+Include the following in the .env file within the Backend directory:
+
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+SECRET_KEY=your_secret_key
+JWT_ALGORITHM=HS256
 ```
 
 ## Docker
 
-If you're using Docker to containerize the app, make sure your `Dockerfile` and `docker-compose.yml` are properly configured. Use the following commands to build and run the containers:
+If you're using Docker to containerize the app, make sure your `Dockerfile` and `docker-compose.yml` are properly configured. Use the following commands to build and run the containers: (You can skip this if you're using the run.sh script)
 
 ```
 chmod +x docker_backend.sh
 ./docker_backend.sh
 ```
+
+This will run the docker container and automatically run the backend on port 8000 and the frontend on port 3000.
 
 ## FastAPI Backend - Route Guide
 
@@ -241,7 +256,7 @@ This guide provides a basic summary of creating routes with FastAPI. For further
 
 Pydantic models are used to validate data coming into your application. To update or add new Pydantic models:
 
-1. Navigate to the directory where your Pydantic models are located (e.g., `app/models/pydantic/`).
+1. Navigate to the directory where your Pydantic models are located (e.g., `app/models/pydantic_models.py`).
 
 2. Modify the existing models or create a new one based on your requirements.
 
@@ -398,9 +413,54 @@ After updating the models or routes, always ensure to:
 #### If dependencies aren't already installed:
 ```bash
 python -m pip install --upgrade pip
-pip || pip3 install -r requirements.txt
+pip install -r requirements.txt || pip3 install -r requirements.txt
 ```
 
 ```bash
 pytest tests/test_suite.py
 ```
+
+Individual tests can be run with:
+```bash
+pytest tests/test_suite.py::test_function_name
+```
+
+# Important Git Commands and Workflow
+
+1. **Pull the latest changes from the repository:**
+   ```bash
+   git pull
+   ```
+
+2. **Create a new branch for your changes:**
+    ```bash
+    git checkout -b your-branch-name
+    ```
+
+3. **Make your changes and commit them:**
+    ```bash
+    git add .
+    git commit -m "Your commit message"
+    ```
+
+4. **Push your changes to the repository:**
+    ```bash
+    git push origin your-branch-name
+    ```
+
+5. **Create a pull request:**
+    - Go to the repository on GitHub.
+    - Click on "Pull Requests."
+
+6. **Merge your pull request:**
+    - Once the pull request is approved, you can merge it into the main branch.
+
+7. **Pull the latest changes from the repository:**
+    ```bash
+    git pull
+    ```
+
+8. **Delete your branch:**
+    ```bash
+    git branch -d your-branch-name
+    ```

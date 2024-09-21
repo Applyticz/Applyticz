@@ -1,7 +1,8 @@
 // src/Pages/Login.jsx
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../authContext";
+import "./Auth.css"; // Import the CSS file for styling
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,11 +38,11 @@ const Login = () => {
   };
 
   return (
-    <div>
+    <div className="auth-container">
       <h2>Login</h2>
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-      <form onSubmit={submitLogin}>
-        <div>
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+      <form onSubmit={submitLogin} className="auth-form">
+        <div className="form-group">
           <label>
             Username:
             <input
@@ -52,7 +53,7 @@ const Login = () => {
             />
           </label>
         </div>
-        <div>
+        <div className="form-group">
           <label>
             Password:
             <input
@@ -63,8 +64,11 @@ const Login = () => {
             />
           </label>
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" className="auth-button">Login</button>
       </form>
+      <p className="switch-auth">
+        Don't have an account? <Link to="/register">Register here</Link>
+      </p>
     </div>
   );
 };

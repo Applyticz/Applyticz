@@ -46,9 +46,7 @@ class UploadResumeRequest(BaseModel):
   pdf_url: str
 
 class EditResumeRequest(BaseModel):
-  title: str
   description: str
-  modified_date: str
   pdf_url: str
 
   model_config = ConfigDict(from_attributes=True)

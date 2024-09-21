@@ -145,7 +145,7 @@ async def delete_all_resumes(user: user_dependency, db: db_dependency):
     return "All resumes deleted successfully"
 
 @router.put('/update_resume', tags=['resume'], status_code=status.HTTP_201_CREATED)
-async def update_resume(resume: EditResumeRequest, user: user_dependency, db: db_dependency):
+async def update_resume(title: str, resume: EditResumeRequest, user: user_dependency, db: db_dependency):
     # Ensure user['id'] is a string
     user_id_str = str(user['id'])
     
@@ -155,7 +155,7 @@ async def update_resume(resume: EditResumeRequest, user: user_dependency, db: db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Query the Resume associated with the user_id and title
-    resume_to_update = db.query(Resume).filter(Resume.user_id == user_id_str, Resume.title == resume.title).first()
+    resume_to_update = db.query(Resume).filter(Resume.user_id == user_id_str, Resume.title == title).first()
 
     if not resume_to_update:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
