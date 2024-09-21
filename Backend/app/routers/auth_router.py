@@ -22,9 +22,10 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     
     return {'access_token': token, 'token_type': 'bearer'}
    
-
-user_dependency = Annotated[dict, Depends(get_current_user)]
-user = user_dependency
+# Verify Auth Token
+@router.post("/verify_token", status_code=status.HTTP_200_OK, tags=['auth'])
+async def verify_token(token: Annotated[str, Depends(oauth2_bearer)]):
+    return verify_token_expiration(token)
 
 
 @router.get('/auth_route', tags=['auth'])

@@ -1,6 +1,6 @@
 import React, { createContext, useState } from "react";
 import { Navigate } from "react-router-dom";
-
+import axios from "axios"; // Import axios for making HTTP requests
 
 export const AuthContext = createContext();
 
@@ -15,14 +15,27 @@ export const AuthProvider = ({ children }) => {
     // console.log("Access token set:", token);
   };
 
-  const verifyAuthToken = () => {
-    const token = localStorage.getItem("access_token");
-    if (!token || token !== authTokens) {
-      setAuthTokens(null);
-      localStorage.removeItem("access_token");
-      Navigate("/login");
+  const verifyAuthToken = async () => {
+    if (!authTokens) {
+      return { status: "no_token" };
     }
-  }
+
+    try {
+      const response = await axios.post(
+        "/verify_token",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${authTokens}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Token verification failed:", error);
+      return { status: "invalid" };
+    }
+  };
 
   const logoutUser = () => {
     setAuthTokens(null);

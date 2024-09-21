@@ -12,7 +12,8 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
     "react-chartjs-2": "^5.2.0",
-    "chart.js": "^4.3.0"
+    "chart.js": "^4.3.0",
+    "axios": "^0.21.1"
   },
   "scripts": {
     "start": "react-scripts start",

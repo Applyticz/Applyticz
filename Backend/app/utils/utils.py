@@ -109,3 +109,18 @@ def get_current_time():
     formatted_time = est_now.strftime('%m-%d-%Y %I:%M %p')
 
     return formatted_time
+
+def verify_token_expiration(token: str):
+    """Verifies if the token is expired or still active."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        exp = payload.get('exp')
+        if exp is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has no expiration")
+        
+        expiration = datetime.fromtimestamp(exp, timezone.utc)
+        if expiration < datetime.now(timezone.utc):
+            return {"status": "expired"}
+        return {"status": "active"}
+    except PyJWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
