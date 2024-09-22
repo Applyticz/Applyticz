@@ -1,6 +1,7 @@
 from app.tests.conftest import testClient, dbSession, overrideDbDepend
 from app.models.database_models import User
 from app.utils.utils import create_user_and_login
+from app.utils.utils import get_current_time
 
 def test_create_user(testClient, dbSession, overrideDbDepend):
     res = testClient.post('/auth/register_account', json={
@@ -10,8 +11,6 @@ def test_create_user(testClient, dbSession, overrideDbDepend):
     })
 
     assert res.status_code == 201
-
-
 
 def test_update_user(testClient, dbSession, overrideDbDepend):
     headers = create_user_and_login(dbSession, testClient)
@@ -109,7 +108,8 @@ def test_get_resume_by_title(testClient, dbSession, overrideDbDepend):
     upload_resume_response = testClient.post('/resume/upload_resume', json={
         'title': 'Test Resume',
         'description': 'This is a test resume',
-        'date': '2022-01-01',
+        'date': get_current_time(),
+        'modified_date': '',
         'pdf_url': 'https://example.com/test_resume.pdf'
     }, headers=headers)
 
@@ -133,7 +133,11 @@ def test_get_resume_by_title(testClient, dbSession, overrideDbDepend):
 
     # Verify the date of the resume
 
-    assert resume_data['date'] == '2022-01-01'
+    assert resume_data['date'] == get_current_time()
+
+    # Verify the modified date of the resume
+
+    assert resume_data['modified_date'] == ''
 
     # Verify the PDF URL of the resume
 
@@ -143,47 +147,39 @@ def test_update_resume(testClient, dbSession, overrideDbDepend):
     headers = create_user_and_login(dbSession, testClient)
 
     # Upload a resume
-
     upload_resume_response = testClient.post('/resume/upload_resume', json={
         'title': 'Test Resume',
         'description': 'This is a test resume',
         'date': '2022-01-01',
+        'modified_date': '',
         'pdf_url': 'https://example.com/test_resume.pdf'
     }, headers=headers)
-
+    
     assert upload_resume_response.status_code == 201
-
-    # Make the PUT request to update the resume
-
+    
+    # Update the resume
     update_resume_response = testClient.put('/resume/update_resume', json={
-        'title': 'Test Resume',
         'description': 'This is an updated test resume',
-        'date': '2023-01-01',
         'pdf_url': 'https://example.com/updated_test_resume.pdf'
-    }, headers=headers)
-
+    }, params={'title': 'Test Resume'}, headers=headers)
+    
     assert update_resume_response.status_code == 201
 
-    # Make the GET request to get the updated resume
-
+    # Verify the updated resume
     get_resume_response = testClient.get('/resume/get_resume_by_title', params={'title': 'Test Resume'}, headers=headers)
-
     assert get_resume_response.status_code == 200
 
     resume_data = get_resume_response.json()
 
-    # Verify the updated description of the resume
-
+    # Verify the updated description
     assert resume_data['description'] == 'This is an updated test resume'
 
-    # Verify the updated date of the resume
-
-    assert resume_data['date'] == '2023-01-01'
-
-    # Verify the updated PDF URL of the resume
-
+    # Verify the updated PDF URL
     assert resume_data['pdf_url'] == 'https://example.com/updated_test_resume.pdf'
 
+    # Verify the modified date is updated
+    assert resume_data['modified_date'] != ''  # Ensure modified_date is not empty
+    
 def test_delete_resume(testClient, dbSession, overrideDbDepend):
     headers = create_user_and_login(dbSession, testClient)
 
@@ -210,8 +206,12 @@ def test_create_application(testClient, dbSession, overrideDbDepend):
         "id": "App",
         "company": "Pub",
         "position": "GRS",
+        "location": "Remote",
         "status": "New",
         "applied_date": "09-09-2024",
+        "last_update": "",
+        "salary": "100000",
+        "job_description": "No job description",
         "notes": "No notes"
     }, headers=headers)
 
@@ -234,5 +234,3 @@ def test_get_applications(testClient, dbSession, overrideDbDepend):
     get_applications_response = testClient.get('/application/get_applications', headers=headers)
     
     assert get_applications_response.status_code == 200
-
-

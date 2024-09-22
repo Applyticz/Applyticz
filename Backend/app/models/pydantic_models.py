@@ -64,6 +64,15 @@ class ApplicationRequest(BaseModel):
     job_description: str = None
     notes: str = None
 
+class ApplicationUpdateRequest(BaseModel):
+    company: str
+    position: str
+    location: str
+    status: str
+    salary: str
+    job_description: str
+    notes: str
+
 class UserSettingsRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None

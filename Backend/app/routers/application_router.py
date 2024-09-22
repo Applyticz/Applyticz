@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.utils.utils import get_current_user
 from typing import Annotated
-from app.models.pydantic_models import ApplicationRequest
+from app.models.pydantic_models import ApplicationRequest, ApplicationUpdateRequest
 from app.db.database import get_db, db_dependency
 from app.models.database_models import Application, User
 from fastapi import Query
@@ -69,7 +69,7 @@ async def get_applications(user: user_dependency, db: db_dependency):
     return application_list
 
 @router.put('/update_application', tags=['application'], status_code=status.HTTP_200_OK)
-async def update_application(application: ApplicationRequest, user: user_dependency, db: db_dependency):
+async def update_application(application: ApplicationUpdateRequest, user: user_dependency, db: db_dependency, id: str):
     # Ensure user['id'] is a string
     user_id_str = str(user['id'])
     
@@ -79,7 +79,7 @@ async def update_application(application: ApplicationRequest, user: user_depende
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Query the Application associated with the user_id and application id
-    application_to_update = db.query(Application).filter(Application.user_id == user_id_str, Application.id == application.id).first()
+    application_to_update = db.query(Application).filter(Application.user_id == user_id_str, Application.id == id).first()
 
     if not application_to_update:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
