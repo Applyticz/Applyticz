@@ -7,7 +7,7 @@ from typing import Annotated
 from datetime import timedelta
 import uuid
 from dotenv import load_dotenv
-from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_bearer
+from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, verify_token, ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_bearer
 
 
 
@@ -27,9 +27,10 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     return {'access_token': token, 'token_type': 'bearer'}
    
 # Verify Auth Token
-@router.post("/verify_token", status_code=status.HTTP_200_OK, tags=['auth'])
-async def verify_token(token: Annotated[str, Depends(oauth2_bearer)]):
-    return verify_token_expiration(token)
+@router.get("/verify-token/{token}", status_code=status.HTTP_200_OK, tags=['auth'])
+async def verify_user_token(token: str):
+    verify_token(token=token)
+    return {"message": "Token is valid"}
 
 
 @router.get('/auth_route', tags=['auth'])

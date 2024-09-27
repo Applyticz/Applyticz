@@ -124,3 +124,13 @@ def verify_token_expiration(token: str):
         return {"status": "active"}
     except PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    
+def verify_token(token: str = Depends(oauth2_bearer)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        if username is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+        return payload
+    except PyJWTError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token")

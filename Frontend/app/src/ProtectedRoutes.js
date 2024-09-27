@@ -1,20 +1,38 @@
-import React, { useContext } from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import { AuthContext } from "./authContext";
+import { useEffect, useState } from "react";
+import { useNavigate, Outlet } from "react-router-dom";
 
-const ProtectedRoutes = () => {
-  // Use the useContext hook to access the AuthContext
-  const { authTokens } = useContext(AuthContext);
+const ProtectedRoutes = ({ children }) => {
+  const navigate = useNavigate();
+  const [isVerified, setIsVerified] = useState(false);
 
-  if (!authTokens) {
-    // If not authenticated, redirect to login
-    //console.log("Access token not found.");
-    return <Navigate to="/login" />;
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('access_token');
+      console.log(token);
+      try {
+        const response = await fetch(`http://localhost:8000/auth/verify-token/${token}`);
+        if (!response.ok) {
+          throw new Error('Token verification failed');
+        }
+        setIsVerified(true);
+      } catch (error) {
+        localStorage.removeItem('access_token');
+        navigate('/login');
+      }
+    };
+    verifyToken();
+  }, [navigate]);
+
+  if (!isVerified) {
+    return null; // or a loading spinner
   }
 
-  // If authenticated, render child routes
-  //console.log("Access token found:", authTokens);
-  return <Outlet />;
+  return (
+    <>
+      {children}
+      <Outlet />
+    </>
+  );
 };
 
 export default ProtectedRoutes;

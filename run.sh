@@ -62,7 +62,7 @@ if [[ "$USE_DOCKER" =~ ^[Yy]$ ]]; then
 
         echo "Starting Docker Compose services with a rebuild..."
         cd ..
-        docker compose up --build -d  # Start Docker Compose services in detached mode
+        docker compose up  
         
         # Open backend and frontend in the browser
         echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."

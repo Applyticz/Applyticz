@@ -24,7 +24,7 @@ if image_exists; then
     echo "Docker image '$IMAGE_NAME:$TAG' already exists."
 else
     echo "Docker image '$IMAGE_NAME:$TAG' not found, building image."
-    docker build -t "$IMAGE_NAME:$TAG" .
+    docker build -t "$IMAGE_NAME:$TAG" -f Dockerfile .
     if [ $? -ne 0 ]; then
         echo "Error: Failed to build the Docker image."
         exit 1

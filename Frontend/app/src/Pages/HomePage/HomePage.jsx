@@ -10,6 +10,7 @@ function HomePage() {
   const navigate = useNavigate();
 
   const getUserData = async () => {
+    console.log(authTokens);
     if (!authTokens) {
       setErrorMessage("Access token not found.");
       return;

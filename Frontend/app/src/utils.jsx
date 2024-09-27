@@ -1,13 +1,22 @@
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "./authContext";
 
 // Custom hook to access auth tokens and validate them
 function useAuth() {
-  const { authTokens } = useContext(AuthContext); // Access tokens from AuthContext
+  const authTokens = localStorage.getItem('access_token');
   const navigate = useNavigate(); // Hook to navigate if token is invalid
 
   const getValidToken = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/auth/verify-token/${authTokens}`);
+      if (!response.ok) {
+        throw new Error('Token verification failed');
+      }
+      return authTokens;
+    } catch (error) {
+      localStorage.removeItem('access_token');
+      navigate('/login');
+    }
     if (!authTokens) {
       console.log("Access token not found.");
       navigate("/login"); // Redirect to login if no token is found
