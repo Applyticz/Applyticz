@@ -10,7 +10,7 @@ function HomePage() {
   const navigate = useNavigate();
 
   const getUserData = async () => {
-    console.log(authTokens);
+    //console.log(authTokens);
     if (!authTokens) {
       setErrorMessage("Access token not found.");
       return;
@@ -33,7 +33,7 @@ function HomePage() {
           typeof data.username === "string" &&
           typeof data.email === "string"
         ) {
-          console.log("User data:", data);
+          //console.log("User data:", data);
           setUserData(data);
         } else {
           setErrorMessage("Invalid data format received.");
@@ -43,7 +43,7 @@ function HomePage() {
         setErrorMessage(errorData.detail || "Failed to fetch user data.");
       }
     } catch (error) {
-      console.error("Error:", error);
+      //console.error("Error:", error);
       setErrorMessage("An error occurred. Please try again.");
     }
   };

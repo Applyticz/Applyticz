@@ -18,10 +18,10 @@ function useAuth() {
       navigate('/login');
     }
     if (!authTokens) {
-      console.log("Access token not found.");
+      //console.log("Access token not found.");
       navigate("/login"); // Redirect to login if no token is found
     } else {
-      console.log("Access token found:", authTokens);
+      //console.log("Access token found:", authTokens);
       return authTokens; // Return the valid auth token
     }
   };

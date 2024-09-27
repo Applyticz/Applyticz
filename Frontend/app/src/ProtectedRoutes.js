@@ -8,7 +8,7 @@ const ProtectedRoutes = ({ children }) => {
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem('access_token');
-      console.log(token);
+      //console.log(token);
       try {
         const response = await fetch(`http://localhost:8000/auth/verify-token/${token}`);
         if (!response.ok) {
