@@ -92,31 +92,70 @@ function Resumes() {
   };
 
   const handleDelete = async (title) => {
-    try {
-      const response = await fetch(`http://localhost:8000/resume/delete_resume?title=${title}`, {
-        method: 'DELETE',
-        headers: {
-          "Authorization": `Bearer ${authTokens}`
-        }
-      });
 
-      if (response.ok) {
-        fetchResumes();
-      } else {
-        throw new Error('Failed to delete resume');
+    const confirmed = window.confirm("Are you sure you want to delete " + title + ". This action cannot be undone.");
+
+    if(confirmed)
+    {
+      try {
+        const response = await fetch(`http://localhost:8000/resume/delete_resume?title=${title}`, {
+          method: 'DELETE',
+          headers: {
+            "Authorization": `Bearer ${authTokens}`
+          }
+        });
+  
+        if (response.ok) {
+          fetchResumes();
+        } else {
+          throw new Error('Failed to delete resume');
+        }
+      } catch (err) {
+        setError('Error deleting resume');
       }
-    } catch (err) {
-      setError('Error deleting resume');
+    }
+  };
+
+  const handleDeleteAll = async (title) => {
+    const confirmed = window.confirm("Are you sure you want to delete all resumes? This action cannot be undone.");
+
+    if(confirmed)
+    {
+      try {
+        const response = await fetch(`http://localhost:8000/resume/delete_all_resumes`, {
+          method: 'DELETE',
+          headers: {
+            "Authorization": `Bearer ${authTokens}`
+          }
+        });
+  
+        if (response.ok) {
+          fetchResumes();
+        } else {
+          throw new Error('Failed to delete all resumes');
+        }
+      } catch (err) {
+        setError('Error deleting resumes');
+      }
     }
   };
 
   return (
-    <div className="resumes-container">
-      <h2>My Resumes</h2>
-      <button onClick={() => setIsCreating(true)} className="create">
-        Create New Resume
-      </button>
+    <div>
+      <div className="button-bar">
 
+        <h1>My Resumes</h1>
+
+        <button onClick={() => setIsCreating(true)} className="create">
+          Create New Resume
+        </button>
+
+        <button onClick={handleDeleteAll} className="delete-all">
+          Delete All Resumes
+        </button>
+
+      </div>
+      
       {isCreating && (
         <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="resume-form">
           <input
@@ -177,9 +216,9 @@ function Resumes() {
               </div>
             ) : (
               <div className="resume-display">
-                <p className="description">{resume.description}</p>
-                <p className="date">Date: {resume.date}</p>
-                <p className="modified_date">Modified Date: {resume.modified_date}</p>
+                <p className="description"><b>Description: </b>{resume.description}</p>
+                <p className="date"><b>Date:</b> {resume.date}</p>
+                <p className="modified_date"><b>Modified Date: </b>: {resume.modified_date}</p>
                 <a href={resume.pdf_url} target="_blank" rel="noopener noreferrer" className="pdf-link">View PDF</a>
                 <div className="button-group">
                   <button onClick={() => setEditingId(resume.title)} className="edit">Edit</button>
