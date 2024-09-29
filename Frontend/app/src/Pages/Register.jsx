@@ -28,7 +28,8 @@ const Register = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Success:", data);
+        //console.log("Success:", data);
+        navigate("/login");
         // Handle successful registration
       } else {
         const errorData = await response.json();
