@@ -7,14 +7,15 @@ function Resumes() {
   const [resumes, setResumes] = useState([]);
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [editingData, setEditingData] = useState({
+    title: '',
+    description: '',
+    pdf_data: null
+  });
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    date: '',
-    modified_date: '',
-    pdf_url: '',
-    pdf_file: ''
+    pdf_data: null
   });
 
   useEffect(() => {
@@ -39,27 +40,39 @@ function Resumes() {
     }
   };
 
-  const handleInputChange = (e, resumeTitle) => {
+  const handleEditInputChange = (e) => {
     const { name, value } = e.target;
-    setResumes(prevResumes => prevResumes.map(resume => 
-      resume.title === resumeTitle ? { ...resume, [name]: value } : resume
-    ));
+    setEditingData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (resumeTitle) => {
+  const handleEditFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditingData(prev => ({ ...prev, pdf_data: file }));
+    }
+  };
+
+  const handleSubmit = async () => {
     try {
-      const updatedResume = resumes.find(resume => resume.title === resumeTitle);
-      const response = await fetch(`http://localhost:8000/resume/update_resume?title=${resumeTitle}`, {
+      // Prepare FormData for updating
+      const data = new FormData();
+      data.append('description', editingData.description);
+
+      if (editingData.pdf_data) {
+        data.append('pdf', editingData.pdf_data);
+      }
+
+      const response = await fetch(`http://localhost:8000/resume/update_resume?title=${encodeURIComponent(editingData.title)}`, {
         method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${authTokens}`
         },
-        body: JSON.stringify(updatedResume)
+        body: data
       });
 
       if (response.ok) {
-        setEditingId(null);
+        fetchResumes();
+        setEditingData({ title: '', description: '', pdf_data: null });
       } else {
         throw new Error('Failed to update resume');
       }
@@ -70,19 +83,26 @@ function Resumes() {
 
   const handleCreate = async () => {
     try {
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('description', formData.description);
+
+      if (formData.pdf_data) {
+        data.append('pdf', formData.pdf_data);
+      }
+
       const response = await fetch("http://localhost:8000/resume/upload_resume", {
         method: 'POST',
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${authTokens}`
         },
-        body: JSON.stringify(formData)
+        body: data
       });
 
       if (response.ok) {
-        fetchResumes();
+        fetchResumes(); // Refresh the resume list
         setIsCreating(false);
-        setFormData({ title: '', description: '', date: '', modified_date: '', pdf_url: '', pdf_file: '' });
+        setFormData({ title: '', description: '', pdf_data: null });
       } else {
         throw new Error('Failed to create resume');
       }
@@ -92,11 +112,8 @@ function Resumes() {
   };
 
   const handleDelete = async (title) => {
-
-    const confirmed = window.confirm("Are you sure you want to delete " + title + ". This action cannot be undone.");
-
-    if(confirmed)
-    {
+    const confirmed = window.confirm(`Are you sure you want to delete ${title}? This action cannot be undone.`);
+    if (confirmed) {
       try {
         const response = await fetch(`http://localhost:8000/resume/delete_resume?title=${title}`, {
           method: 'DELETE',
@@ -104,7 +121,7 @@ function Resumes() {
             "Authorization": `Bearer ${authTokens}`
           }
         });
-  
+
         if (response.ok) {
           fetchResumes();
         } else {
@@ -116,114 +133,128 @@ function Resumes() {
     }
   };
 
-  const handleDeleteAll = async (title) => {
-    const confirmed = window.confirm("Are you sure you want to delete all resumes? This action cannot be undone.");
-
-    if(confirmed)
-    {
-      try {
-        const response = await fetch(`http://localhost:8000/resume/delete_all_resumes`, {
-          method: 'DELETE',
-          headers: {
-            "Authorization": `Bearer ${authTokens}`
+  const handleDeleteAll = async () => {
+        const confirmed = window.confirm("Are you sure you want to delete all resumes? This action cannot be undone.");
+        if (confirmed) {
+          try {
+            const response = await fetch("http://localhost:8000/resume/delete_all_resumes", {
+              method: 'DELETE',
+              headers: {
+                "Authorization": `Bearer ${authTokens}`
+              }
+            });
+    
+            if (response.ok) {
+              fetchResumes();
+            } else {
+              throw new Error('Failed to delete all resumes');
+            }
+          } catch (err) {
+            setError('Error deleting resumes');
           }
-        });
-  
-        if (response.ok) {
-          fetchResumes();
-        } else {
-          throw new Error('Failed to delete all resumes');
         }
-      } catch (err) {
-        setError('Error deleting resumes');
-      }
-    }
-  };
-
-  return (
-    <div>
-      <div className="button-bar">
-
-        <h1>My Resumes</h1>
-
-        <button onClick={() => setIsCreating(true)} className="create">
-          Create New Resume
-        </button>
-
-        <button onClick={handleDeleteAll} className="delete-all">
-          Delete All Resumes
-        </button>
-
-      </div>
-      
-      {isCreating && (
-        <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="resume-form">
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Title"
-            required
-          />
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Description"
-            required
-          />
-          <input
-            type="text"
-            name="pdf_url"
-            value={formData.pdf_url}
-            onChange={(e) => setFormData(prev => ({ ...prev, pdf_url: e.target.value }))}
-            placeholder="PDF URL"
-            required
-          />
-          <div className="button-group">
-            <button type="submit">Create</button>
-            <button type="button" onClick={() => setIsCreating(false)} className="cancel">Cancel</button>
+      };
+    
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          setFormData((prev) => ({ ...prev, pdf_data: file }));
+        }
+      };
+    
+      const fetchAndOpenPdf = async (title) => {
+        try {
+          const response = await fetch(`http://localhost:8000/resume/get_resume_pdf?title=${encodeURIComponent(title)}`, {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${authTokens}`
+            }
+          });
+    
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank', 'noopener,noreferrer');
+          } else {
+            const errorText = await response.text();
+            console.error('Failed to fetch PDF:', response.status, errorText);
+          }
+        } catch (error) {
+          console.error('Error fetching PDF:', error);
+        }
+      };
+    
+      return (
+        <div>
+          <div className="button-bar">
+            <h1>My Resumes</h1>
+            <button onClick={() => setIsCreating(true)} className="create">Create New Resume</button>
+            <button onClick={handleDeleteAll} className="delete-all">Delete All Resumes</button>
           </div>
-        </form>
-      )}
-
-      <div className="resume-container">
-        {resumes.map((resume) => (
-          <div key={resume.title} className="resume-item">
-            <h3>{resume.title}</h3>
-            {editingId === resume.title ? (
-              <div className="resume-edit-form">
-                <textarea
-                  name="description"
-                  value={resume.description}
-                  onChange={(e) => handleInputChange(e, resume.title)}
-                  placeholder="Description"
-                  required
-                />
-                <input
-                  type="text"
-                  name="pdf_url"
-                  value={resume.pdf_url}
-                  onChange={(e) => handleInputChange(e, resume.title)}
-                  placeholder="PDF URL"
-                  required
-                />
-                <div className="button-group">
-                  <button onClick={() => handleSubmit(resume.title)} className="save">Save</button>
-                  <button onClick={() => setEditingId(null)} className="cancel">Cancel</button>
-                </div>
+          
+          {isCreating && (
+            <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="resume-form">
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Title"
+                required
+              />
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Description"
+                required
+              />
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileUpload}
+                required
+              />
+              <div className="button-group">
+                <button type="submit">Create</button>
+                <button type="button" onClick={() => setIsCreating(false)} className="cancel">Cancel</button>
               </div>
-            ) : (
-              <div className="resume-display">
-                <p className="description"><b>Description: </b>{resume.description}</p>
-                <p className="date"><b>Date:</b> {resume.date}</p>
-                <p className="modified_date"><b>Modified Date: </b>: {resume.modified_date}</p>
-                <a href={resume.pdf_url} target="_blank" rel="noopener noreferrer" className="pdf-link">View PDF</a>
-                <div className="button-group">
-                  <button onClick={() => setEditingId(resume.title)} className="edit">Edit</button>
-                  <button onClick={() => handleDelete(resume.title)} className="delete">Delete</button>
-                </div>
+            </form>
+          )}
+    
+          <div className="resume-container">
+            {resumes.map((resume) => (
+              <div key={resume.title} className="resume-item">
+                <h3>{resume.title}</h3>
+                {editingData.title === resume.title ? (
+                  <div className="resume-edit-form">
+                    <textarea
+                      name="description"
+                      value={editingData.description}
+                      onChange={handleEditInputChange}
+                      placeholder="Description"
+                      required
+                    />
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleEditFileUpload}
+                    />
+                    <div className="button-group">
+                      <button onClick={handleSubmit} className="save">Save</button>
+                      <button onClick={() => setEditingData({ title: '', description: '', pdf_data: null })} className="cancel">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="resume-display">
+                    <p className="description"><b>Description: </b>{resume.description}</p>
+                    <p className="date"><b>Date:</b> {resume.date}</p>
+                    <p className="modified_date"><b>Modified Date: </b> {resume.modified_date}</p>
+                    <button onClick={() => fetchAndOpenPdf(resume.title)} className="pdf-link"> View PDF</button>
+                    <div className="button-group">
+                      <button onClick={() => setEditingData({ title: resume.title, description: resume.description, pdf_data: null })} className="edit">Edit</button>
+                      <button onClick={() => handleDelete(resume.title)} className="delete">Delete</button>
+                    </div>
               </div>
             )}
           </div>
