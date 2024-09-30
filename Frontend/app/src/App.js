@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+
 import "./App.css";
+
 import Login from "./Pages/Authentication/Login";
 import Register from "./Pages/Authentication/Register";
 import Dashboard from "./Pages/HomePage/HomePageComponents/Dashboard";
@@ -13,6 +15,8 @@ import SignOut from "./Pages/HomePage/HomePageComponents/SignOut";
 import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/HomePage/HomePageComponents/NavBar"; // NavBar imported here
 import HomePage from "./Pages/HomePage/HomePage";
+
+
 
 // Create a wrapper component for Protected Routes
 function ProtectedLayout() {
