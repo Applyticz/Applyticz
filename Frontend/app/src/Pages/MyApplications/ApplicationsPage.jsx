@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from "../../utils";
+import { ChakraProvider } from '@chakra-ui/react'
+import { Input } from '@chakra-ui/react'
 import "./ApplicationsPage.css";
+import "../../App.css";
+
+import Tabs from './Tabbing.jsx';
 
 function Applications() {
   const { authTokens } = useAuth();
@@ -15,10 +20,10 @@ function Applications() {
     applied_date: '',
     notes: ''
   });
-
   useEffect(() => {
     fetchApplications();
   }, []);
+
 
   const fetchApplications = async () => {
     try {
@@ -37,14 +42,12 @@ function Applications() {
       setError('Error fetching applications');
     }
   };
-
   const handleInputChange = (e, applicationId) => {
     const { name, value } = e.target;
     setApplications(prevApplications => prevApplications.map(app => 
       app.id === applicationId ? { ...app, [name]: value } : app
     ));
   };
-
   const handleSubmit = async (applicationId) => {
     try {
       const updatedApplication = applications.find(app => app.id === applicationId);
@@ -67,7 +70,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
   const handleCreate = async () => {
     try {
       const response = await fetch("http://localhost:8000/application/create_application", {
@@ -90,7 +92,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
   const handleDelete = async (id) => {
     try {
       const response = await fetch(`http://localhost:8000/application/delete_application?id=${id}`, {
@@ -110,18 +111,22 @@ function Applications() {
     }
   };
 
+
+
   return (
     <div className="applications-container">
       <h2>My Applications</h2>
 
-      {/* Put towards right maybe  --> on Same line  -> Also have it bring up a dialogue*/}
+      {/* Have it be a plus sign to right, then have it bring up a dialogue*/}
       <button onClick={() => setIsCreating(true)} className="create">
         Create New Application
       </button>
 
 
 
-      {/* Do Tabs for list */}
+      {/* Tabs --> Figure out how to keep rest of styling correct */}
+      <Tabs />
+      
 
 
 
