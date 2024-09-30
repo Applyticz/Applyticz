@@ -30,9 +30,36 @@
 }
 
 /* Button styles */
-.resume-item button,
-button.create,
-button.refresh {
+
+.button-bar {
+    text-align: center; /* Center-aligns child elements */
+    width: 100%;
+    max-width: 1200px; /* Maximum width constraint */
+    margin: 0 auto; /* Centers the container on the page */
+}
+
+.button-bar button,
+.button-bar h1 {
+    margin: 10px 0; /* Adds vertical space between items */
+    display: block; /* Makes each element take up full width */
+    width: fit-content; /* Adjusts width to fit the content */
+    margin-left: auto; /* Centers the block element */
+    margin-right: auto; /* Centers the block element */
+}
+
+.button-bar button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.button-bar h1 {
+    vertical-align: middle; /* Aligns h1 with center line */
+  }
+
+.resume-item button{
     padding: 8px 12px;
     border: none;
     border-radius: 4px;
@@ -40,12 +67,14 @@ button.refresh {
     transition: background-color 0.3s ease;
 }
 
-.resume-item button.delete {
+.resume-item button.delete,
+.button-bar button.delete-all {
     background-color: #ff6b6b;
     color: white;
 }
 
-.resume-item button.delete:hover {
+.resume-item button.delete:hover,
+.button-bar button.delete-all:hover {
     background-color: #ff4757;
 }
 
@@ -61,10 +90,6 @@ button.refresh {
 button.create {
     background-color: #66bb6a;
     color: white;
-}
-
-button.create:hover {
-    background-color: #4caf50;
 }
 
 button.refresh {
@@ -106,6 +131,11 @@ button.refresh:hover {
 .resume-edit-form input {
     margin-bottom: 10px;
     flex-grow: 1;
+}
+
+.resume-display p
+{
+    text-align: left;
 }
 
 .resume-edit-form textarea {

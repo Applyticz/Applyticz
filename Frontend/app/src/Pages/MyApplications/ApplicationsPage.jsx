@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useAuth from "../../../utils";
-import "./Applications.css";
+import useAuth from "../../utils";
+import "./ApplicationsPage.css";
 
 function Applications() {
   const { authTokens } = useAuth();
@@ -113,9 +113,17 @@ function Applications() {
   return (
     <div className="applications-container">
       <h2>My Applications</h2>
+
+      {/* Put towards right maybe  --> on Same line  -> Also have it bring up a dialogue*/}
       <button onClick={() => setIsCreating(true)} className="create">
         Create New Application
       </button>
+
+
+
+      {/* Do Tabs for list */}
+
+
 
       {isCreating && (
         <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="application-form">

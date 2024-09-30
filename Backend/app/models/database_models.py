@@ -41,7 +41,7 @@ class Resume(Base):
     description = Column(String(255), nullable=False)
     date = Column(String(255), nullable=False)
     modified_date = Column(String(255), nullable=True)
-    pdf_url = Column(String(255), nullable=False)  # Store URL or file path to the PDF
+    pdf_data = Column(LargeBinary, nullable=False)  # Store binary PDF data
 
     user = relationship("User", back_populates="resumes")
 
