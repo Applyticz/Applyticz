@@ -32,6 +32,9 @@ function Tabbing() {
                 </TabList>
 
                 <TabPanels>
+
+                    {/* For each tab it should show different information? */}
+
                     <TabPanel>
                         <p>1st Tab Content</p>
                     </TabPanel>
