@@ -1,7 +1,7 @@
 // src/Pages/Login.jsx
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AuthContext } from "../authContext";
+import { AuthContext } from "../../authContext";
 import "./Auth.css"; // Import the CSS file for styling
 
 const Login = () => {

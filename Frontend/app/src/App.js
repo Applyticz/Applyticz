@@ -1,8 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import "./App.css";
-import Login from "./Pages/Login";
-import Register from "./Pages/Register";
+import Login from "./Pages/Authentication/Login";
+import Register from "./Pages/Authentication/Register";
 import Dashboard from "./Pages/HomePage/HomePageComponents/Dashboard";
 import Applications from "./Pages/HomePage/HomePageComponents/Applications";
 import Resumes from "./Pages/HomePage/HomePageComponents/Resumes";
