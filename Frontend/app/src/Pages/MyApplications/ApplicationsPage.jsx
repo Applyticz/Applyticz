@@ -151,9 +151,9 @@ function Applications() {
       
       
       <ChakraProvider>
-        <Button colorScheme='gray'>Pull From Email</Button> 
+        <Button colorScheme='gray'>Pull From Email (make a refresh symbol inside of all tab)</Button> 
         {/* Maybe put this inside All Tab? */}
-        <Button colorScheme='gray' onClick={openModal_Create}>New <AddIcon /></Button>
+        <Button colorScheme='gray' onClick={openModal_Create}>New Application</Button>
        
         {/* When pulling from email, make it so you can bring up a dialogue maybe of New Applications, new Rejections, new Responses, etc... and update them Into List */}
         {/* Upon Pulling from email it notices anything that is not in your current applications and updates gives you a breakdown of what to add etc*/}
