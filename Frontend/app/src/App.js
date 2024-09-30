@@ -4,7 +4,7 @@ import "./App.css";
 import Login from "./Pages/Authentication/Login";
 import Register from "./Pages/Authentication/Register";
 import Dashboard from "./Pages/HomePage/HomePageComponents/Dashboard";
-import Applications from "./Pages/MyApplications/Applications";
+import Applications from "./Pages/MyApplications/ApplicationsPage";
 import Resumes from "./Pages/HomePage/HomePageComponents/Resumes";
 import Analytics from "./Pages/HomePage/HomePageComponents/Analytics";
 import Settings from "./Pages/HomePage/HomePageComponents/Settings";
