@@ -151,7 +151,7 @@ function Applications() {
       
       
       <ChakraProvider>
-        <Button colorScheme='gray'>Pull From Email (make a refresh symbol inside of all tab)</Button> 
+        <Button colorScheme='gray'>Pull From Email (make a refresh symbol inside of 'ALL' tab  Large Button)</Button> 
         {/* Maybe put this inside All Tab? */}
         <Button colorScheme='gray' onClick={openModal_Create}>New Application</Button>
        

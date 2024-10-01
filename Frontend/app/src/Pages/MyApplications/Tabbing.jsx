@@ -36,7 +36,28 @@ function Tabbing() {
                     {/* For each tab it should show different information? */}
 
                     <TabPanel>
-                        <p>1st Tab Content</p>
+                        <p>IDEAS/STRUCTURE FOR EACH TAB:</p>
+                       <br></br>
+                        <p>ALL, AWIAITING RESPONSE, REJECTED</p>
+                            <p>it should be more like a table format with thin boxes one on top of other (Table format like - Since we have so many)
+                            </p>
+                            <p>Needs search functionality and default sort to newest first, but be able to change (by clicking up or down arrow - down currently selected)</p>
+                            <br></br>
+                        <p> INTERVIEWING</p>
+                        <p>Box format with tri column staging visual (with right and left arrows on each BOX to move between stages) - since not many at a time</p>
+                        
+                        <br>
+                        </br>
+                        <p>OFFERS</p>
+                        <p>Have it be more like a comparison of salary, benefits, location, interest (shown in stars) 1-10 stars and order by priority</p>
+
+                        <br></br>
+                        <p>POSITIVE RESPONSES</p>
+                        <p>These will be pulled from email and indicate a response that needs to done and maybe like staging area where you can go from like NeedsAction and move to SentMyResponse 
+                            Or buttons that move it to rejected/interviewing tab depending
+                        </p>
+                        
+
                     </TabPanel>
 
                     <TabPanel>
@@ -44,13 +65,14 @@ function Tabbing() {
                     </TabPanel>
 
                     <TabPanel>
-                        <p>Depending on the positive response you can manually decide to move to interview stage</p>
+                        <p>Depending on the positive response you can manually decide to move to interview stage via a button</p>
                     </TabPanel>
 
                     <TabPanel>
-                        <p>In this tab we can have some sort of Interview tracker to track all stages within</p>
+                        <p>In this tab we can have some sort of Interview tracker to track all stages within. Maybe like 2-4 columns</p>
                         {/* <p>Basically an entirely seperate tracker within... i think itd make it easier and be more detailed</p> */}
                         {/* that way you can use the overarching tabs as a main overview but wunna dial in on interview stuff so seperate thing */}
+                        {/* Have them be displayed as boxes with arrows where you can move between 3 trifold columns (1st round, 2nd round, 3rd round -> and notes for each round) */}
                     </TabPanel>
 
                     <TabPanel>
