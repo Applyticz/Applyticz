@@ -34,104 +34,80 @@ if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "darwin"* ]]; then
 elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
     # For Windows
     echo "Activating the virtual environment for Windows..."
-    source .venv/Scripts/activate  # Use proper backslashes for Windows
+    source .venv/Scripts/activate
 else
     echo "Unknown OS. Cannot activate the virtual environment."
     exit 1
 fi
-
 
 # Install required packages from requirements.txt
 echo "Installing required packages..."
 $PIP_EXEC install -r requirements.txt
 
 # Ask the user if they want to use Docker and Docker Compose
-echo -n "Do you want to use Docker and Docker Compose to run the full stack? (y/n): "
+echo -n "Do you want to use Docker (y/n): "
 read -r USE_DOCKER
 
 if [[ "$USE_DOCKER" =~ ^[Yy]$ ]]; then
-    # Check if docker-compose.yml exists
-    if [ -f "../docker-compose.yml" ]; then
-        echo "docker-compose.yml found. Checking if services are already running..."
-        
-        # Check if Docker containers are running
-        if [ "$(docker ps -q -f name=applyticz-backend)" ] || [ "$(docker ps -q -f name=applyticz-frontend)" ]; then
-            echo "Docker containers are already running. Restarting the services..."
-            docker compose down  # Stop the running services
-        fi
+    echo "Running Docker..."
+    docker compose up -d
 
-        echo "Starting Docker Compose services with a rebuild..."
-        cd ..
-        docker compose up  
-        
-        # Open backend and frontend in the browser
-        echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
-        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            xdg-open "http://localhost:8000"
-            xdg-open "http://localhost:3000"
-        elif [[ "$OSTYPE" == "darwin"* ]]; then
-            open "http://localhost:8000"
-            open "http://localhost:3000"
-        elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-            start "http://localhost:8000"
-            start "http://localhost:3000"
-        fi
-
-    else
-        echo "Could not find docker-compose.yml. Please ensure the file exists."
-        exit 1
+    # Open backend and frontend in the browser
+    echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        xdg-open "http://localhost:8000"
+        xdg-open "http://localhost:3000"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        open "http://localhost:8000"
+        open "http://localhost:3000"
+    elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        start "http://localhost:8000"
+        start "http://localhost:3000"
     fi
 else
-    echo -n "Do you want to run the backend using Docker? (y/n): "
-    read -r USE_DOCKER_BACKEND
+    echo "Skipping Docker setup. Starting the backend server directly..."
 
-    if [[ "$USE_DOCKER_BACKEND" =~ ^[Yy]$ ]]; then
-        echo "Running backend using Docker..."
-        ./docker_backend.sh
+    # Check if port 8000 is in use
+    PORT=8000
+    if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        PID=$(netstat -ano | findstr :$PORT | findstr LISTEN | awk '{print $5}')
     else
-        echo "Skipping Docker setup. Starting the backend server directly..."
-
-        # Check if port 8000 is in use
-        if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-            PID=$(netstat -ano | findstr :$PORT | findstr LISTEN | awk '{print $5}')
-        else
-            PID=$(lsof -ti tcp:$PORT)
-        fi
-
-        if [ ! -z "$PID" ]; then
-            echo "Port $PORT is in use by process $PID. Terminating the process..."
-            kill -9 $PID  # Kill the process using the port
-            echo "Process $PID terminated. Proceeding to start the backend."
-        else
-            echo "Port $PORT is free. Starting the backend."
-        fi
-
-        # Start the backend server directly on port 8000
-        uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 &
-        
-        # Change to the frontend directory
-        cd ../Frontend/app
-
-        # Install dependencies if they haven't been installed yet or if new ones have been added
-        echo "Ensuring dependencies are up-to-date..."
-        npm install
-
-        # Start the React development server
-        echo "Starting the React development server..."
-        npm start &
-
-        # Open backend and frontend in the browser
-        echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
-        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            xdg-open "http://localhost:8000"
-            xdg-open "http://localhost:3000"
-        elif [[ "$OSTYPE" == "darwin"* ]]; then
-            open "http://localhost:8000"
-            open "http://localhost:3000"
-        elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-            start "http://localhost:8000"
-            start "http://localhost:3000"
-        fi
-
+        PID=$(lsof -ti tcp:$PORT)
     fi
+
+    if [ ! -z "$PID" ]; then
+        echo "Port $PORT is in use by process $PID. Terminating the process..."
+        kill -9 $PID  # Kill the process using the port
+        echo "Process $PID terminated. Proceeding to start the backend."
+    else
+        echo "Port $PORT is free. Starting the backend."
+    fi
+
+    # Start the backend server directly on port 8000
+    uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 &
+        
+    # Change to the frontend directory
+    cd ../Frontend/app
+
+    # Install dependencies if they haven't been installed yet or if new ones have been added
+    echo "Ensuring dependencies are up-to-date..."
+    npm install
+
+    # Start the React development server
+    echo "Starting the React development server..."
+    npm start &
+
+    # Open backend and frontend in the browser
+    echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        xdg-open "http://localhost:8000"
+        xdg-open "http://localhost:3000"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        open "http://localhost:8000"
+        open "http://localhost:3000"
+    elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        start "http://localhost:8000"
+        start "http://localhost:3000"
+    fi
+
 fi

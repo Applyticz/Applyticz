@@ -1,6 +1,5 @@
 # Ignore node_modules
-node_modules
-Frontend/node_modules
+Frontend/app/node_modules
 
 # Ignore logs
 *.log
@@ -10,13 +9,14 @@ Frontend/node_modules
 *.swp
 
 # Ignore build directories
-Frontend/build
-Frontend/dist
+Frontend/app/build
+Frontend/app/dist
 
 # Ignore other unnecessary files
 Dockerfile
 docker-compose.yml
 .env
+.env.*  # Ignore any additional .env files (e.g., .env.local)
 .vscode
 .idea
 .git
@@ -38,15 +38,16 @@ venv
 *.rar
 *.7z
 
-# Ignore media files
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.mp4
-*.mp3
-*.avi
-*.mkv
-*.mov
+# Ignore media files in the frontend
+Frontend/app/*.jpg
+Frontend/app/*.jpeg
+Frontend/app/*.png
+Frontend/app/*.gif
+Frontend/app/*.mp4
+Frontend/app/*.mp3
+Frontend/app/*.avi
+Frontend/app/*.mkv
+Frontend/app/*.mov
 
+# Optional: Ignore any dist directories at the root or elsewhere
 dist

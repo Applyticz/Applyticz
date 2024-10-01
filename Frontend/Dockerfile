@@ -5,7 +5,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy the package.json and package-lock.json files to the container
-COPY Frontend/app/package*.json ./
+COPY ./Frontend/app/package*.json ./
 
 # Install dependencies
 RUN npm install
@@ -16,5 +16,5 @@ COPY ./Frontend/app .
 # Expose port 3000 to the host
 EXPOSE 3000
 
-# Command to run the React development server with live reload
+# Run the React development server with live reload
 CMD ["npm", "start"]

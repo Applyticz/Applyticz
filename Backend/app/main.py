@@ -52,3 +52,7 @@ app.include_router(user_settings_router.router, prefix="/settings", tags=["setti
 @app.get("/")
 async def entry():
     return {"message": "Welcome to the backend!"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "OK"}

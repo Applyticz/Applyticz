@@ -1,12 +1,20 @@
+# Use the official Python image
 FROM python:3.12
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Only copy requirements first to install dependencies (this layer can be cached)
+# Copy only the requirements file first (this helps cache dependencies if unchanged)
 COPY Backend/requirements.txt /app/requirements.txt
+
+# Install the Python dependencies
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-# Expose port 8000
+# Copy the rest of the backend code to the container
+COPY Backend/ /app
+
+# Expose port 8000 to the host
 EXPOSE 8000
 
+# Command to run the FastAPI app with Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
