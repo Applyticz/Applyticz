@@ -16,5 +16,5 @@ COPY ./Frontend/app .
 # Expose port 3000 to the host
 EXPOSE 3000
 
-# Run the React development server with live reload
-CMD ["npm", "start"]
+# Run the Vite development server with host 0.0.0.0 to expose it on all network interfaces
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

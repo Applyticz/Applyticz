@@ -40,9 +40,9 @@ else
     exit 1
 fi
 
-# Install required packages from requirements.txt
+# Install required packages from requirements.txt with verbose output
 echo "Installing required packages..."
-$PIP_EXEC install -r requirements.txt
+$PIP_EXEC install --no-cache-dir -r requirements.txt -v
 
 # Ask the user if they want to use Docker and Docker Compose
 echo -n "Do you want to use Docker (y/n): "
@@ -50,7 +50,19 @@ read -r USE_DOCKER
 
 if [[ "$USE_DOCKER" =~ ^[Yy]$ ]]; then
     echo "Running Docker..."
-    docker compose up -d
+
+    # Ask if user wants to recreate Docker Images
+    echo -n "Do you want to recreate Docker Images (y/n): "
+    read -r RECREATE_DOCKER
+
+    if [[ "$RECREATE_DOCKER" =~ ^[Yy]$ ]]; then
+        echo "Recreating Docker Images..."
+        docker compose down
+        docker compose build  # Rebuild the images
+        docker compose up -d
+    else
+        docker compose up -d
+    fi
 
     # Open backend and frontend in the browser
     echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
@@ -67,24 +79,24 @@ if [[ "$USE_DOCKER" =~ ^[Yy]$ ]]; then
 else
     echo "Skipping Docker setup. Starting the backend server directly..."
 
-    # Check if port 8000 is in use
-    PORT=8000
+    # Check if port 8000 is in use for backend
+    BACKEND_PORT=8000
     if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-        PID=$(netstat -ano | findstr :$PORT | findstr LISTEN | awk '{print $5}')
+        PID=$(netstat -ano | findstr :$BACKEND_PORT | findstr LISTEN | awk '{print $5}')
     else
-        PID=$(lsof -ti tcp:$PORT)
+        PID=$(lsof -ti tcp:$BACKEND_PORT)
     fi
 
     if [ ! -z "$PID" ]; then
-        echo "Port $PORT is in use by process $PID. Terminating the process..."
+        echo "Port $BACKEND_PORT is in use by process $PID. Terminating the process..."
         kill -9 $PID  # Kill the process using the port
         echo "Process $PID terminated. Proceeding to start the backend."
     else
-        echo "Port $PORT is free. Starting the backend."
+        echo "Port $BACKEND_PORT is free. Starting the backend."
     fi
 
     # Start the backend server directly on port 8000
-    uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 &
+    uvicorn app.main:app --reload --host localhost --port 8000 &
         
     # Change to the frontend directory
     cd ../Frontend/app
@@ -93,9 +105,25 @@ else
     echo "Ensuring dependencies are up-to-date..."
     npm install
 
-    # Start the React development server
-    echo "Starting the React development server..."
-    npm start &
+    # Start the Vite development server
+    echo "Starting the React/Vite development server..."
+    npm run dev -- --host &
+
+    # Check if port 3000 is in use for frontend
+    FRONTEND_PORT=3000
+    if [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+        PID=$(netstat -ano | findstr :$FRONTEND_PORT | findstr LISTEN | awk '{print $5}')
+    else
+        PID=$(lsof -ti tcp:$FRONTEND_PORT)
+    fi
+
+    if [ ! -z "$PID" ]; then
+        echo "Port $FRONTEND_PORT is in use by process $PID. Terminating the process..."
+        kill -9 $PID  # Kill the process using the port
+        echo "Process $PID terminated. Proceeding to start the frontend."
+    else
+        echo "Port $FRONTEND_PORT is free. Starting the frontend."
+    fi
 
     # Open backend and frontend in the browser
     echo "Opening backend (http://localhost:8000) and frontend (http://localhost:3000) in the browser..."
@@ -109,5 +137,4 @@ else
         start "http://localhost:8000"
         start "http://localhost:3000"
     fi
-
 fi

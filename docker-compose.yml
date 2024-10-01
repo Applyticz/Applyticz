@@ -48,7 +48,7 @@ services:
     volumes:
       - ./Frontend/app:/app  # Bind mount for live reloading
       - /app/node_modules  # Anonymous volume to preserve node_modules in container
-    command: npm start
+    command: npm start -- --host 0.0.0.0
     depends_on:
       - backend
 
