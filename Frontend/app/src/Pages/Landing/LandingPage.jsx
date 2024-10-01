@@ -12,11 +12,12 @@ function Landing(){
 
             <h1>Complete Autonomy</h1>
             <p>Applytics allows you to connect your gmail account so that you never have to manually track applications again! Our software automatically
-                parses your email inbox for job applications, updates, and responses, allowing you to focus on what really matters - Langing your dream job
+                parses your email inbox for job applications, updates, and responses, allowing you to focus on what really matters - Landing your dream job
             </p>
+            
 
             <h1>Powered By Data</h1>
-            <p>Every tracked application goes through our carefully crafted metrics algorithm to ensure personalized data based on your own results!</p>
+            <p>Every tracked application goes through our carefully curated metrics algorithm to ensure personalized data based on your own results</p>
 
             <h1>Tracking Made Easy</h1>
             <p>Easily navigate through a variety of application statuses, interview stages, offers, and more!</p>
@@ -25,8 +26,7 @@ function Landing(){
             <p>As CS students ourselves, we know how tough the job market can be. Why waste time when you can prioritize what gives you the best results</p>
 
             <h1> Applytics</h1>
-            <p>100% Free!</p>
-            
+            <p>(Register Button)</p>
         </div>
     );
 }
