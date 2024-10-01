@@ -1,17 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import useAuth from "../../utils";
+
+//Chakra
 import { ChakraProvider } from '@chakra-ui/react'
-import { Input } from '@chakra-ui/react'
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+} from '@chakra-ui/react'
+import { Button, ButtonGroup } from '@chakra-ui/react'
+import { ArrowForwardIcon } from '@chakra-ui/icons'
+import { AddIcon } from '@chakra-ui/icons'
+
+
+
+import useAuth from "../../utils";
 import "./ApplicationsPage.css";
 import "../../App.css";
-
 import Tabs from './Tabbing.jsx';
 
 function Applications() {
   const { authTokens } = useAuth();
   const [applications, setApplications] = useState([]);
   const [error, setError] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+
+  //Remove When modal complete
+  const [isCreating, setIsCreating] = useState(false);  
+
+  //Modal
+  const [createModal, setCreateModal] = useState(false);
+  const openModal_Create = () => setCreateModal(true);
+  const closeModal_Create = () => setCreateModal(false);
+
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     company: '',
@@ -112,23 +135,54 @@ function Applications() {
   };
 
 
-
   return (
     <div className="applications-container">
       <h2>My Applications</h2>
 
       {/* Have it be a plus sign to right, then have it bring up a dialogue*/}
       <button onClick={() => setIsCreating(true)} className="create">
-        Create New Application
+        old button
       </button>
 
+      {/* Another Button to Pull from email */}
 
 
-      {/* Tabs --> Figure out how to keep rest of styling correct */}
-      <Tabs />
+
+      
+      
+      <ChakraProvider>
+        <Button colorScheme='gray'>Pull From Email (make a refresh symbol inside of all tab)</Button> 
+        {/* Maybe put this inside All Tab? */}
+        <Button colorScheme='gray' onClick={openModal_Create}>New Application</Button>
+       
+        {/* When pulling from email, make it so you can bring up a dialogue maybe of New Applications, new Rejections, new Responses, etc... and update them Into List */}
+        {/* Upon Pulling from email it notices anything that is not in your current applications and updates gives you a breakdown of what to add etc*/}
+
+
+        <Modal isOpen={createModal} onClose={closeModal_Create}>
+          <ModalContent>
+
+            <ModalHeader>Create Application</ModalHeader>
+      
+            <ModalBody>
+             Create Application Form here
+            </ModalBody>
+
+            <ModalFooter>
+              <Button colorScheme='red' mr={3} onClick={closeModal_Create}>Cancel</Button>
+              <Button colorScheme='gray' rightIcon={<ArrowForwardIcon />}>Create</Button>
+            </ModalFooter>
+
+          </ModalContent>
+        </Modal>
+      </ChakraProvider>
       
 
+       {/* Tabs --> Figure out how to keep rest of styling correct */}
+      <Tabs />
 
+
+      {/* FORM: Add Job Title, Posting  */}
 
       {isCreating && (
         <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="application-form">
@@ -188,6 +242,9 @@ function Applications() {
           <button type="button" className="cancel" onClick={() => setIsCreating(false)}>Cancel</button>
         </form>
       )}
+
+
+
 
       <div className="applications-list">
         {applications.map((application) => (
