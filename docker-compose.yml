@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql+pymysql://admin:Applyticz12@applyticzdb.cjsqs004ifhp.us-east-2.rds.amazonaws.com:3311/applytics_db
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - ./Backend:/app  # Mount the Backend folder for live reloading
       - /app/__pycache__  # Optional: Mounting pycache (shouldn't be necessary)
@@ -16,8 +16,8 @@ services:
       - db
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 600s
+      timeout: 10s
       retries: 3
 
   db:
