@@ -64,10 +64,38 @@ def create_access_token(username: str, user_id: uuid.UUID, expires_delta: timede
         'id': str(user_id)  # Convert UUID to string for encoding in JWT
     }
     
+    # Calculate the expiration time
     expires = datetime.now(timezone.utc) + expires_delta
-    encode.update({'exp': expires})
+    # Format the expiration time as DD-MM-YYYY HH:MM:SS AM/PM
+    formatted_expires = expires.strftime("%d-%m-%Y %I:%M:%S %p")
+    
+    # Include both the expiration datetime object (for JWT) and the formatted string (for display)
+    encode.update({'expires': formatted_expires})
+    
+    # print(encode)  # Optional: For debugging, prints the payload before encoding
     
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def update_access_token(token: str):
+    
+    token_payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    username = token_payload.get('sub')
+    user_id = token_payload.get('id')
+    
+    encode = {
+        'sub': username, 
+        'id': str(user_id)  # Convert UUID to string for encoding in JWT
+    }
+    
+    # Calculate the expiration time
+    expires = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Format the expiration time as DD-MM-YYYY HH:MM:SS AM/PM
+    formatted_expires = expires.strftime("%d-%m-%Y %I:%M:%S %p")
+    
+    encode.update({'expires': formatted_expires})
+    
+    return jwt.encode(encode, SECRET_KEY, ALGORITHM)
+
 
 def create_user_and_login(db, testClient):
 # Register a test user

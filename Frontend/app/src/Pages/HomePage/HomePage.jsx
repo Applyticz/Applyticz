@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // Correctly import useNavigate
-import { AuthContext } from "../../authContext";
 import useAuth from "../../utils";
 
 function HomePage() {
@@ -48,9 +47,6 @@ function HomePage() {
     }
   };
 
-  useEffect(() => {
-    getValidToken(); // Call getValidToken to check if the token is valid
-  });
 
   return (
     <div className="App">

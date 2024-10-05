@@ -7,7 +7,7 @@ from typing import Annotated
 from datetime import timedelta
 import uuid
 from dotenv import load_dotenv
-from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, verify_token, ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_bearer
+from app.utils.utils import get_current_user, authenticate_user, create_access_token, hash_password, verify_token, ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_bearer, update_access_token
 
 
 
@@ -30,6 +30,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 @router.get("/verify-token/{token}", status_code=status.HTTP_200_OK, tags=['auth'])
 async def verify_user_token(token: str):
     verify_token(token=token)
+    update_access_token(token=token)
     return {"message": "Token is valid"}
 
 
@@ -106,8 +107,6 @@ async def get_account(user: user_dependency, db: db_dependency):
     # Return user information
     return GetAccountResponse(username=user_to_get.username, email=user_to_get.email)
 
-    
-
 @router.post('/login', response_model=Token, status_code=status.HTTP_200_OK, tags=['auth'])
 async def login_user(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     # Authenticate the user with the provided username and password
@@ -140,9 +139,6 @@ async def logout_user(db: db_dependency, user: user_dependency):
 
 @router.get("/", status_code=status.HTTP_200_OK, tags=["auth"])
 async def user(user: user_dependency, db: db_dependency):
-    # Fetch user information for the home route (if needed)
-    pass
-
-    if user is None:
-        raise HTTPException(status_code=401, detail="Authentication fail")
-    return {"User": user}
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return { "user": user }
