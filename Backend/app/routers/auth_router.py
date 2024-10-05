@@ -29,9 +29,13 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 # Verify Auth Token
 @router.get("/verify-token/{token}", status_code=status.HTTP_200_OK, tags=['auth'])
 async def verify_user_token(token: str):
-    verify_token(token=token)
-    update_access_token(token=token)
-    return {"message": "Token is valid"}
+    # Update the access token and get the new token
+    new_token = update_access_token(token=token)
+    
+    # Verify the new token
+    verify_token(token=new_token)
+    
+    return {"message": "Token is valid", "new_access_token": new_token}
 
 
 @router.get('/auth_route', tags=['auth'])

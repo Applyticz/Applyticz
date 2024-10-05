@@ -81,10 +81,12 @@ def update_access_token(token: str):
     token_payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     username = token_payload.get('sub')
     user_id = token_payload.get('id')
+    expires = token_payload.get('expires')
     
     encode = {
         'sub': username, 
-        'id': str(user_id)  # Convert UUID to string for encoding in JWT
+        'id': str(user_id),  # Convert UUID to string for encoding in JWT
+        'expires': expires
     }
     
     # Calculate the expiration time
@@ -93,6 +95,8 @@ def update_access_token(token: str):
     formatted_expires = expires.strftime("%d-%m-%Y %I:%M:%S %p")
     
     encode.update({'expires': formatted_expires})
+    
+    # print("Expiration updated to:", formatted_expires)
     
     return jwt.encode(encode, SECRET_KEY, ALGORITHM)
 
@@ -142,11 +146,16 @@ def verify_token_expiration(token: str):
     """Verifies if the token is expired or still active."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        exp = payload.get('exp')
+        # print(payload)
+        exp = payload.get('expires')
+        # print(exp)
         if exp is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has no expiration")
         
-        expiration = datetime.fromtimestamp(exp, timezone.utc)
+        # Parse the expiration string back to a datetime object
+        expiration = datetime.strptime(exp, "%d-%m-%Y %I:%M:%S %p").replace(tzinfo=timezone.utc)
+        
+        # Use timezone-aware current time
         if expiration < datetime.now(timezone.utc):
             return {"status": "expired"}
         return {"status": "active"}
@@ -157,8 +166,11 @@ def verify_token(token: str = Depends(oauth2_bearer)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
-        if username is None:
+        if not username:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+        verify_token_expiration(token)
+        if verify_token_expiration(token)['status'] == "expired":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
         return payload
     except PyJWTError:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token")

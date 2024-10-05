@@ -100,12 +100,12 @@ async def get_resume(user: user_dependency, db: db_dependency):
     # Ensure user['id'] is a string
     user_id_str = str(user['id'])
     
-    print(f"User ID from token: {user_id_str}")
+    # print(f"User ID from token: {user_id_str}")
     
     # Query the User from the DB
     user_in_db = db.query(User).filter(User.id == user_id_str).first()
     if not user_in_db:
-        print(f"User not found with ID: {user_id_str}")
+        # print(f"User not found with ID: {user_id_str}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Query the Resume associated with the user_id
