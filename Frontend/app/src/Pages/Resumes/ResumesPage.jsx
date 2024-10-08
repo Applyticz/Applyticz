@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useAuth from "../../../utils";
-import "./Resume.css";
+import useAuth from "../../utils";
+import "./ResumesPage.css";
 
 function Resumes() {
   const { authTokens } = useAuth();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useAuth from "../../../utils";
-import "./Dashboard.css";
+import useAuth from "../../utils";
+import "./DashboardPage.css";
 
 function Dashboard() {
   const { authTokens } = useAuth();

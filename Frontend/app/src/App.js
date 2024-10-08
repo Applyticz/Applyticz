@@ -2,44 +2,44 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 
 import "./App.css";
-
 import Login from "./Pages/Authentication/Login";
 import Register from "./Pages/Authentication/Register";
-import Dashboard from "./Pages/HomePage/HomePageComponents/Dashboard";
+import Dashboard from "./Pages/Dashboard/DashboardPage";
 import Applications from "./Pages/MyApplications/ApplicationsPage";
-import Resumes from "./Pages/HomePage/HomePageComponents/Resumes";
-import Analytics from "./Pages/HomePage/HomePageComponents/Analytics";
-import Settings from "./Pages/HomePage/HomePageComponents/Settings";
-import Profile from "./Pages/HomePage/HomePageComponents/Profile";
-import SignOut from "./Pages/HomePage/HomePageComponents/SignOut";
+import Resumes from "./Pages/Resumes/ResumesPage";
+import Analytics from "./Pages/Analytics/AnalyticsPage";
+import Settings from "./Pages/Settings/SettingsPage";
+import Profile from "./Pages/Header/Profile";
+import SignOut from "./Pages/Header/SignOut";
 import ProtectedRoutes from "./ProtectedRoutes";
-import NavBar from "./Pages/HomePage/HomePageComponents/NavBar"; // NavBar imported here
+import NavBar from "./Pages/Header/NavBar"; 
 
+
+/* TODO:
+  //Restructure Component Directorys
+  //Make / and "" redirects go to landing page instead
+  //Make Landing Page a little better
+  //Add Header to each component directly - make its own component
+  //Delete Unnecessary Routess
+
+*/
 
 function NotFound() {
   return (
     <div>
       <h2>404 - Page Not Found</h2>
       <p>Oops! The page you are looking for does not exist.</p>
-      <Link to="/">Go back to the homepage</Link>
+      <Link to="/login">Go back to login</Link>
     </div>
   );
 }
 
-function ProtectedLayout() {
-  function Header() {
-    return (
-      <header className="Header">
-        <h2>
-          <Link to="/">Applyticz</Link>
-        </h2>
-      </header>
-    );
-  }
 
+
+// NEED TO ADD AUTHENTICATION TO PROTECTED ROUTES!!!
+function ProtectedLayout() {
   return (
     <>
-      <Header />
       <NavBar /> {/* NavBar visible across all protected routes */}
       <div className="ProtectedContent">
         <Routes>

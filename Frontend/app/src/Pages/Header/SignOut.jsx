@@ -1,6 +1,6 @@
 // src/Pages/SignOut.jsx
 import React, { useEffect, useContext } from "react";
-import { AuthContext } from "../../../authContext";
+import { AuthContext } from "../../authContext";
 import { useNavigate } from "react-router-dom";
 
 function SignOut() {
