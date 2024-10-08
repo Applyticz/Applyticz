@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useAuth from "../../../utils";
-import "./Settings.css";
+import useAuth from "../../utils";
+import "./SettingsPage.css";
 
 function Settings() {
   const { authTokens } = useAuth();

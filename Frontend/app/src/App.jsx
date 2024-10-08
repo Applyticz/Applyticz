@@ -1,50 +1,56 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 
 import "./App.css";
-
 import Login from "./Pages/Authentication/Login";
 import Register from "./Pages/Authentication/Register";
-import Dashboard from "./Pages/HomePage/HomePageComponents/Dashboard";
+import Dashboard from "./Pages/Dashboard/DashboardPage";
 import Applications from "./Pages/MyApplications/ApplicationsPage";
-import Resumes from "./Pages/HomePage/HomePageComponents/Resumes";
-import Analytics from "./Pages/HomePage/HomePageComponents/Analytics";
-import Settings from "./Pages/HomePage/HomePageComponents/Settings";
-import Profile from "./Pages/HomePage/HomePageComponents/Profile";
-import SignOut from "./Pages/HomePage/HomePageComponents/SignOut";
+import Resumes from "./Pages/Resumes/ResumesPage";
+import Analytics from "./Pages/Analytics/AnalyticsPage";
+import Settings from "./Pages/Settings/SettingsPage";
 import ProtectedRoutes from "./ProtectedRoutes";
-import NavBar from "./Pages/HomePage/HomePageComponents/NavBar";
-import HomePage from "./Pages/HomePage/HomePage";
+import NavBar from "./Pages/Header/NavBar"; 
+
+
+/* TODO:
+
+  //Make / and "" redirects go to landing page instead (make landing page route)
+  //Make it so 404 error works properly with catch all instead of catch needing to be in protected routes
+  //Fix Authentication of protected routes so cant directly navigate to them
+  //Make Landing Page a little better
+
+
+*/
+
+function NotFound() {
+  return (
+    <div>
+      <h2>404 - Page Not Found</h2>
+      <p>Oops! The page you are looking for does not exist.</p>
+      <Link to="/login">Go back to login</Link>
+    </div>
+  );
+}
 
 
 
-// Create a wrapper component for Protected Routes
+// NEED TO ADD AUTHENTICATION TO PROTECTED ROUTES!!!
 function ProtectedLayout() {
-  function Header() {
-    return (
-      <header className="Header">
-        <h2>
-          <Link to="/">Applyticz</Link>
-        </h2>
-      </header>
-    );
-  }
-
   return (
     <>
-      <Header />
       <NavBar /> {/* NavBar visible across all protected routes */}
       <div className="ProtectedContent">
         <Routes>
-          {/* Protected routes go here */}
-          <Route path="/" element={<HomePage />} />
+          {/* Defined Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/resumes" element={<Resumes />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/sign-out" element={<SignOut />} />
+
+          {/* All Other Routes - 404 Error */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </>
@@ -55,25 +61,17 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* UnAuthenticated Routes */}
+        <Route path="/" element={<Navigate to ="/login" />} />
+        <Route path="" element={<Navigate to ="/login" />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoutes>
-              <NavBar />
-            </ProtectedRoutes>
-          }
-        >
-          <Route index element={<HomePage />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="applications" element={<Applications />} />
-          <Route path="resumes" element={<Resumes />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="signout" element={<SignOut />} />
+
+        {/* All Other Routes */}
+        <Route element={<ProtectedRoutes />}>
+          <Route path="/*" element={<ProtectedLayout />} />
         </Route>
       </Routes>
     </Router>
