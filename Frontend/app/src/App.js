@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 
 import "./App.css";
 
@@ -14,7 +14,7 @@ import Profile from "./Pages/HomePage/HomePageComponents/Profile";
 import SignOut from "./Pages/HomePage/HomePageComponents/SignOut";
 import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/HomePage/HomePageComponents/NavBar"; // NavBar imported here
-import HomePage from "./Pages/HomePage/HomePage";
+
 
 
 
@@ -36,8 +36,6 @@ function ProtectedLayout() {
       <NavBar /> {/* NavBar visible across all protected routes */}
       <div className="ProtectedContent">
         <Routes>
-          {/* Protected routes go here */}
-          <Route path="/" element={<HomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/resumes" element={<Resumes />} />
@@ -55,11 +53,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
+        {/* Automatic Reroute to Landing page if no route specified */}
+        <Route path="/" element={<Navigate to ="/login" />} />
+        <Route path="" element={<Navigate to ="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Wrap Protected Routes with ProtectedLayout */}
+
+        {/* Authenticated Routes */}
         <Route element={<ProtectedRoutes />}>
           <Route path="/*" element={<ProtectedLayout />} />
         </Route>
