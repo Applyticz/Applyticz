@@ -5,4 +5,12 @@ Applyticz is a full stack React/FastAPI application that allows users to autonom
 In addition to autonomous tracking, users can also utilize the metrics page to gain statistical insights about their job search. Applyticz generates detailed reports on which insights provide you the highest interview and response rates, so that the user can focus more on facts and take out the guesswork. 
 
 ## Team Members
+Applyticz is made by students for students. As graduating Computer Science majors ourselves, we wanted to create a way to streamline the application process and make it easier for students entering the job market to get internships or full time offers.
 
+Created By:
+Dylan DePasquale
+Alec-Nesat Colak
+Pranav Venu
+Alejandro Androuin
+
+@UF Class of 24
