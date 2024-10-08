@@ -29,12 +29,6 @@ In addition to autonomous tracking, users can also utilize the metrics page to g
 - Hash Password Encryption
 
 
-## Features & Screenshots
-TBD
-
-## Running The Project
-TBD
-
 ## Developer Team
 Applyticz is made by students for students. As graduating Computer Science majors ourselves, we wanted to create a way to streamline the application process and make it easier for students entering the job market to get internships or full time offers.
 
