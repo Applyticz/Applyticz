@@ -16,9 +16,16 @@ import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/HomePage/HomePageComponents/NavBar"; // NavBar imported here
 
 
+function NotFound() {
+  return (
+    <div>
+      <h2>404 - Page Not Found</h2>
+      <p>Oops! The page you are looking for does not exist.</p>
+      <Link to="/">Go back to the homepage</Link>
+    </div>
+  );
+}
 
-
-// Create a wrapper component for Protected Routes
 function ProtectedLayout() {
   function Header() {
     return (
@@ -36,6 +43,7 @@ function ProtectedLayout() {
       <NavBar /> {/* NavBar visible across all protected routes */}
       <div className="ProtectedContent">
         <Routes>
+          {/* Defined Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/resumes" element={<Resumes />} />
@@ -43,6 +51,9 @@ function ProtectedLayout() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/sign-out" element={<SignOut />} />
+
+          {/* All Other Routes - 404 Error */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </>
@@ -53,14 +64,15 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Automatic Reroute to Landing page if no route specified */}
+        {/* UnAuthenticated Routes */}
         <Route path="/" element={<Navigate to ="/login" />} />
         <Route path="" element={<Navigate to ="/login" />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
 
-        {/* Authenticated Routes */}
+        {/* All Other Routes */}
         <Route element={<ProtectedRoutes />}>
           <Route path="/*" element={<ProtectedLayout />} />
         </Route>
