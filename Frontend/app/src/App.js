@@ -15,7 +15,7 @@ import NavBar from "./Pages/Header/NavBar";
 
 /* TODO:
 
-  //Make / and "" redirects go to landing page instead
+  //Make / and "" redirects go to landing page instead (make landing page route)
   //Make it so 404 error works properly with catch all instead of catch needing to be in protected routes
   //Fix Authentication of protected routes so cant directly navigate to them
   //Make Landing Page a little better
