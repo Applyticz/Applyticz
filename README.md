@@ -5,9 +5,6 @@ Applyticz is a full stack React/FastAPI application that allows users to autonom
 
 In addition to autonomous tracking, users can also utilize the metrics page to gain statistical insights about their job search. Applyticz generates detailed reports on which insights provide you the highest interview and response rates, so that the user can focus more on facts and take out the guesswork. 
 
-## Features & Screenshots
-TBD
-
 ## Software Architecture
 **Frontend**
 - React
@@ -32,6 +29,8 @@ TBD
 - Hash Password Encryption
 
 
+## Features & Screenshots
+TBD
 
 ## Running The Project
 TBD
