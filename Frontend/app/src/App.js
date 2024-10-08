@@ -14,15 +14,12 @@ import NavBar from "./Pages/Header/NavBar";
 
 
 /* TODO:
-  //Restructure Component Directorys
-  //Put signout in Navbar and delete the route, also delete profile
-  //Make Applytics not purple anymore
 
   //Make / and "" redirects go to landing page instead
+  //Make it so 404 error works properly with catch all instead of catch needing to be in protected routes
+  //Fix Authentication of protected routes so cant directly navigate to them
   //Make Landing Page a little better
-  //Delete Unnecessary Routess
 
-  //Coordinate w Alec about authentication for just typing in routes directly
 
 */
 
