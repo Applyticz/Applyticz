@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../authContext";
 import "./Auth.css"; // Import the CSS file for styling
-import AuthHeader from './AuthHeader';
+import PublicHeader from '../Landing/PublicHeader';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ const Register = () => {
 
   return (
     <>
-      <AuthHeader />
+      <PublicHeader />
       <div className="auth-container">
         <h2>Register</h2>
         {errorMessage && <p className="error-message">{errorMessage}</p>}

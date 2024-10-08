@@ -15,8 +15,6 @@ import { Button, ButtonGroup } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
 import { AddIcon } from '@chakra-ui/icons'
 
-
-
 import useAuth from "../../utils";
 import "./ApplicationsPage.css";
 import "../../App.css";

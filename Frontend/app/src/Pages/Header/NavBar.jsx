@@ -5,7 +5,7 @@ import { AuthContext } from "../../authContext";
 
 function NavBar() {
 
-  function Header() {
+  function PrivateHeader() {
     return (
       <header className="Header">
         <h2>
@@ -28,7 +28,7 @@ function NavBar() {
 
   return (
     <>
-      <Header />
+      <PrivateHeader />
       <nav className="NavBar">
         <ul className="left-nav">
           {/* ... your other navigation links ... */}

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-function AuthHeader() {
+function PublicHeader() {
     return (
         <header className="Header">
         <h2>
@@ -10,4 +10,4 @@ function AuthHeader() {
     );
 }
 
-export default AuthHeader;
+export default PublicHeader;

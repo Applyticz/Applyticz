@@ -11,17 +11,8 @@ import Analytics from "./Pages/Analytics/AnalyticsPage";
 import Settings from "./Pages/Settings/SettingsPage";
 import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/Header/NavBar"; 
+import LandingPage from "./Pages/Landing/LandingPage";
 
-
-/* TODO:
-
-  //Make / and "" redirects go to landing page instead (make landing page route)
-  //Make it so 404 error works properly with catch all instead of catch needing to be in protected routes
-  //Fix Authentication of protected routes so cant directly navigate to them
-  //Make Landing Page a little better
-
-
-*/
 
 function NotFound() {
   return (
@@ -39,7 +30,7 @@ function NotFound() {
 function ProtectedLayout() {
   return (
     <>
-      <NavBar /> {/* NavBar visible across all protected routes */}
+      <NavBar /> 
       <div className="ProtectedContent">
         <Routes>
           {/* Defined Routes */}
@@ -62,11 +53,12 @@ function App() {
     <Router>
       <Routes>
         {/* UnAuthenticated Routes */}
-        <Route path="/" element={<Navigate to ="/login" />} />
-        <Route path="" element={<Navigate to ="/login" />} />
+        <Route path="/" element={<Navigate to ="/landing" />} />
+        <Route path="" element={<Navigate to ="/landing" />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/landing" element={<LandingPage/>} />
 
 
         {/* All Other Routes */}

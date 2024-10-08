@@ -3,7 +3,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../authContext";
 import "./Auth.css"; // Import the CSS file for styling
-import AuthHeader from './AuthHeader';
+import PublicHeader from '../Landing/PublicHeader';
 
 const Login = () => {
 
@@ -41,7 +41,7 @@ const Login = () => {
 
   return (
     <>
-      <AuthHeader />
+      <PublicHeader />
       <div className="auth-container">
         <h2>Login</h2>
         {errorMessage && <p className="error-message">{errorMessage}</p>}
