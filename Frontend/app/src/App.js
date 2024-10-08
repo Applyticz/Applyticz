@@ -9,18 +9,20 @@ import Applications from "./Pages/MyApplications/ApplicationsPage";
 import Resumes from "./Pages/Resumes/ResumesPage";
 import Analytics from "./Pages/Analytics/AnalyticsPage";
 import Settings from "./Pages/Settings/SettingsPage";
-import Profile from "./Pages/Header/Profile";
-import SignOut from "./Pages/Header/SignOut";
 import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/Header/NavBar"; 
 
 
 /* TODO:
   //Restructure Component Directorys
+  //Put signout in Navbar and delete the route, also delete profile
+  //Make Applytics not purple anymore
+
   //Make / and "" redirects go to landing page instead
   //Make Landing Page a little better
-  //Add Header to each component directly - make its own component
   //Delete Unnecessary Routess
+
+  //Coordinate w Alec about authentication for just typing in routes directly
 
 */
 
@@ -49,8 +51,6 @@ function ProtectedLayout() {
           <Route path="/resumes" element={<Resumes />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/sign-out" element={<SignOut />} />
 
           {/* All Other Routes - 404 Error */}
           <Route path="*" element={<NotFound />} />

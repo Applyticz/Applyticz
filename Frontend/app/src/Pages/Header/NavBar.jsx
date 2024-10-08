@@ -9,7 +9,7 @@ function NavBar() {
     return (
       <header className="Header">
         <h2>
-          <Link to="/">Applyticz</Link>  
+          <Link to="/dashboard" className="Header">Applyticz</Link>  
         </h2>
       </header>
     );
@@ -49,9 +49,6 @@ function NavBar() {
           </li>
         </ul>
         <ul className="right-nav">
-          <li>
-            <Link to="/profile">Profile</Link>
-          </li>
           <li>
             <button className="link-button" onClick={handleLogout}>
               Sign Out

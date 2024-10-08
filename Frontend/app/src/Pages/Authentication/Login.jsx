@@ -3,8 +3,10 @@ import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../authContext";
 import "./Auth.css"; // Import the CSS file for styling
+import AuthHeader from './AuthHeader';
 
 const Login = () => {
+
   const navigate = useNavigate();
   const { loginUser } = useContext(AuthContext);
   const [errorMessage, setErrorMessage] = useState("");
@@ -38,38 +40,41 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <h2>Login</h2>
-      {errorMessage && <p className="error-message">{errorMessage}</p>}
-      <form onSubmit={submitLogin} className="auth-form">
-        <div className="form-group">
-          <label>
-            Username:
-            <input
-              type="text"
-              name="username"
-              required
-              autoComplete="username"
-            />
-          </label>
-        </div>
-        <div className="form-group">
-          <label>
-            Password:
-            <input
-              type="password"
-              name="password"
-              required
-              autoComplete="current-password"
-            />
-          </label>
-        </div>
-        <button type="submit" className="auth-button">Login</button>
-      </form>
-      <p className="switch-auth">
-        Don't have an account? <Link to="/register">Register here</Link>
-      </p>
-    </div>
+    <>
+      <AuthHeader />
+      <div className="auth-container">
+        <h2>Login</h2>
+        {errorMessage && <p className="error-message">{errorMessage}</p>}
+        <form onSubmit={submitLogin} className="auth-form">
+          <div className="form-group">
+            <label>
+              Username:
+              <input
+                type="text"
+                name="username"
+                required
+                autoComplete="username"
+              />
+            </label>
+          </div>
+          <div className="form-group">
+            <label>
+              Password:
+              <input
+                type="password"
+                name="password"
+                required
+                autoComplete="current-password"
+              />
+            </label>
+          </div>
+          <button type="submit" className="auth-button">Login</button>
+        </form>
+        <p className="switch-auth">
+          Don't have an account? <Link to="/register">Register here</Link>
+        </p>
+      </div>
+    </>
   );
 };
 
