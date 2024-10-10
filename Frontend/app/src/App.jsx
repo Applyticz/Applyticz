@@ -12,7 +12,7 @@ import Settings from "./Pages/Settings/SettingsPage";
 import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/Header/NavBar"; 
 import LandingPage from "./Pages/Landing/LandingPage";
-import LinkedEmails from "./Pages/LinkedEmails/LinkedEmailsPage";
+import LinkedAccounts from "./Pages/LinkedAccounts/LinkedAccountsPage";
 
 
 function NotFound() {
@@ -39,7 +39,7 @@ function ProtectedLayout() {
           <Route path="/applications" element={<Applications />} />
           <Route path="/resumes" element={<Resumes />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/linkedemails" element={<LinkedEmails />} />
+          <Route path="/linkedaccounts" element={<LinkedAccounts />} />
           <Route path="/settings" element={<Settings />} />
 
           {/* All Other Routes - 404 Error */}

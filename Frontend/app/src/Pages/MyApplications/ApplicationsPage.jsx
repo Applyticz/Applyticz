@@ -135,7 +135,7 @@ function Applications() {
 
   return (
     <div className="applications-container">
-      <h2>My Applications</h2>
+      <h2>My Applications (fix styling)</h2>
 
       {/* Have it be a plus sign to right, then have it bring up a dialogue*/}
       <button onClick={() => setIsCreating(true)} className="create">
