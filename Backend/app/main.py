@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from app.routers import test, auth, resume, application, dashboard, user_settings
+from app.routers import test, auth, resume, application, dashboard, user_settings, gmail_api
 from app.models.database_models import Test, User
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -37,6 +37,7 @@ app.add_middleware(
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # Include the test router, assuming it's defined in routers/test_router.py
+app.include_router(gmail_api.router, prefix='/gmail_api')
 app.include_router(test.router, prefix='/test')
 app.include_router(auth.router, prefix='/auth')
 app.include_router(resume.router, prefix='/resume')

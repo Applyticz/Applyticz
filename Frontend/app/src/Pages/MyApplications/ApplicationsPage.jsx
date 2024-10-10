@@ -2,18 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 //Chakra
 import { ChakraProvider } from '@chakra-ui/react'
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-} from '@chakra-ui/react'
-import { Button, ButtonGroup } from '@chakra-ui/react'
+import {Modal, ModalContent, ModalHeader, ModalFooter, ModalBody} from '@chakra-ui/react'
+import { Button } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { AddIcon } from '@chakra-ui/icons'
 
 import useAuth from "../../utils";
 import "./ApplicationsPage.css";
@@ -29,9 +20,8 @@ function Applications() {
   const [isCreating, setIsCreating] = useState(false);  
 
   //Modal
-  const [createModal, setCreateModal] = useState(false);
-  const openModal_Create = () => setCreateModal(true);
-  const closeModal_Create = () => setCreateModal(false);
+  const [creatingApplication, setCreatingApplication] = useState(false);
+ 
 
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -151,13 +141,13 @@ function Applications() {
       <ChakraProvider>
         <Button colorScheme='gray'>Pull From Email (make a refresh symbol inside of 'ALL' tab  Large Button)</Button> 
         {/* Maybe put this inside All Tab? */}
-        <Button colorScheme='gray' onClick={openModal_Create}>New Application</Button>
+        <Button colorScheme='gray' onClick={() => setCreatingApplication(true)}>New Application</Button>
        
         {/* When pulling from email, make it so you can bring up a dialogue maybe of New Applications, new Rejections, new Responses, etc... and update them Into List */}
         {/* Upon Pulling from email it notices anything that is not in your current applications and updates gives you a breakdown of what to add etc*/}
 
 
-        <Modal isOpen={createModal} onClose={closeModal_Create}>
+        <Modal isOpen={creatingApplication} onClose={() => setCreatingApplication(false)}>
           <ModalContent>
 
             <ModalHeader>Create Application</ModalHeader>
@@ -167,7 +157,7 @@ function Applications() {
             </ModalBody>
 
             <ModalFooter>
-              <Button colorScheme='red' mr={3} onClick={closeModal_Create}>Cancel</Button>
+              <Button colorScheme='red' mr={3} onClick={() => setCreatingApplication(false)}>Cancel</Button>
               <Button colorScheme='gray' rightIcon={<ArrowForwardIcon />}>Create</Button>
             </ModalFooter>
 
