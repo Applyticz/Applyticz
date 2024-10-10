@@ -45,6 +45,9 @@ function NavBar() {
             <Link to="/analytics">Analytics</Link>
           </li>
           <li>
+            <Link to="/linkedemails">Linked Emails</Link>
+          </li>
+          <li>
             <Link to="/settings">Settings</Link>
           </li>
         </ul>
