@@ -187,7 +187,7 @@ function Resumes() {
       return (
         <div>
           <div className="button-bar">
-            <h1>My Resumes</h1>
+            <h2>My Resumes</h2>
             <button onClick={() => setIsCreating(true)} className="create">Create New Resume</button>
             <button onClick={handleDeleteAll} className="delete-all">Delete All Resumes</button>
           </div>

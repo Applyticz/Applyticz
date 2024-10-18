@@ -159,7 +159,7 @@ function Analytics() {
 
   return (
     <div className="analytics-page">
-      <h1>Application Analytics</h1>
+      <h2>Application Analytics</h2>
       
       <section className="analytics-section">
         <h2>Total Applications: {mockData.totalApplications}</h2>

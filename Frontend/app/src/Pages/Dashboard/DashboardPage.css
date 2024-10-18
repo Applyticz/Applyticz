@@ -4,6 +4,19 @@
   margin: 0 auto;
 }
 
+:root.light {
+  --back-color: #ffffff;
+  --text-color: #000000;
+  --heading-color: #2f333b;
+}
+
+:root.dark {
+  --back-color: #222222;
+  --text-color: #ffffff;
+  --heading-color: #e0e0e0;
+  --summary-color: #494949;
+}
+
 .dashboard-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -12,7 +25,7 @@
 }
 
 .summary-card {
-  background-color: #f8f9fa;
+  background-color: var(--summary-color);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
@@ -21,7 +34,7 @@
 
 .summary-card h3 {
   margin-top: 0;
-  color: #343a40;
+  color: var(--heading-color);
 }
 
 .summary-card p {
@@ -38,7 +51,7 @@
 }
 
 .activity-section {
-  background-color: #ffffff;
+  background-color: var(--summary-color);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -46,7 +59,7 @@
 
 .activity-section h3 {
   margin-top: 0;
-  color: #343a40;
+  color: var(--heading-color);
   border-bottom: 1px solid #dee2e6;
   padding-bottom: 10px;
 }
