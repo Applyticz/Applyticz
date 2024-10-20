@@ -107,7 +107,7 @@ else
 
     # Start the Vite development server
     echo "Starting the React/Vite development server..."
-    npm start -- --host &
+    npm start & 
 
     # Check if port 3000 is in use for frontend
     FRONTEND_PORT=3000
