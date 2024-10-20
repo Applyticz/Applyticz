@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from app.routers import test, auth, resume, application, dashboard, user_settings, gmail_api
+from app.routers import test, auth, resume, application, dashboard, user_settings, gmail_api, outlook_api
 from app.models.database_models import Test, User
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -44,6 +44,7 @@ app.include_router(resume.router, prefix='/resume')
 app.include_router(application.router, prefix='/application')
 app.include_router(dashboard.router, prefix='/dashboard')
 app.include_router(user_settings.router, prefix="/settings", tags=["settings"])
+app.include_router(outlook_api.router, prefix="/outlook_api")
 # Example endpoint template
 # @app.get('/test')
 # def test_(dependencies):
