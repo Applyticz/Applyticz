@@ -1,4 +1,3 @@
-// src/Pages/Login.jsx
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../authContext";
@@ -6,7 +5,6 @@ import "./Auth.css"; // Import the CSS file for styling
 import PublicHeader from '../Landing/PublicHeader';
 
 const Login = () => {
-
   const navigate = useNavigate();
   const { loginUser } = useContext(AuthContext);
   const [errorMessage, setErrorMessage] = useState("");
@@ -14,6 +12,7 @@ const Login = () => {
   const submitLogin = async (e) => {
     e.preventDefault();
     try {
+      // Handle app login first
       const response = await fetch("http://localhost:8000/auth/login", {
         method: "POST",
         headers: {
@@ -27,8 +26,10 @@ const Login = () => {
 
       if (response.ok) {
         const data = await response.json();
-        loginUser(data.access_token); // Update authentication context
-        navigate("/dashboard"); // Redirect to the home page or dashboard
+        loginUser(data.access_token); // Save the app access token in the Auth context
+
+        // Redirect to the Outlook OAuth2 login endpoint
+          window.location.href = `http://localhost:8000/outlook_api/login?state=${data.access_token}`;
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.detail || "Failed to login.");

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate} from "react-router-dom";
 
 import "./App.css";
 import Login from "./Pages/Authentication/Login";
@@ -13,6 +13,8 @@ import ProtectedRoutes from "./ProtectedRoutes";
 import NavBar from "./Pages/Header/NavBar"; 
 import LandingPage from "./Pages/Landing/LandingPage";
 import LinkedAccounts from "./Pages/LinkedAccounts/LinkedAccountsPage";
+import OutlookCallback from "./Pages/Authentication/OutlookCallback";
+import OutlookApi from "./Pages/OutlookAPI/OutlookAPI";
 
 
 function NotFound() {
@@ -41,6 +43,8 @@ function ProtectedLayout() {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/linkedaccounts" element={<LinkedAccounts />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/outlook_api/callback" element={<OutlookCallback />} />
+          <Route path="/outlookapi" element={<OutlookApi />} />
 
           {/* All Other Routes - 404 Error */}
           <Route path="*" element={<NotFound />} />

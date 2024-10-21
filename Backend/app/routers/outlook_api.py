@@ -45,9 +45,12 @@ async def login():
         f"&redirect_uri={REDIRECT_URL}"
         f"&scope={SCOPE.replace(' ', '%20')}"
     )
+    print(authorization_url)
     return RedirectResponse(url=authorization_url)
 
-# OAuth2 Callback to exchange code for an access token
+# Simple in-memory storage for access tokens (use a proper store in production)
+user_tokens = {}
+
 @router.get("/callback", tags=["Outlook API"])
 async def callback(code: str):
     
@@ -66,7 +69,12 @@ async def callback(code: str):
 
     if "access_token" in token_json:
         access_token = token_json["access_token"]
-        return {"access_token": access_token}
+        
+        # Save the access token associated with a user (for simplicity, using a static user id)
+        user_id = "user1"  # This would typically be replaced by an actual user identifier
+        user_tokens[user_id] = access_token
+        
+        return {"message": "Access token saved", "access_token": access_token}
 
     return {"error": "Failed to get access token", "response": token_json}
 
@@ -76,20 +84,22 @@ async def secure_endpoint(token: str = Depends(oauth2_scheme)):
     return {"message": "You have access to this secure endpoint", "token": token}
 
 
-# Function to get user's messages
 @router.get("/get-user-messages", tags=["Outlook API"])
-async def get_user_messages(email: str, access_token: str):
+async def get_user_messages(email: str):
     # Define headers with the access token
+    user_id = "user1" # Replace with actual logic to identify the user
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
     
-    # Construct the full URL with the user's email
-    url = CURRENT_USER_EMAILS_URL.format(email=email)
-    
     # Make the request to Microsoft Graph API
-    response = requests.get(url, headers=headers)
+    response = requests.get(CURRENT_USER_EMAILS_URL, headers=headers)
     
     if response.status_code == 200:
         return response.json()
@@ -99,8 +109,14 @@ async def get_user_messages(email: str, access_token: str):
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(email: str, access_token: str, phrase: str):
-    # Define headers with the access token
+async def get_user_messages_by_phrase(email: str, phrase: str):
+        # Define headers with the access token
+    user_id = "user1" # Replace with actual logic to identify the user
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
