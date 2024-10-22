@@ -24,6 +24,7 @@ AUTH_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
 TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 CURRENT_USER_EMAILS_URL = "https://graph.microsoft.com/v1.0/me/messages"
 USER_EMAILS_URL = "https://graph.microsoft.com/v1.0/users/{email}/messages"
+USER_BY_EMAIL_URL = "https://graph.microsoft.com/v1.0/users/{email}"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 
 # OAuth2 configuration
@@ -82,6 +83,29 @@ async def callback(code: str):
 @router.get("/secure-endpoint", tags=["Outlook API"])
 async def secure_endpoint(token: str = Depends(oauth2_scheme)):
     return {"message": "You have access to this secure endpoint", "token": token}
+
+# Function to get user's data
+@router.get("/get-user", tags=["Outlook API"])
+async def get_user(email: str):
+    # Define headers with the access token
+    user_id = "user1"
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # Make the request to Microsoft Graph API
+    response = requests.get(USER_BY_EMAIL_URL.format(email=email), headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve user data: {response.text}")
 
 
 @router.get("/get-user-messages", tags=["Outlook API"])

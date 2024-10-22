@@ -32,6 +32,36 @@ const OutlookApi = () => {
         }
     };
 
+    // Fetch current user data
+    const fetchUserData = async () => {
+      console.log("User Email for fetch:", userEmail);
+      const encodedEmail = encodeURIComponent(userEmail);
+        try {
+            const response = await fetch(`http://localhost:8000/outlook_api/get-user?email=${encodedEmail}`, {
+                method: "GET",
+                headers: {
+                    "accept": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log("User Data:", data); // Log or use the returned user data
+                // Use the user data email as the email to fetch messages
+                if (data.mail !== userEmail) {
+                  setUserEmail(data.mail);
+                  alert("Caution, Outlook email does not match user email. Using Outlook email instead.");
+                }
+                console.log("User Email:", data.mail); // Log or use the returned email
+            } else {
+                const errorData = await response.json();
+                console.error("Failed to fetch user data:", errorData.detail || "Unknown error");
+            }
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+        }
+    };
   // Function to fetch user messages
   const fetchUserMessages = async () => {
     try {
@@ -46,6 +76,7 @@ const OutlookApi = () => {
         console.log("User Email for fetch:", userEmail);
       if (response.ok) {
         const data = await response.json();
+        console.log("Messages Data:", data); // Log or use the returned messages
         setMessages(data.value); // Assuming the messages are returned directly
       } else {
         const errorData = await response.json();
@@ -86,6 +117,13 @@ const OutlookApi = () => {
   useEffect(() => {
     fetchUserEmail();
   }, []);
+
+  // Trigger fetchUserData whenever userEmail is updated
+  useEffect(() => {
+    if (userEmail) {
+      fetchUserData();
+    }
+  }, [userEmail]); // This useEffect runs whenever `userEmail` changes
 
   return (
     <div className="outlook-api-container">
