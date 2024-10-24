@@ -1,168 +1,116 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import './AnalyticsPage.css';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
 
-// Mock data - replace with actual data from your backend
-const mockData = {
-  totalApplications: 100,
-  statusTotals: {
-    Applied: 50,
-    'Further Review': 20,
-    'Interview Scheduled': 15,
-    Interviewed: 10,
-    Rejected: 3,
-    Accepted: 1,
-    Declined: 1,
-  },
-  topCompanies: {
-    'Google': 30,
-    'Facebook': 20,
-    'Amazon': 15,
-    'Microsoft': 10,
-    'Apple': 5,
-  },
-  resumeVersions: {
-    'Version 1': 0.6,
-    'Version 2': 0.8,
-    'Version 3': 0.7,
-  },
-  applicationTimeline: {
-    'January': 10,
-    'February': 20,
-    'March': 30,
-    'April': 40,
-  },
-  applicationSuccessRateByJobTitle: {
-    'Software Engineer': {
-      'Version 1': 0.5,
-      'Version 2': 0.6,
-      'Version 3': 0.4,
-    },
-    'Data Scientist': {
-      'Version 1': 0.3,
-      'Version 2': 0.4,
-      'Version 3': 0.5,
-    },
-    'Product Manager': {
-      'Version 1': 0.2,
-      'Version 2': 0.3,
-      'Version 3': 0.4,
-    },
-  },
-  applicationSuccessRateByLocation: {
-    'San Francisco': {
-      'Version 1': 0.4,
-      'Version 2': 0.5,
-      'Version 3': 0.6,
-    },
-    'New York': {
-      'Version 1': 0.3,
-      'Version 2': 0.4,
-      'Version 3': 0.5,
-    },
-    'Seattle': {
-      'Version 1': 0.2,
-      'Version 2': 0.3,
-      'Version 3': 0.4,
-    },
-  },
-  averageTimeToResponse: {
-    'Google': 10,
-    'Facebook': 15,
-    'Amazon': 20,
-    'Microsoft': 25,
-    'Apple': 30,
-  },
-};
-
 function Analytics() {
+  const [applicationData, setApplicationData] = useState(null); // Store the real data
+  const [loading, setLoading] = useState(true); // Handle loading state
+  const [errorMessage, setErrorMessage] = useState(""); // Store error messages if any
+
+  // Fetch application data from the backend
+  const getApplicationData = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/application/get_applications", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApplicationData(data); // Set the real data
+        console.log("Application data:", data);
+        setLoading(false); // Stop loading
+      } else {
+        const errorData = await response.json();
+        setErrorMessage(errorData.detail || "Failed to fetch applications");
+        setLoading(false);
+      }
+    } catch (error) {
+      setErrorMessage("Error fetching applications");
+      console.error("Error fetching applications:", error);
+      setLoading(false);
+    }
+  };
+
+  // Process data for the charts (based on the structure of your real data)
+  const processData = (data) => {
+    const statusTotals = data.reduce((acc, app) => {
+      const status = app.status;
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const topCompanies = data.reduce((acc, app) => {
+      const company = app.company;
+      acc[company] = (acc[company] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Return processed data for all charts
+    return {
+      statusTotals,
+      topCompanies,
+      // Other processed data
+    };
+  };
+
+  // Fetch the data on component mount
+  useEffect(() => {
+    getApplicationData();
+  }, []);
+
+  // If data is still loading, show a loading message
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  // If there's an error, show the error message
+  if (errorMessage) {
+    return <div>Error: {errorMessage}</div>;
+  }
+
+  // If no data is available, return a message
+  if (!applicationData) {
+    return <div>No data available</div>;
+  }
+
+  // Process the application data for the charts
+  const processedData = processData(applicationData);
+
   const statusData = {
-    labels: Object.keys(mockData.statusTotals),
+    labels: Object.keys(processedData.statusTotals),
     datasets: [
       {
-        data: Object.values(mockData.statusTotals),
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384'
-        ],
+        data: Object.values(processedData.statusTotals),
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384'],
       },
     ],
   };
 
   const topCompaniesData = {
-    labels: Object.keys(mockData.topCompanies),
+    labels: Object.keys(processedData.topCompanies),
     datasets: [
       {
         label: 'Applications',
-        data: Object.values(mockData.topCompanies),
+        data: Object.values(processedData.topCompanies),
         backgroundColor: 'rgba(153, 102, 255, 0.6)',
       },
     ],
   };
 
-  const resumeVersionsData = {
-    labels: Object.keys(mockData.resumeVersions),
-    datasets: [
-      {
-        label: 'Success Rate',
-        data: Object.values(mockData.resumeVersions),
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56'
-        ],
-      },
-    ],
-  };
-
-  const applicationTimelineData = {
-    labels: Object.keys(mockData.applicationTimeline),
-    datasets: [
-      {
-        label: 'Applications Over Time',
-        data: Object.values(mockData.applicationTimeline),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        fill: false,
-      },
-    ],
-  };
-
-  const applicationSuccessRateByJobTitleData = {
-    labels: Object.keys(mockData.applicationSuccessRateByJobTitle),
-    datasets: Object.keys(mockData.resumeVersions).map((version, index) => ({
-      label: `Success Rate by Job Title (${version})`,
-      data: Object.values(mockData.applicationSuccessRateByJobTitle).map(jobTitleData => jobTitleData[version]),
-      backgroundColor: `rgba(${index * 50}, ${index * 100}, ${index * 150}, 0.6)`,
-    })),
-  };
-
-  const applicationSuccessRateByLocationData = {
-    labels: Object.keys(mockData.applicationSuccessRateByLocation),
-    datasets: Object.keys(mockData.resumeVersions).map((version, index) => ({
-      label: `Success Rate by Location (${version})`,
-      data: Object.values(mockData.applicationSuccessRateByLocation).map(locationData => locationData[version]),
-      backgroundColor: `rgba(${index * 50}, ${index * 100}, ${index * 150}, 0.6)`,
-    })),
-  };
-
-  const averageTimeToResponseData = {
-    labels: Object.keys(mockData.averageTimeToResponse),
-    datasets: [
-      {
-        label: 'Average Time to Response (days)',
-        data: Object.values(mockData.averageTimeToResponse),
-        backgroundColor: 'rgba(255, 206, 86, 0.6)',
-      },
-    ],
-  };
-
+  // Return the JSX with real data
   return (
     <div className="analytics-page">
       <h1>Application Analytics</h1>
       
       <section className="analytics-section">
-        <h2>Total Applications: {mockData.totalApplications}</h2>
+        <h2>Total Applications: {applicationData.length}</h2>
       </section>
 
       <section className="analytics-section">
@@ -179,42 +127,7 @@ function Analytics() {
         </div>
       </section>
 
-      <section className="analytics-section">
-        <h2>Resume Versions Success Rate</h2>
-        <div className="chart-container">
-          <Pie data={resumeVersionsData} />
-        </div>
-      </section>
-
-      <section className="analytics-section">
-        <h2>Application Timeline</h2>
-        <div className="chart-container">
-          <Line data={applicationTimelineData} />
-        </div>
-      </section>
-
-      <section className="analytics-section">
-        <h2>Application Success Rate by Job Title</h2>
-        <div className="chart-container">
-          <Bar data={applicationSuccessRateByJobTitleData} />
-        </div>
-      </section>
-
-      <section className="analytics-section">
-        <h2>Application Success Rate by Location</h2>
-        <div className="chart-container">
-          <Bar data={applicationSuccessRateByLocationData} />
-        </div>
-      </section>
-
-      <section className="analytics-section">
-        <h2>Average Time to Response</h2>
-        <div className="chart-container">
-          <Bar data={averageTimeToResponseData} />
-        </div>
-      </section>
-
-      {/* Add more sections for other important statistics */}
+      {/* Add more charts with processedData as needed */}
     </div>
   );
 }

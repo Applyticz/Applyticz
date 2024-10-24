@@ -7,7 +7,9 @@ const OutlookCallback = () => {
     useEffect(() => {
         // Capture the authorization code from the URL
         const urlParams = new URLSearchParams(window.location.search);
+        // console.log(urlParams);
         const code = urlParams.get("code");
+        // console.log(code);
 
         if (code) {
             // Send the code to the backend to exchange for an access token
@@ -21,6 +23,7 @@ const OutlookCallback = () => {
             .then(data => {
                 if (data.access_token) {
                     // Successfully received access token, redirect to the desired page
+                    localStorage.setItem("outlook_access_token", data.access_token);
                     navigate("/dashboard"); // Redirect after successful authentication
                 } else {
                     console.error("Error fetching access token:", data.error);
