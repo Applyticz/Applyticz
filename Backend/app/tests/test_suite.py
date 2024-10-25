@@ -48,22 +48,22 @@ def test_user_data(testClient, dbSession, overrideDbDepend):
     assert res.status_code == 200
 
     res_json = res.json()
-
-    # Verify that 'User' key exists
-    assert 'User' in res_json, "Response JSON does not contain 'User' key"
+        
 
     # Access the user data
-    user_data = res_json['User']
+    user_data = res_json['user']
+    
+    username = user_data['username']
+    id = user_data['id']
 
-    # Compare the username
-    assert user_data['username'] == 'test_user'
 
     # Get the user id from the database
     from app.models.database_models import User  # Adjust the import according to your project structure
     user_in_db = dbSession.query(User).filter_by(username='test_user').first()
     assert user_in_db is not None, "User not found in the database"
 
-    # Compare the user id
+    # Compare the username and id
+    assert user_data['username'] == user_in_db.username
     assert user_data['id'] == user_in_db.id
 
 def test_resume_upload(testClient, dbSession, overrideDbDepend):

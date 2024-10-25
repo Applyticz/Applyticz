@@ -4,10 +4,15 @@ from fastapi.responses import RedirectResponse, JSONResponse
 import requests
 import os
 from dotenv import load_dotenv
+from typing import Annotated
+from app.utils.utils import get_current_user
 
 # Load environment variables from .env file
 load_dotenv()
 router = APIRouter()
+
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
 
 # MSAL configuration from environment variables
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -53,7 +58,7 @@ async def login():
 user_tokens = {}
 
 @router.get("/callback", tags=["Outlook API"])
-async def callback(code: str):
+async def callback(code: str, user: user_dependency):
     
     # Exchange the authorization code for an access token
     token_data = {
@@ -71,8 +76,8 @@ async def callback(code: str):
     if "access_token" in token_json:
         access_token = token_json["access_token"]
         
-        # Save the access token associated with a user (for simplicity, using a static user id)
-        user_id = "user1"  # This would typically be replaced by an actual user identifier
+        # Save the access token associated with a user from user dependency
+        user_id = user.get("id")
         user_tokens[user_id] = access_token
         
         return {"message": "Access token saved", "access_token": access_token}
@@ -86,9 +91,9 @@ async def secure_endpoint(token: str = Depends(oauth2_scheme)):
 
 # Function to get user's data
 @router.get("/get-user", tags=["Outlook API"])
-async def get_user(email: str):
+async def get_user(email: str, user: user_dependency):
     # Define headers with the access token
-    user_id = "user1"
+    user_id = user.get("id")
     access_token = user_tokens.get(user_id)
     
     if not access_token:
@@ -109,9 +114,9 @@ async def get_user(email: str):
 
 
 @router.get("/get-user-messages", tags=["Outlook API"])
-async def get_user_messages(email: str):
+async def get_user_messages(email: str, user: user_dependency):
     # Define headers with the access token
-    user_id = "user1" # Replace with actual logic to identify the user
+    user_id = user.get("id")
     access_token = user_tokens.get(user_id)
     
     if not access_token:
@@ -133,9 +138,9 @@ async def get_user_messages(email: str):
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(email: str, phrase: str):
+async def get_user_messages_by_phrase(email: str, phrase: str, user: user_dependency):
         # Define headers with the access token
-    user_id = "user1" # Replace with actual logic to identify the user
+    user_id = user.get("id")
     access_token = user_tokens.get(user_id)
     
     if not access_token:
@@ -168,5 +173,25 @@ async def get_user_messages_by_phrase(email: str, phrase: str):
         return filtered_emails
     else:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
+    
+# Function to get a refresh token for Outlook API
+@router.get("/refresh-token", tags=["Outlook API"])
+async def refresh_token(refresh_token: str):
+    token_data = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "scope": SCOPE
+    }
+
+    token_response = requests.post(TOKEN_URL, data=token_data)
+    token_json = token_response.json()
+
+    if "access_token" in token_json:
+        access_token = token_json["access_token"]
+        return {"message": "Access token refreshed", "access_token": access_token}
+
+    return {"error": "Failed to refresh access token", "response": token_json}
 
     

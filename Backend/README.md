@@ -402,6 +402,7 @@ After updating the models or routes, always ensure to:
 
 #### Activate the virtual environment:
 - **Linux/MacOS:**
+- start from backend main directory
   ```bash
   source .venv/bin/activate
   ```
@@ -417,12 +418,12 @@ pip install -r requirements.txt || pip3 install -r requirements.txt
 ```
 
 ```bash
-pytest tests/test_suite.py
+pytest app/tests/test_suite.py
 ```
 
 Individual tests can be run with:
 ```bash
-pytest tests/test_suite.py::test_function_name
+pytest app/tests/test_suite.py::test_function_name
 ```
 
 # Important Git Commands and Workflow

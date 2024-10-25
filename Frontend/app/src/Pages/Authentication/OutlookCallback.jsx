@@ -16,6 +16,7 @@ const OutlookCallback = () => {
             fetch("http://localhost:8000/outlook_api/callback?code=" + code, {
                 method: "GET",
                 headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
                     "Content-Type": "application/json",
                 },
             })
