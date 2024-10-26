@@ -10,6 +10,7 @@ from app.models.database_models import User
 import uuid
 import pytz
 from datetime import datetime
+from app.db.database import db_dependency
 
 # Load JWT secret key from environment variables
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
@@ -18,13 +19,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency):
     try:
         # Decode JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
         user_id_str: str = payload.get('id')  # Retrieve user_id as a string
-
+        
+        email = db.query(User).filter(User.username == username).first().email
         if not username or not user_id_str:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
         
@@ -35,7 +37,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user ID format")
 
         # Return the user information if valid
-        return {'username': username, 'id': user_id}
+        return {'username': username, 'id': user_id, 'email': email}
 
     except PyJWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

@@ -6,6 +6,10 @@ import os
 from dotenv import load_dotenv
 from typing import Annotated
 from app.utils.utils import get_current_user
+from app.db.database import db_dependency
+from app.models.database_models import User
+from app.models.pydantic_models import UpdateEmailRequest
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -32,8 +36,10 @@ USER_EMAILS_URL = "https://graph.microsoft.com/v1.0/users/{email}/messages"
 USER_BY_EMAIL_URL = "https://graph.microsoft.com/v1.0/users/{email}"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 
+GET_USER = "https://graph.microsoft.com/v1.0/me"
+
 # OAuth2 configuration
-SCOPE = "https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.ReadBasic"
+SCOPE = "https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.ReadBasic https://graph.microsoft.com/Calendars.ReadWrite"
 STATE = "12345"
 
 # OAuth2 Authorization Code Bearer
@@ -91,30 +97,68 @@ async def secure_endpoint(token: str = Depends(oauth2_scheme)):
 
 # Function to get user's data
 @router.get("/get-user", tags=["Outlook API"])
-async def get_user(email: str, user: user_dependency):
-    # Define headers with the access token
+async def get_user(user: user_dependency, db: db_dependency):
+    compare_user_id = str(user.get("id"))  # Ensure user_id is a string
     user_id = user.get("id")
+    print("User ID:", user_id)
+    
+    # Fetch the access token for the current user
     access_token = user_tokens.get(user_id)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
     
+    # Prepare the request headers
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
     
-    # Make the request to Microsoft Graph API
-    response = requests.get(USER_BY_EMAIL_URL.format(email=email), headers=headers)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
+    # Make a request to the Outlook API to get the user information
+    response = requests.get(GET_USER, headers=headers)
+    outlook_data = response.json()
+    print(outlook_data)
+
+    if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve user data: {response.text}")
+    
+    # Fetch the user from the database
+    db_user = db.query(User).filter(User.id == compare_user_id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found in the database")
+    
+    # Compare the email from Outlook API and the database, update if necessary
+    outlook_email = outlook_data.get('mail')
+    if db_user.email != outlook_email:
+        db_user.email = outlook_email  # Update the email in the database
+        db.commit()
+        print(f"Email updated to {outlook_email}")
+    
+    # Return the updated user data from the Outlook API
+    return outlook_data
+
+@router.post("/update-email", tags=["Users"])
+async def update_email(user: user_dependency, db: db_dependency, email_request: UpdateEmailRequest):
+    user_id = str(user.get("id"))  # Get the user ID from the dependency
+    new_email = email_request.new_email
+
+    # Fetch the user from the database
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found in the database")
+    
+    # Update the email and commit the changes
+    db_user.email = new_email
+    db.commit()
+    
+    return {"message": "Email updated successfully", "new_email": new_email}
+
 
 
 @router.get("/get-user-messages", tags=["Outlook API"])
-async def get_user_messages(email: str, user: user_dependency):
+async def get_user_messages(user: user_dependency):
     # Define headers with the access token
     user_id = user.get("id")
     access_token = user_tokens.get(user_id)
@@ -138,9 +182,10 @@ async def get_user_messages(email: str, user: user_dependency):
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(email: str, phrase: str, user: user_dependency):
+async def get_user_messages_by_phrase(phrase: str, user: user_dependency):
         # Define headers with the access token
     user_id = user.get("id")
+    email = user.get("email")
     access_token = user_tokens.get(user_id)
     
     if not access_token:
@@ -175,7 +220,7 @@ async def get_user_messages_by_phrase(email: str, phrase: str, user: user_depend
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
     
 # Function to get a refresh token for Outlook API
-@router.get("/refresh-token", tags=["Outlook API"])
+@router.get("/refresh-token", tags=["Outlook API"], status_code=status.HTTP_200_OK)
 async def refresh_token(refresh_token: str):
     token_data = {
         "client_id": CLIENT_ID,
@@ -194,4 +239,91 @@ async def refresh_token(refresh_token: str):
 
     return {"error": "Failed to refresh access token", "response": token_json}
 
+# Calander API
+
+CALANDER_URL = "https://graph.microsoft.com/v1.0/users/{email}/calendar/events"
+
+@router.post("/create-event", tags=["Outlook API"])
+async def create_event(event_data: dict, user: user_dependency):
+    user_id = user.get("id")
+    email = user.get("email")
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(CALANDER_URL.format(email=email), headers=headers, json=event_data)
+
+    if response.status_code == 201:
+        return {"message": "Event created successfully", "event_id": response.json().get("id")}
+    else:
+        raise HTTPException(status_code=response.status_code, detail=f"Failed to create event: {response.text}")
+    
+@router.put("/update-event", tags=["Outlook API"])
+async def update_event(event_id: str, event_data: dict, user: user_dependency):
+    user_id = user.get("id")
+    email = user.get("email")
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.patch(CALANDER_URL.format(email=email) + f"/{event_id}", headers=headers, json=event_data)
+
+    if response.status_code == 200:
+        return {"message": "Event updated successfully"}
+    else:
+        raise HTTPException(status_code=response.status_code, detail=f"Failed to update event: {response.text}")
+    
+@router.delete("/delete-event", tags=["Outlook API"])
+async def delete_event(event_id: str, user: user_dependency):
+    user_id = user.get("id")
+    email = user.get("email")
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.delete(CALANDER_URL.format(email=email) + f"/{event_id}", headers=headers)
+
+    if response.status_code == 204:
+        return {"message": "Event deleted successfully"}
+    else:
+        raise HTTPException(status_code=response.status_code, detail=f"Failed to delete event: {response.text}")
+    
+@router.get("/get-events", tags=["Outlook API"])
+async def get_events(user: user_dependency):
+    user_id = user.get("id")
+    email = user.get("email")
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(CALANDER_URL.format(email=email), headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve events: {response.text}")
     

@@ -82,3 +82,5 @@ class UserSettingsRequest(BaseModel):
     theme: str
     notification_preferences: Optional[str] = None
 
+class UpdateEmailRequest(BaseModel):
+    email: str
