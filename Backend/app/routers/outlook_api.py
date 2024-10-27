@@ -6,9 +6,11 @@ import os
 from dotenv import load_dotenv
 from typing import Annotated
 from app.utils.utils import get_current_user
+from app.utils.parsing_tool import extract_plain_text
 from app.db.database import db_dependency
 from app.models.database_models import User
 from app.models.pydantic_models import UpdateEmailRequest
+from app.utils.email_parser import extract_company_and_position
 
 
 # Load environment variables from .env file
@@ -206,14 +208,25 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency):
         # Parse the response to get only the specific email fields you need (e.g., subject, from, receivedDateTime)
         email_data = response.json()
         filtered_emails = []
+        
 
         for email in email_data.get('value', []):
             filtered_emails.append({
                 'subject': email.get('subject'),
                 'from': email.get('from', {}).get('emailAddress', {}).get('address'),
                 'receivedDateTime': email.get('receivedDateTime'),
-                'bodyPreview': email.get('bodyPreview')
+                'bodyPreview': email.get('bodyPreview'),
+                'body': extract_plain_text(email.get('body', {}).get('content', ''))
             })
+            
+        for email in filtered_emails:
+            extract_company_and_position(email.get('body'))
+            print("COMPANY AND POSITION: ", extract_company_and_position(email.get('body')))
+            
+            
+        print("FILTERED EMAILS: ", filtered_emails)
+        
+        
 
         return filtered_emails
     else:

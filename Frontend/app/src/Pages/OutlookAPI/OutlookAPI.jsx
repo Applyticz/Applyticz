@@ -75,7 +75,12 @@ const OutlookApi = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages?email=${userEmail}`
+        `http://localhost:8000/outlook_api/get-user-messages?email=${userEmail}`, {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        }
+      }
       );
 
       if (response.ok) {
@@ -107,7 +112,12 @@ const OutlookApi = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`, {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        }
+      }
       );
 
       if (response.ok) {
@@ -151,7 +161,12 @@ const fetchUserMessages = async () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages?email=${userEmail}`
+        `http://localhost:8000/outlook_api/get-user-messages?email=${userEmail}`, {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        }
+      }
       );
         console.log("User Email for fetch:", userEmail);
       if (response.ok) {
@@ -177,7 +192,12 @@ const fetchUserMessages = async () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`, {
+        headers: {
+          "accept": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        }
+      }
       );
 
       if (response.ok) {
@@ -237,7 +257,8 @@ const fetchUserMessages = async () => {
                   : msg.from || "Unknown"}{" "}
                 <br />
                 <strong>Received At:</strong> {msg.receivedDateTime} <br />
-                <strong>Preview:</strong> {msg.bodyPreview}
+                <strong>Preview:</strong> {msg.bodyPreview} <br />
+                <strong>Body:</strong> {msg.body}
               </li>
             ))}
           </ul>

@@ -176,3 +176,15 @@ def verify_token(token: str = Depends(oauth2_bearer)):
         return payload
     except PyJWTError:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token")
+    
+    
+def parse_email_for_company_name(email: str):
+    """Parses the email address to extract the company name."""
+    # Split the email address by the '@' symbol
+    email_parts = email.split('@')
+    # Split the domain name by the '.' symbol
+    domain_parts = email_parts[1].split('.')
+    # Return the first part of the domain name
+    return domain_parts[0]
+
+
