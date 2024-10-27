@@ -5,7 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import {Modal, ModalContent, ModalHeader, ModalFooter, ModalBody} from '@chakra-ui/react'
 import { Button } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { Input, Textarea, FormControl, FormLabel, Grid, GridItem } from '@chakra-ui/react';
+import { Input, Textarea, FormControl, FormLabel, Grid, GridItem, HStack, Stack, Radio, RadioGroup } from '@chakra-ui/react';
 
 import useAuth from "../../utils";
 import "./ApplicationsPage.css";
@@ -220,15 +220,17 @@ function Applications() {
                   </GridItem>
 
                   <GridItem>
-                    <FormControl id="status" isRequired>
-                      <FormLabel>Status</FormLabel>
-                      <Input
-                        type="text"
-                        name="status"
-                        value={formData.status}
-                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                        placeholder="i.e. Pending"
-                      />
+                    <FormControl id="status">
+                      <FormLabel>Stage</FormLabel>
+                        <RadioGroup onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))} value={formData.status}>
+                          <Radio value="Awaiting Response">Awaiting Response</Radio>
+                          <Radio value="Positive Response">Positive Response</Radio>
+                          <Radio value="Interviewing">Interviewing</Radio>
+                          <br></br>
+                          <Radio value="Rejected">Rejected</Radio>
+                          <br></br>
+                          <Radio value="Offer">Offer</Radio>
+                        </RadioGroup>
                     </FormControl>
                   </GridItem>
 
@@ -342,7 +344,7 @@ function Applications() {
               </div>
             ) : (
               <div className="application-display">
-                <p>Status: {application.status}</p>
+                <p>Stage: {application.status}</p>
                 <p>Applied Date: {application.applied_date}</p>
                 <p>Last Update: {application.last_update}</p>
                 <p>Notes: {application.notes}</p>
