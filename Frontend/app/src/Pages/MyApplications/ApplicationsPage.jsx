@@ -18,8 +18,6 @@ function Applications() {
   const [error, setError] = useState('');
   const [theme, setTheme] = useState('light');
 
-  
-
   //Create Application Dialogue Box
   const [creatingApplication, setCreatingApplication] = useState(false);
  
@@ -29,7 +27,6 @@ function Applications() {
 
 
   //Old STuff
-  const [isCreating, setIsCreating] = useState(false);  
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     company: '',
@@ -157,26 +154,15 @@ function Applications() {
   return (
     <div className="applications-container">
       <h2>My Applications</h2>
-
-     
-      {/* <button onClick={() => setIsCreating(true)} className="create">
-        old button
-      </button> */}
-
-      
-
-
-
-      
       
       <ChakraProvider>
         <Button colorScheme='gray'>Pull From Email</Button> 
         <Button colorScheme='gray' onClick={() => setCreatingApplication(true)}>New Application</Button>
        
-        <Modal isOpen={creatingApplication} onClose={() => setCreatingApplication(false)}>
+        <Modal isOpen={creatingApplication} onClose={() => setCreatingApplication(false)} size="xl">
           <ModalContent>
 
-            <ModalHeader>Create Application</ModalHeader>
+            <ModalHeader>New Application</ModalHeader>
             <form onSubmit={(e) => { e.preventDefault(); handleCreate(); setCreatingApplication(false);}}>
               <ModalBody>
 
@@ -189,7 +175,7 @@ function Applications() {
                         name="company"
                         value={formData.company}
                         onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                        placeholder="Company"
+                        placeholder="i.e. Amazon"
                       />
                     </FormControl>
                   </GridItem>
@@ -202,7 +188,7 @@ function Applications() {
                         name="position"
                         value={formData.position}
                         onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
-                        placeholder="Position"
+                        placeholder="i.e. Software Engineer"
                       />
                     </FormControl>
                   </GridItem>
@@ -215,7 +201,7 @@ function Applications() {
                         name="location"
                         value={formData.location}
                         onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                        placeholder="Location"
+                        placeholder="i.e. San Francisco, CA"
                       />
                     </FormControl>
                   </GridItem>
@@ -228,7 +214,7 @@ function Applications() {
                         name="salary"
                         value={formData.salary}
                         onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
-                        placeholder="Salary"
+                        placeholder="i.e. 115,000"
                       />
                     </FormControl>
                   </GridItem>
@@ -241,7 +227,7 @@ function Applications() {
                         name="status"
                         value={formData.status}
                         onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                        placeholder="Status"
+                        placeholder="i.e. Pending"
                       />
                     </FormControl>
                   </GridItem>
@@ -253,7 +239,7 @@ function Applications() {
                         name="job_description"
                         value={formData.job_description}
                         onChange={(e) => setFormData(prev => ({ ...prev, job_description: e.target.value }))}
-                        placeholder="Job Description"
+                        placeholder="i.e. Expects 2+ years of experience and proficiency in React, NodeJS, and Python"
                       />
                     </FormControl>
                   </GridItem>
@@ -265,7 +251,7 @@ function Applications() {
                         name="notes"
                         value={formData.notes}
                         onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Notes"
+                        placeholder="i.e. Anything else you want to add!"
                       />
                     </FormControl>
                   </GridItem>
@@ -282,70 +268,11 @@ function Applications() {
       </ChakraProvider>
       
 
-       {/* Tabs --> Figure out how to keep rest of styling correct */}
+      
       <Tabs />
 
 
-      {/* FORM: Add Job Title, Posting  */}
-
-      {isCreating && (
-        <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="application-form">
-          <input
-            type="text"
-            name="company"
-            value={formData.company}
-            onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-            placeholder="Company"
-            required
-          />
-          <input
-            type="text"
-            name="position"
-            value={formData.position}
-            onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
-            placeholder="Position"
-            required
-          />
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-            placeholder="Location"
-            required
-          />
-          <input
-            type="text"
-            name="status"
-            value={formData.status}
-            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-            placeholder="Status"
-            required
-          />
-          <input
-            type="text"
-            name="salary"
-            value={formData.salary}
-            onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
-            placeholder="Salary"
-            required
-          />
-          <textarea
-            name="job_description"
-            value={formData.job_description}
-            onChange={(e) => setFormData(prev => ({ ...prev, job_description: e.target.value }))}
-            placeholder="Job Description"
-          />
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Notes"
-          />
-          <button type="submit">Create</button>
-          <button type="button" className="cancel" onClick={() => setIsCreating(false)}>Cancel</button>
-        </form>
-      )}
+      
 
 
 
