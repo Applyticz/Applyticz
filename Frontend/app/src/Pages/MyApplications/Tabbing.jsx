@@ -34,9 +34,7 @@ function Tabbing() {
                 <TabPanels>
 
                     {/* For each tab it should show different information? */}
-
-                    <TabPanel>
-                        <p>IDEAS/STRUCTURE FOR EACH TAB:</p>
+                    {/* <p>IDEAS/STRUCTURE FOR EACH TAB:</p>
                        <br></br>
                         <p>ALL, AWIAITING RESPONSE, REJECTED</p>
                             <p>it should be more like a table format with thin boxes one on top of other (Table format like - Since we have so many)
@@ -55,7 +53,10 @@ function Tabbing() {
                         <p>POSITIVE RESPONSES</p>
                         <p>These will be pulled from email and indicate a response that needs to done and maybe like staging area where you can go from like NeedsAction and move to SentMyResponse 
                             Or buttons that move it to rejected/interviewing tab depending
-                        </p>
+                        </p> */}
+
+                    <TabPanel>
+                        
                         
 
                     </TabPanel>
