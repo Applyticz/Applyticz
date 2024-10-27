@@ -1,3 +1,17 @@
+:root.light {
+  --back-color: #ffffff;
+  --text-color: #000000;
+  --heading-color: #2f333b;
+}
+
+:root.dark {
+  --back-color: #222222;
+  --text-color: #ffffff;
+  --heading-color: #e0e0e0;
+  --summary-color: #494949;
+  
+}
+
 .analytics-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -5,13 +19,15 @@
 }
 
 .analytics-page h1 {
+  color: var(--text-color);
   text-align: center;
   margin-bottom: 30px;
 }
 
 .analytics-section {
   margin-bottom: 40px;
-  background-color: #f8f9fa;
+  background-color: var(--summary-color);
+  color: var(--text-color);
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -19,7 +35,7 @@
 
 .analytics-section h2 {
   margin-bottom: 20px;
-  color: #333;
+  color: var(--heading-color);
 }
 
 .chart-container {

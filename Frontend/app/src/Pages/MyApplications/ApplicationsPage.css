@@ -1,7 +1,35 @@
+:root.light {
+  --back-color: #ffffff;
+  --text-color: #000000;
+  --heading-color: #2f333b;
+}
+
+:root.dark {
+  --back-color: #222222;
+  --text-color: #ffffff;
+  --heading-color: #e0e0e0;
+  --summary-color: #494949;
+}
+
 .applications-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  background-color: var(--back-color);
+  color: var(--text-color);
+}
+
+.ProtectedContent {
+  background-color: var(--back-color);
+}
+
+body{
+  background-color: var(--back-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html{
   background-color: var(--back-color);
 }
 
@@ -31,10 +59,13 @@ h2 {
   justify-content: center;
   text-align: center;
   min-height: 200px;
+  background-color: var(--summary-color);
+  color: var(--text-color);
 }
 
 .application-item h3 {
   margin-bottom: 10px;
+  color: var(--text-color);
 }
 
 .application-display,
@@ -139,6 +170,7 @@ button.create:hover {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  
 }
 
 .application-form button {
@@ -147,6 +179,7 @@ button.create:hover {
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  
 }
 
 .application-form button[type="submit"] {
