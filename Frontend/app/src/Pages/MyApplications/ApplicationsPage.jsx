@@ -5,6 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import {Modal, ModalContent, ModalHeader, ModalFooter, ModalBody} from '@chakra-ui/react'
 import { Button } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
+import { Input, Textarea, FormControl, FormLabel, Grid, GridItem } from '@chakra-ui/react';
 
 import useAuth from "../../utils";
 import "./ApplicationsPage.css";
@@ -17,13 +18,15 @@ function Applications() {
   const [error, setError] = useState('');
   const [theme, setTheme] = useState('light');
 
-  //Remove When modal complete
-  const [isCreating, setIsCreating] = useState(false);  
-
-  //Modal
+  //Create Application Dialogue Box
   const [creatingApplication, setCreatingApplication] = useState(false);
  
 
+
+
+
+
+  //Old STuff
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     company: '',
@@ -32,36 +35,6 @@ function Applications() {
     applied_date: '',
     notes: ''
   });
-  useEffect(() => {
-    fetchApplications();
-    fetchTheme();
-  }, []);
-
-  const fetchTheme = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/settings/get_settings", {
-        headers: {
-          "Authorization": `Bearer ${authTokens}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTheme(data.theme || 'light');
-      } else {
-        throw new Error('Failed to fetch theme');
-      }
-    } catch (err) {
-      setError('Error fetching theme');
-    }
-  };
-
-  useEffect(() => {
-    // Apply the theme by toggling class on the root element
-    const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-  }, [theme]);
-
   const fetchApplications = async () => {
     try {
       const response = await fetch("http://localhost:8000/application/get_applications", {
@@ -86,6 +59,7 @@ function Applications() {
     ));
   };
   const handleSubmit = async (applicationId) => {
+
     try {
       const updatedApplication = applications.find(app => app.id === applicationId);
       const response = await fetch(`http://localhost:8000/application/update_application`, {
@@ -120,7 +94,6 @@ function Applications() {
 
       if (response.ok) {
         fetchApplications();
-        setIsCreating(false);
         setFormData({ company: '', position: '', location: '', status: '', applied_date: '', last_update: '', salary: '', job_description: '', notes: '' });
       } else {
         throw new Error('Failed to create application');
@@ -149,114 +122,157 @@ function Applications() {
   };
 
 
+  useEffect(() => {
+    fetchApplications();
+    fetchTheme();
+  }, []);
+  const fetchTheme = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/settings/get_settings", {
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTheme(data.theme || 'light');
+      } else {
+        throw new Error('Failed to fetch theme');
+      }
+    } catch (err) {
+      setError('Error fetching theme');
+    }
+  };
+  useEffect(() => {
+    // Apply the theme by toggling class on the root element
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
 
   return (
     <div className="applications-container">
-      <h2>My Applications (fix styling)</h2>
-
-      {/* Have it be a plus sign to right, then have it bring up a dialogue*/}
-      <button onClick={() => setIsCreating(true)} className="create">
-        old button
-      </button>
-
-      {/* Another Button to Pull from email */}
-
-
-
-      
+      <h2>My Applications</h2>
       
       <ChakraProvider>
-        <Button colorScheme='gray'>Pull From Email (make a refresh symbol inside of 'ALL' tab  Large Button)</Button> 
-        {/* Maybe put this inside All Tab? */}
+        <Button colorScheme='gray'>Pull From Email</Button> 
         <Button colorScheme='gray' onClick={() => setCreatingApplication(true)}>New Application</Button>
        
-        {/* When pulling from email, make it so you can bring up a dialogue maybe of New Applications, new Rejections, new Responses, etc... and update them Into List */}
-        {/* Upon Pulling from email it notices anything that is not in your current applications and updates gives you a breakdown of what to add etc*/}
-
-
-        <Modal isOpen={creatingApplication} onClose={() => setCreatingApplication(false)}>
+        <Modal isOpen={creatingApplication} onClose={() => setCreatingApplication(false)} size="xl">
           <ModalContent>
 
-            <ModalHeader>Create Application</ModalHeader>
-      
-            <ModalBody>
-             Create Application Form here
-            </ModalBody>
+            <ModalHeader>New Application</ModalHeader>
+            <form onSubmit={(e) => { e.preventDefault(); handleCreate(); setCreatingApplication(false);}}>
+              <ModalBody>
 
-            <ModalFooter>
-              <Button colorScheme='red' mr={3} onClick={() => setCreatingApplication(false)}>Cancel</Button>
-              <Button colorScheme='gray' rightIcon={<ArrowForwardIcon />}>Create</Button>
-            </ModalFooter>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  <GridItem>
+                    <FormControl id="company" isRequired>
+                      <FormLabel>Company</FormLabel>
+                      <Input
+                        type="text"
+                        name="company"
+                        value={formData.company}
+                        onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                        placeholder="i.e. Amazon"
+                      />
+                    </FormControl>
+                  </GridItem>
 
+                  <GridItem>
+                    <FormControl id="position" isRequired>
+                      <FormLabel>Position</FormLabel>
+                      <Input
+                        type="text"
+                        name="position"
+                        value={formData.position}
+                        onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                        placeholder="i.e. Software Engineer"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl id="location" isRequired>
+                      <FormLabel>Location</FormLabel>
+                      <Input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="i.e. San Francisco, CA"
+                      />
+                    </FormControl>
+                  </GridItem>
+                  
+                  <GridItem>
+                    <FormControl id="salary" isRequired>
+                      <FormLabel>Salary</FormLabel>
+                      <Input
+                        type="text"
+                        name="salary"
+                        value={formData.salary}
+                        onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
+                        placeholder="i.e. 115,000"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl id="status" isRequired>
+                      <FormLabel>Status</FormLabel>
+                      <Input
+                        type="text"
+                        name="status"
+                        value={formData.status}
+                        onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                        placeholder="i.e. Pending"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem colSpan={2}>
+                    <FormControl id="job_description">
+                      <FormLabel>Job Description</FormLabel>
+                      <Textarea
+                        name="job_description"
+                        value={formData.job_description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, job_description: e.target.value }))}
+                        placeholder="i.e. Expects 2+ years of experience and proficiency in React, NodeJS, and Python"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem colSpan={2}>
+                    <FormControl id="notes">
+                      <FormLabel>Notes</FormLabel>
+                      <Textarea
+                        name="notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="i.e. Anything else you want to add!"
+                      />
+                    </FormControl>
+                  </GridItem>
+                </Grid>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button colorScheme='red' mr={3} onClick={() => setCreatingApplication(false)}>Cancel</Button>
+                <Button colorScheme='gray' type="submit" rightIcon={<ArrowForwardIcon />}>Create</Button>
+              </ModalFooter>
+            </form>
           </ModalContent>
         </Modal>
       </ChakraProvider>
       
 
-       {/* Tabs --> Figure out how to keep rest of styling correct */}
+      
       <Tabs />
 
 
-      {/* FORM: Add Job Title, Posting  */}
-
-      {isCreating && (
-        <form onSubmit={(e) => { e.preventDefault(); handleCreate(); }} className="application-form">
-          <input
-            type="text"
-            name="company"
-            value={formData.company}
-            onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-            placeholder="Company"
-            required
-          />
-          <input
-            type="text"
-            name="position"
-            value={formData.position}
-            onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
-            placeholder="Position"
-            required
-          />
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-            placeholder="Location"
-            required
-          />
-          <input
-            type="text"
-            name="status"
-            value={formData.status}
-            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-            placeholder="Status"
-            required
-          />
-          <input
-            type="text"
-            name="salary"
-            value={formData.salary}
-            onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
-            placeholder="Salary"
-            required
-          />
-          <textarea
-            name="job_description"
-            value={formData.job_description}
-            onChange={(e) => setFormData(prev => ({ ...prev, job_description: e.target.value }))}
-            placeholder="Job Description"
-          />
-          <textarea
-            name="notes"
-            value={formData.notes}
-            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Notes"
-          />
-          <button type="submit">Create</button>
-          <button type="button" className="cancel" onClick={() => setIsCreating(false)}>Cancel</button>
-        </form>
-      )}
+      
 
 
 
