@@ -11,9 +11,11 @@ function Dashboard() {
     recentResumes: []
   });
   const [error, setError] = useState('');
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchUpcomingEvents();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -34,6 +36,26 @@ function Dashboard() {
     }
   };
 
+  const fetchUpcomingEvents = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/outlook_api/get-events`, {
+        headers: {
+          "accept": "application/json", 
+          "Authorization": `Bearer ${authTokens}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data.value);
+      } else {
+        throw new Error('Failed to fetch events');
+      }
+    }
+    catch (err) {
+      setError('Error fetching events');
+  }
+  }
+
   return (
     <div className="dashboard-container">
       <h2>Dashboard</h2>
@@ -47,31 +69,47 @@ function Dashboard() {
           <p>{dashboardData.totalResumes}</p>
         </div>
       </div>
-      <div className="recent-activity">
-        <div className="activity-section">
-          <h3>Recent Applications</h3>
-          <ul className="activity-list">
-            {dashboardData.recentApplications.map((app, index) => (
-              <li key={index} className="activity-item">
+      <div className="activity-section">
+        <h3>Recent Applications</h3>
+        <ul className="activity-list">
+          {dashboardData.recentApplications.map((app, index) => (
+            <li key={index} className="activity-item">
+              <div className="application-info">
                 {app.company} - {app.position} ({app.status})
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="activity-section">
-          <h3>Recent Resumes</h3>
-          <ul className="activity-list">
-            {dashboardData.recentResumes.map((resume, index) => (
-              <li key={index} className="activity-item">
-                <div>
-                  <strong>{resume.title}</strong>
-                  <div>Uploaded: {new Date(resume.date).toLocaleDateString()}</div>
-                  <div>Last Updated: {new Date(resume.modified_date).toLocaleDateString()}</div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+                <button className="details-button" onClick={() => navigate(`/applications/${app.id}`)}>View Details</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="activity-section">
+        <h3>Recent Resumes</h3>
+        <ul className="activity-list">
+          {dashboardData.recentResumes.map((resume, index) => (
+            <li key={index} className="activity-item">
+              <div>
+                <strong>{resume.title}</strong>
+                <div>Uploaded: {new Date(resume.date).toLocaleDateString()}</div>
+                <div>Last Updated: {new Date(resume.modified_date).toLocaleDateString()}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="activity-section">
+        <h3>Upcoming Events</h3>
+        <ul className="activity-list">
+          {events.map((event, index) => (
+            <li key={index} className="activity-item">
+              <div>
+                <strong>{event.subject}</strong>
+                <div>Attendees: {event.attendees[0].emailAddress.name}</div>
+                <div>Start: {new Date(event.start.dateTime).toLocaleString()}</div>
+                <div>End: {new Date(event.end.dateTime).toLocaleString()}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
       {error && <p className="error">{error}</p>}
     </div>

@@ -1,42 +1,28 @@
-
 import { useNavigate } from 'react-router-dom';
 import PublicHeader from './PublicHeader';
+import './LandingPage.css'; // Import the new CSS file
 
 function LandingPage(){
     const navigate = useNavigate();
 
-    //Add button in top right of header
-    //Add sign up button on bottom of landing page
-    //Fix navbar so it doesn't change styling with chakra -
-
     return(
         <>
             <PublicHeader />
-            <div>
-                {/* <h1>Applytics</h1>
-                <p>Lets face it. Keeping track of 100's of applications is exhausting.</p>
-                <p>What resume works best, which roles am i most qualified for? The list goes on.</p>
-                <p>With Applytics we try to bring control back to the job search with proven analytics and data to help you come out on top</p> */}
-
-                <h1>Complete Autonomy</h1>
-                <p>Applytics allows you to connect your gmail account so that you never have to manually track applications again! Our software automatically
+            <div className="landing-container">
+                <h1 className="main-title">Complete Autonomy</h1>
+                <p className="description">Applytics allows you to connect your gmail account so that you never have to manually track applications again! Our software automatically
                     parses your email inbox for job applications, updates, and responses, allowing you to focus on what really matters - Landing your dream job
                 </p>
                 
+                <h1 className="main-title">Powered By Data</h1>
+                <p className="description">Every tracked application goes through our carefully curated metrics algorithm to ensure personalized data based on your own results</p>
 
-                <h1>Powered By Data</h1>
-                <p>Every tracked application goes through our carefully curated metrics algorithm to ensure personalized data based on your own results</p>
+                <h1 className="main-title">Tracking Made Easy</h1>
+                <p className="description">Easily navigate through a variety of application statuses, interview stages, offers, and more!</p>
 
-                <h1>Tracking Made Easy</h1>
-                <p>Easily navigate through a variety of application statuses, interview stages, offers, and more!</p>
-
-                {/* <h1>By Students For Students</h1>
-                <p>As CS students ourselves, we know how tough the job market can be. Why waste time when you can prioritize what gives you the best results</p> */}
-
-                <h1> Applytics</h1>
-                Start today! It's 100% FREE
-                <br></br>
-                <button onClick={() => navigate("/register")}>Register</button>
+                <h1 className="main-title">Applytics</h1>
+                <p className="cta">Start today! It's 100% FREE</p>
+                <button className="register-button" onClick={() => navigate("/register")}>Register</button>
             </div>
         </>
     );

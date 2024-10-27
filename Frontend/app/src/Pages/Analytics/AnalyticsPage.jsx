@@ -52,10 +52,38 @@ function Analytics() {
       return acc;
     }, {});
 
+    // New analytics: Applications over time
+    const applicationsOverTime = data.reduce((acc, app) => {
+      const date = new Date(app.date_applied).toLocaleDateString();
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    // New analytics: Success rate by company
+    const successRateByCompany = data.reduce((acc, app) => {
+      const company = app.company;
+      if (!acc[company]) {
+        acc[company] = { total: 0, successful: 0 };
+      }
+      acc[company].total += 1;
+      if (app.status === 'Accepted') {
+        acc[company].successful += 1;
+      }
+      return acc;
+    }, {});
+
+    // Calculate success rates
+    for (const company in successRateByCompany) {
+      const { total, successful } = successRateByCompany[company];
+      successRateByCompany[company] = (successful / total) * 100;
+    }
+
     // Return processed data for all charts
     return {
       statusTotals,
       topCompanies,
+      applicationsOverTime,
+      successRateByCompany,
       // Other processed data
     };
   };
@@ -104,6 +132,28 @@ function Analytics() {
     ],
   };
 
+  const applicationsOverTimeData = {
+    labels: Object.keys(processedData.applicationsOverTime),
+    datasets: [
+      {
+        label: 'Applications Over Time',
+        data: Object.values(processedData.applicationsOverTime),
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      },
+    ],
+  };
+
+  const successRateByCompanyData = {
+    labels: Object.keys(processedData.successRateByCompany),
+    datasets: [
+      {
+        label: 'Success Rate (%)',
+        data: Object.values(processedData.successRateByCompany),
+        backgroundColor: 'rgba(255, 159, 64, 0.6)',
+      },
+    ],
+  };
+
   // Return the JSX with real data
   return (
     <div className="analytics-page">
@@ -124,6 +174,20 @@ function Analytics() {
         <h2>Top Companies Applied To</h2>
         <div className="chart-container">
           <Bar data={topCompaniesData} />
+        </div>
+      </section>
+
+      <section className="analytics-section">
+        <h2>Applications Over Time</h2>
+        <div className="chart-container">
+          <Line data={applicationsOverTimeData} />
+        </div>
+      </section>
+
+      <section className="analytics-section">
+        <h2>Success Rate by Company</h2>
+        <div className="chart-container">
+          <Bar data={successRateByCompanyData} />
         </div>
       </section>
 
