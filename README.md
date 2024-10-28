@@ -22,7 +22,7 @@ Students can also utilize the metrics page to gain statistical insights about th
 
 
 ## Developer Team
-Applyticz is made by students for students. As graduating Computer Science majors ourselves, we wanted to create a way to simplify the application process and make it easier for students entering the job market to get internships or full time offers.
+As graduating Computer Science majors ourselves, we wanted to create a way to simplify the application process and make it easier for students entering the job market to get internships or full time offers.
 
 **Contributors:**
 - Alec-Nesat Colak
