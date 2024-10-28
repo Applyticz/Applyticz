@@ -3,7 +3,9 @@
 ## About
 Applyticz is a React/FastAPI application that allows students to manage, track, and analyze their job applications. Students can connect their GMail/Outlook accounts to enable autonomous tracking every time they recieve a new email. The application data will be automatically parsed, organized, and added to their applications page for easy monitoring. Upon Interview and Online Assessment invites, students will be automatically notified and the application will be categorized.
 
-Students can also utilize the metrics page to gain statistical insights about their job search. Applyticz generates detailed reports on which applications provide you the highest interview and response rates, so that the students can focus more on facts and take out the guesswork. 
+Students can also utilize the metrics page to gain statistical insights about their job search. Applyticz generates detailed reports on which applications provide you the highest interview and response rates, so that the students can focus more on facts and take out the guesswork.
+
+Applyticz is still currently in development, but we are expecting to have it completed in early December.
 
 ## Software Architecture
 **Frontend**
