@@ -11,6 +11,7 @@ from app.utils.utils import get_current_time
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse
 import io
+from fastapi.responses import StreamingResponse
 
 
 router = APIRouter()
@@ -128,32 +129,31 @@ async def get_resume(user: user_dependency, db: db_dependency):
 
 @router.get('/get_resume_by_title', tags=['resume'], status_code=status.HTTP_200_OK)
 async def get_resume_by_title(title: str, user: user_dependency, db: db_dependency):
-    # Ensure user['id'] is a string
     user_id_str = str(user['id'])
-    
+
     # Query the User from the DB
     user_in_db = db.query(User).filter(User.id == user_id_str).first()
     if not user_in_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
+
     # Query the Resume associated with the user_id and title
     resume = db.query(Resume).filter(Resume.user_id == user_id_str, Resume.title == title).first()
     if not resume:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
-    
+
+    # Return resume details along with the PDF data (encoded if needed)
     resume_dict = {
         'title': resume.title,
         'description': resume.description,
         'date': resume.date,
         'modified_date': resume.modified_date,
-        'pdf_url': resume.pdf_url,
+        'pdf_data': resume.pdf_data,  # Return the PDF data here
     }
-    
+
     return resume_dict
 
-@router.get('/get_resume_pdf', tags=['resume'], status_code=status.HTTP_200_OK)
-async def get_resume_pdf(title: str, user: user_dependency, db: db_dependency):
-    # Ensure user['id'] is a string
+@router.get('/get_resume_data', tags=['resume'], status_code=status.HTTP_200_OK)
+async def get_resume_data(title: str, user: user_dependency, db: db_dependency):
     user_id_str = str(user['id'])
 
     # Query the User from the DB
@@ -166,11 +166,14 @@ async def get_resume_pdf(title: str, user: user_dependency, db: db_dependency):
     if not resume:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
 
-    # Assuming resume.pdf_data is a binary data representation of the PDF
-    if resume.pdf_data:
-        return StreamingResponse(io.BytesIO(resume.pdf_data), media_type="application/pdf")
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PDF data not found")
+    if not resume.pdf_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume PDF data not found")
+
+    # Return the PDF as a StreamingResponse
+    pdf_stream = io.BytesIO(resume.pdf_data)
+    return StreamingResponse(pdf_stream, media_type="application/pdf", headers={
+        "Content-Disposition": f"attachment; filename={resume.title}.pdf"
+    })
 
 @router.delete('/delete_resume', tags=['resume'], status_code=status.HTTP_200_OK)
 async def delete_resume(user: user_dependency, db: db_dependency, title: str = Query(..., description="Title of the resume to delete")):

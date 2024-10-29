@@ -46,6 +46,11 @@ async def get_applications(user: user_dependency, db: db_dependency):
     
     # Query the Applications associated with the user_id
     applications = db.query(Application).filter(Application.user_id == user_id_str).all()
+    
+    # Don't return the same application with different statuses
+    # Sort the applications by last_update and company name
+    applications = sorted(applications, key=lambda x: (x.last_update, x.company))
+    
     if not applications:
         return []  # Return an empty list if no applications found
     

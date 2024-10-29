@@ -1,19 +1,14 @@
 #!/bin/bash
-
 # Change to the backend directory
-cd backend  # Ensure the directory name matches (case-sensitive)
+cd backend || { echo "Failed to change directory to backend. Exiting..."; exit 1; }
 
-# Check if Python 3 or Python is available and use the correct one
-if command -v python3 &>/dev/null; then
-    PYTHON_EXEC=python3
-    PIP_EXEC=pip3
-    echo "Python 3 is available."
-elif command -v python &>/dev/null; then
-    PYTHON_EXEC=python
-    PIP_EXEC=pip
-    echo "Python is available."
+# Check if Python 3.11 is available and use it
+if command -v /opt/homebrew/bin/python3.11 &>/dev/null; then
+    PYTHON_EXEC=/opt/homebrew/bin/python3.11
+    PIP_EXEC=/opt/homebrew/bin/python3.11 -m pip  # Use pip for Python 3.11
+    echo "Python 3.11 is available."
 else
-    echo "Python is not installed. Please install Python 3."
+    echo "Python 3.11 is not installed. Please install Python 3.11."
     exit 1
 fi
 
@@ -40,15 +35,27 @@ else
     exit 1
 fi
 
+# Ensure setuptools, wheel, and pip are up-to-date
+echo "Upgrading pip, setuptools, and wheel..."
+pip install --upgrade pip setuptools wheel
+
 # Install required packages from requirements.txt with verbose output
-echo "Installing required packages..."
-$PIP_EXEC install --no-cache-dir -r requirements.txt -v
+if [[ -f requirements.txt ]]; then
+    echo "Installing required packages..."
+    pip install --no-cache-dir -r requirements.txt -v
+else
+    echo "requirements.txt not found. Skipping package installation."
+fi
+
+# Inform the user that the virtual environment is activated
+echo "Virtual environment activated using Python 3.11 and required packages installed."
 
 # Ask the user if they want to use Docker and Docker Compose
 echo -n "Do you want to use Docker (y/n): "
 read -r USE_DOCKER
 
 if [[ "$USE_DOCKER" =~ ^[Yy]$ ]]; then
+
     echo "Running Docker..."
 
     # Ask if user wants to recreate Docker Images

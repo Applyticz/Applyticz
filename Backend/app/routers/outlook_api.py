@@ -8,9 +8,11 @@ from typing import Annotated
 from app.utils.utils import get_current_user
 from app.utils.parsing_tool import extract_plain_text
 from app.db.database import db_dependency
-from app.models.database_models import User
+from app.models.database_models import User, Application
 from app.models.pydantic_models import UpdateEmailRequest
-from app.utils.email_parser import extract_company_and_position
+from app.utils.email_parser import extract_company_and_position, parse_email_data_hardcoded
+from app.routers.application import create_application, update_application
+from datetime import datetime
 
 
 # Load environment variables from .env file
@@ -184,8 +186,8 @@ async def get_user_messages(user: user_dependency):
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(phrase: str, user: user_dependency):
-        # Define headers with the access token
+async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db_dependency):
+    # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
     access_token = user_tokens.get(user_id)
@@ -208,29 +210,88 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency):
         # Parse the response to get only the specific email fields you need (e.g., subject, from, receivedDateTime)
         email_data = response.json()
         filtered_emails = []
-        
 
+        # Extract necessary email fields and plain text body
         for email in email_data.get('value', []):
             filtered_emails.append({
                 'subject': email.get('subject'),
                 'from': email.get('from', {}).get('emailAddress', {}).get('address'),
                 'receivedDateTime': email.get('receivedDateTime'),
-                'bodyPreview': email.get('bodyPreview'),
+                'bodyPreview': extract_plain_text(email.get('bodyPreview')),
                 'body': extract_plain_text(email.get('body', {}).get('content', ''))
             })
             
-        for email in filtered_emails:
-            extract_company_and_position(email.get('body'))
-            print("COMPANY AND POSITION: ", extract_company_and_position(email.get('body')))
-            
-            
-        print("FILTERED EMAILS: ", filtered_emails)
-        
-        
+        # Sort emails by 'receivedDateTime' (oldest first)
+        filtered_emails.sort(key=lambda x: x['receivedDateTime'])
 
+        location = "Unknown"
+        salary = "Unknown"
+
+        # Process emails in chronological order
+        for email in filtered_emails:
+            # Convert the email's receivedDateTime to a naive datetime object (removing timezone info)
+            email_received_time = datetime.fromisoformat(email['receivedDateTime'].replace('Z', '+00:00')).replace(tzinfo=None)
+
+            # Convert to the desired format: MM-DD-YYYY HH:MM AM/PM
+            formatted_applied_date = email_received_time.strftime("%m-%d-%Y %I:%M %p")
+
+            hard_coded_data = parse_email_data_hardcoded(email.get('body'))
+            print("COMPANY AND POSITION HARD CODED: ", hard_coded_data)
+
+            # Check if there is an application in the db with the same company name
+            existing_applications = db.query(Application).filter(Application.company == hard_coded_data['company']).all()
+
+            if not existing_applications:
+                # No existing application, so create a new one
+                new_application = Application(
+                    user_id=user_id,
+                    company=hard_coded_data['company'],
+                    position=hard_coded_data['position'],
+                    applied_date=formatted_applied_date,  # Store formatted applied date
+                    last_update=formatted_applied_date,  # Store formatted last update
+                    location=location,
+                    salary=salary,
+                    status=hard_coded_data.get('status', "Received")  # Default to "Received"
+                )
+                db.add(new_application)
+                db.commit()
+                print("New application created")
+            else:
+                # Application already exists, so check if the email is newer than the last update
+                existing_application = existing_applications[0]  # Assuming one application per company
+
+                # Convert the last_update field to a naive datetime object
+                last_updated_time = existing_application.last_update
+                if isinstance(last_updated_time, str):
+                    # Convert string to datetime
+                    last_updated_time = datetime.strptime(last_updated_time, "%m-%d-%Y %I:%M %p")
+
+                # Remove timezone info to make both datetime objects naive
+                last_updated_time = last_updated_time.replace(tzinfo=None)
+
+                # Process the email only if it's newer than the last updated time
+                if email_received_time > last_updated_time:
+                    # Update the application with newer status or position
+                    existing_application.last_update = formatted_applied_date  # Store formatted last update
+
+                    # Only update status if a more specific one is found (e.g., 'Rejected')
+                    if hard_coded_data.get('status') and hard_coded_data['status'] != 'Received':
+                        existing_application.status = hard_coded_data['status']
+
+                    # Optionally update position if it's not 'Unknown'
+                    if hard_coded_data.get('position') and hard_coded_data['position'] != 'Unknown':
+                        existing_application.position = hard_coded_data['position']
+
+                    db.commit()
+                    print(f"Application status for {hard_coded_data['company']} updated.")
+                else:
+                    print(f"Skipping email for {hard_coded_data['company']} as it's older than the last update.")
+        
         return filtered_emails
+
     else:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
+
     
 # Function to get a refresh token for Outlook API
 @router.get("/refresh-token", tags=["Outlook API"], status_code=status.HTTP_200_OK)

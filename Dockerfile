@@ -8,7 +8,11 @@ WORKDIR /app
 COPY Backend/requirements.txt /app/requirements.txt
 
 # Install the Python dependencies
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+# Install the spaCy language model
+RUN python -m spacy download en_core_web_sm
 
 # Copy the rest of the backend code to the container
 COPY Backend/ /app
