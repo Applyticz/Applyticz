@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { ChakraProvider } from '@chakra-ui/react'
 import {Modal, ModalContent, ModalHeader, ModalFooter, ModalBody} from '@chakra-ui/react'
 import { Button } from '@chakra-ui/react'
-import { ArrowForwardIcon } from '@chakra-ui/icons'
+import { ArrowForwardIcon, ArrowDownIcon, ArrowUpIcon, AddIcon, RepeatIcon } from '@chakra-ui/icons'
 import { Input, Textarea, FormControl, FormLabel, Grid, GridItem, Radio, RadioGroup, Flex } from '@chakra-ui/react';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
-import {Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Box} from '@chakra-ui/react'
+import {Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Box, IconButton, Tooltip} from '@chakra-ui/react'
 
 
 import useAuth from "../../utils";
@@ -285,8 +285,13 @@ function Applications() {
 
             {/* Buttons */}
             <Box ml="auto"> 
-              <Button colorScheme="gray" mr={2}>Pull From Email</Button>
-              <Button colorScheme="gray" onClick={() => setCreatingApplication(true)}>New Application</Button>
+              <Tooltip label='Update applications from email'>
+                <IconButton colorScheme="gray" icon={<RepeatIcon />} mr={2}/>
+              </Tooltip>
+              
+              <Tooltip label='Create new application'>
+                <IconButton colorScheme="gray" icon={<AddIcon />} onClick={() => setCreatingApplication(true)}/>
+              </Tooltip>
             </Box>
           </Flex>
 
@@ -320,8 +325,8 @@ function Applications() {
               <Flex justify="space-between" align="center">
                 <Flex align="center">
                   <Input placeholder='Search' width="300px" />
-                  <Button colorScheme='gray' ml={2}>Button 1</Button>
-                  <Button colorScheme='gray' ml={2}>Button 2</Button>
+                  <Button colorScheme='gray' ml={2} rightIcon={<ArrowDownIcon />}>Recent</Button>
+                  <Button colorScheme='gray' ml={2} rightIcon={<ArrowUpIcon />}>Oldest</Button>
                 </Flex>
                 <h1 style={{ textAlign: 'right' }}>Total: {applications.length}</h1>
               </Flex>
