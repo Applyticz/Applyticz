@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChakraProvider } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
+import {Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Box} from '@chakra-ui/react'
 
 import "./ApplicationsPage.css";
 import "../../App.css";
@@ -117,7 +118,6 @@ function Tabbing() {
         <ChakraProvider>
             <Tabs variant='soft-rounded'>
                 <TabList>
-
                     {/* Have number at top of each tab! */}
                     <Tab _selected={{ color: 'white', bg: 'blue.500' }}>All</Tab>
                     <Tab _selected={{ color: 'white', bg: 'yellow.400' }}>Awaiting Response</Tab>
@@ -127,9 +127,8 @@ function Tabbing() {
                     <Tab _selected={{ color: 'white', bg: 'teal.300' }}>Interviewing</Tab>  
                     <Tab _selected={{ color: 'white', bg: 'red.400' }}>Rejected</Tab>
                     <Tab _selected={{ color: 'white', bg: 'purple.300' }}>Offers</Tab>  
-                    
-
                 </TabList>
+
 
                 <TabPanels>
 
@@ -158,7 +157,37 @@ function Tabbing() {
 
 
                     <TabPanel>
-                          
+                        <h1 >Total: 4 </h1>
+                        <br></br>
+                        <Accordion allowToggle>
+                            {applications.map((application) => (
+                                <AccordionItem key={application.id}>  {/* Iterating through each application (all tab) */}
+                                    <h2>
+                                        <AccordionButton>
+                                        <Box as="span" flex="1" textAlign="left">
+                                            {application.company}, {application.position}
+                                        </Box>
+                                        <AccordionIcon />
+                                        </AccordionButton>
+                                    </h2>
+                                    <AccordionPanel pb={4}>
+                                        <p>Stage: {application.status}</p>
+                                        <p>Applied Date: {application.applied_date}</p>
+                                        <p>Last Update: {application.last_update}</p>
+                                        <p>Notes: {application.notes}</p>
+                                        {/* Add buttons or inputs as needed */}
+                                    </AccordionPanel>
+                                </AccordionItem>
+                            ))}
+                        </Accordion> 
+                    
+
+
+
+
+
+
+
                         <div className="applications-list">
                             {applications.map((application) => (
                             <div key={application.id} className="application-item">
@@ -237,12 +266,12 @@ function Tabbing() {
                             </div>
                             ))}
                         </div>                      
-
-                        
                     </TabPanel>
 
+
+
                     <TabPanel>
-                        <p>Order Most Recent First</p>
+                        
                     </TabPanel>
 
                     <TabPanel>
