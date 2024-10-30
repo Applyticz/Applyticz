@@ -5,7 +5,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import {Modal, ModalContent, ModalHeader, ModalFooter, ModalBody} from '@chakra-ui/react'
 import { Button } from '@chakra-ui/react'
 import { ArrowForwardIcon } from '@chakra-ui/icons'
-import { Input, Textarea, FormControl, FormLabel, Grid, GridItem, HStack, Stack, Radio, RadioGroup } from '@chakra-ui/react';
+import { Input, Textarea, FormControl, FormLabel, Grid, GridItem, HStack, Stack, Radio, RadioGroup, Flex, Box } from '@chakra-ui/react';
 
 import useAuth from "../../utils";
 import "./ApplicationsPage.css";

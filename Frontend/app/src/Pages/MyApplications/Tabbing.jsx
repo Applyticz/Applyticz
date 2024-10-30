@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChakraProvider } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
-import {Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Box} from '@chakra-ui/react'
+import {Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Box, Button} from '@chakra-ui/react'
 
 import "./ApplicationsPage.css";
 import "../../App.css";
@@ -157,16 +157,34 @@ function Tabbing() {
 
 
                     <TabPanel>
-                        <h1 >Total: 4 </h1>
+                        <h1 style={{textAlign: 'right'}}>Total: {applications.length} </h1>
                         <br></br>
                         <Accordion allowToggle>
                             {applications.map((application) => (
                                 <AccordionItem key={application.id}>  {/* Iterating through each application (all tab) */}
                                     <h2>
-                                        <AccordionButton>
-                                        <Box as="span" flex="1" textAlign="left">
-                                            {application.company}, {application.position}
-                                        </Box>
+                                        <AccordionButton _expanded={{color: 'white', bg: 'blue.500'}}>
+                                            <Box as="span" flex="1" textAlign="left" >
+                                                <Box as="span" fontWeight="bold">{application.company}</Box>
+                                                ,{" "}
+                                                <Box as="span" fontStyle="italic">{application.position}</Box>
+                                                <br />
+                                                11/4/24
+                                            </Box>
+                                            <Box 
+                                                as="span" 
+                                                flex="1" 
+                                                textAlign="right" 
+                                                borderRadius="full" 
+                                                border="2px solid" 
+                                                borderColor="blue.500" 
+                                                px={3} 
+                                                py={1}
+                                                display="inline-block"
+                                                maxW="162px"
+                                                >
+                                                {application.status}
+                                                </Box>
                                         <AccordionIcon />
                                         </AccordionButton>
                                     </h2>
@@ -175,7 +193,7 @@ function Tabbing() {
                                         <p>Applied Date: {application.applied_date}</p>
                                         <p>Last Update: {application.last_update}</p>
                                         <p>Notes: {application.notes}</p>
-                                        {/* Add buttons or inputs as needed */}
+                                        <Button colorScheme='gray'>Edit</Button> {/* Make circular */}
                                     </AccordionPanel>
                                 </AccordionItem>
                             ))}
@@ -188,7 +206,7 @@ function Tabbing() {
 
 
 
-                        <div className="applications-list">
+                        {/* <div className="applications-list">
                             {applications.map((application) => (
                             <div key={application.id} className="application-item">
                                 <h3>{application.company} - {application.position}</h3>
@@ -265,7 +283,7 @@ function Tabbing() {
                                 )}
                             </div>
                             ))}
-                        </div>                      
+                        </div>                       */}
                     </TabPanel>
 
 
