@@ -56,7 +56,7 @@ function LinkedAccounts(){
     
     return(
         <>
-            <h2>Linked Accounts (fix styling)</h2>
+            <h2 style={{ textAlign: 'left', fontWeight: 'bold'}}>Linked Accounts</h2>
             <ChakraProvider>
                 <h1>Gmail</h1>
                     <p>List Current Linked Accounts HERE</p>

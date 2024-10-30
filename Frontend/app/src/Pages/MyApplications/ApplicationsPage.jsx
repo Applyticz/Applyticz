@@ -158,7 +158,7 @@ function Applications() {
 
   return (
     <div className="applications-container">
-      <h2 style={{ textAlign: 'left'}}>My Applications</h2>
+      <h2 style={{ textAlign: 'left', fontWeight: 'bold'}}>My Applications</h2>
       
       <ChakraProvider>
         
@@ -373,7 +373,6 @@ function Applications() {
                   ))}
               </Accordion> 
         
-
                 {/* <div className="applications-list">
                     {applications.map((application) => (
                     <div key={application.id} className="application-item">

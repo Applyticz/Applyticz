@@ -66,7 +66,7 @@ function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      <h2>Dashboard</h2>
+      <h2 style={{ textAlign: 'left'}}>Dashboard</h2>
       <div className="dashboard-summary">
         <div className="summary-card">
           <h3>Total Applications</h3>
