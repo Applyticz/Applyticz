@@ -315,47 +315,58 @@ function Applications() {
 
 
             <TabPanel>
-                <h1 style={{textAlign: 'right'}}>Total: {applications.length} </h1>
-                <br></br>
-                <Accordion allowToggle>
-                    {applications.map((application) => (
-                        <AccordionItem key={application.id}>  {/* Iterating through each application (all tab) */}
-                            <h2>
-                                <AccordionButton _expanded={{color: 'white', bg: 'blue.500'}}>
-                                    <Box as="span" flex="1" textAlign="left" >
-                                        <Box as="span" fontWeight="bold">{application.company}</Box>
-                                        ,{" "}
-                                        <Box as="span" fontStyle="italic">{application.position}</Box>
-                                        <br />
-                                        11/4/24
-                                    </Box>
-                                    <Box 
-                                        as="span" 
-                                        flex="1" 
-                                        textAlign="right" 
-                                        borderRadius="full" 
-                                        border="2px solid" 
-                                        borderColor="blue.500" 
-                                        px={3} 
-                                        py={1}
-                                        display="inline-block"
-                                        maxW="160px"
-                                        >
-                                        {application.status}
-                                        </Box>
-                                <AccordionIcon />
-                                </AccordionButton>
-                            </h2>
-                            <AccordionPanel pb={4}>
-                                <p>Stage: {application.status}</p>
-                                <p>Applied Date: {application.applied_date}</p>
-                                <p>Last Update: {application.last_update}</p>
-                                <p>Notes: {application.notes}</p>
-                                <Button colorScheme='gray'>Edit</Button> {/* Make circular */}
-                            </AccordionPanel>
-                        </AccordionItem>
-                    ))}
-                </Accordion> 
+              
+              {/* Headline */}
+              <Flex justify="space-between" align="center">
+                <Flex align="center">
+                  <Input placeholder='Search' width="300px" />
+                  <Button colorScheme='gray' ml={2}>Button 1</Button>
+                  <Button colorScheme='gray' ml={2}>Button 2</Button>
+                </Flex>
+                <h1 style={{ textAlign: 'right' }}>Total: {applications.length}</h1>
+              </Flex>
+              <br></br>
+
+
+              <Accordion allowToggle>
+                  {applications.map((application) => (
+                      <AccordionItem key={application.id}>  {/* Iterating through each application (all tab) */}
+                          <h2>
+                              <AccordionButton _expanded={{color: 'white', bg: 'blue.500'}}>
+                                  <Box as="span" flex="1" textAlign="left" >
+                                      <Box as="span" fontWeight="bold">{application.company}</Box>
+                                      ,{" "}
+                                      <Box as="span" fontStyle="italic">{application.position}</Box>
+                                      <br />
+                                      11/4/24
+                                  </Box>
+                                  <Box 
+                                      as="span" 
+                                      flex="1" 
+                                      textAlign="right" 
+                                      borderRadius="full" 
+                                      border="2px solid" 
+                                      borderColor="blue.500" 
+                                      px={3} 
+                                      py={1}
+                                      display="inline-block"
+                                      maxW="160px"
+                                      >
+                                      {application.status}
+                                      </Box>
+                              <AccordionIcon />
+                              </AccordionButton>
+                          </h2>
+                          <AccordionPanel pb={4}>
+                              <p>Stage: {application.status}</p>
+                              <p>Applied Date: {application.applied_date}</p>
+                              <p>Last Update: {application.last_update}</p>
+                              <p>Notes: {application.notes}</p>
+                              <Button colorScheme='gray'>Edit</Button> {/* Make circular */}
+                          </AccordionPanel>
+                      </AccordionItem>
+                  ))}
+              </Accordion> 
         
 
                 {/* <div className="applications-list">
