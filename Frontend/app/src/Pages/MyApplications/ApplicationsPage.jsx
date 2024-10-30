@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 //Chakra
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, HStack } from '@chakra-ui/react'
 import {Modal, ModalContent, ModalHeader, ModalFooter, ModalBody} from '@chakra-ui/react'
 import { Button } from '@chakra-ui/react'
 import { ArrowForwardIcon, ArrowDownIcon, ArrowUpIcon, AddIcon, RepeatIcon } from '@chakra-ui/icons'
@@ -363,13 +363,13 @@ function Applications() {
                               </AccordionButton>
                           </h2>
                           <AccordionPanel pb={4}>
-                              <p style={{ fontWeight: 'bold' }}>Location:</p>
+                              <p>Location:</p>
                                 <p style={{ textIndent: '20px' }}>{application.location}</p>
-                              <p style={{ fontWeight: 'bold' }}>Salary:</p>
-                                <p style={{ textIndent: '20px' }}>{application.salary}</p>
-                              <p style={{ fontWeight: 'bold' }}>Job Description:</p>
+                              <p>Salary:</p>
+                              <p style={{ textIndent: '20px' }}>{application.salary}</p>
+                              <p>Job Description:</p>
                                 <p style={{ textIndent: '20px' }}>{application.job_description}</p>
-                              <p style={{ fontWeight: 'bold' }}>Notes:</p>
+                              <p>Notes:</p>
                                <p style={{ textIndent: '20px' }}>{application.notes}</p>
                               <br />
                               <Button colorScheme='gray'>Edit</Button> {/* Make circular */}
