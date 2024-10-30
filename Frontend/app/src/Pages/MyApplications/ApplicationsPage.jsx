@@ -363,10 +363,15 @@ function Applications() {
                               </AccordionButton>
                           </h2>
                           <AccordionPanel pb={4}>
-                              <p>Stage: {application.status}</p>
-                              <p>Applied Date: {application.applied_date}</p>
-                              <p>Last Update: {application.last_update}</p>
-                              <p>Notes: {application.notes}</p>
+                              <p style={{ fontWeight: 'bold' }}>Location:</p>
+                                <p style={{ textIndent: '20px' }}>{application.location}</p>
+                              <p style={{ fontWeight: 'bold' }}>Salary:</p>
+                                <p style={{ textIndent: '20px' }}>{application.salary}</p>
+                              <p style={{ fontWeight: 'bold' }}>Job Description:</p>
+                                <p style={{ textIndent: '20px' }}>{application.job_description}</p>
+                              <p style={{ fontWeight: 'bold' }}>Notes:</p>
+                               <p style={{ textIndent: '20px' }}>{application.notes}</p>
+                              <br />
                               <Button colorScheme='gray'>Edit</Button> {/* Make circular */}
                           </AccordionPanel>
                       </AccordionItem>
