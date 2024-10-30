@@ -1,16 +1,116 @@
 import React, { useState, useEffect } from 'react';
-
 import { ChakraProvider } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 
-function Tabbing() {
-//   const { authTokens } = useAuth();
-//   const [applications, setApplications] = useState([]);
-//   const [error, setError] = useState('');
-//   const [isCreating, setIsCreating] = useState(false);
-//   const [editingId, setEditingId] = useState(null);
+import "./ApplicationsPage.css";
+import "../../App.css";
+import useAuth from "../../utils";
 
- 
+
+
+function Tabbing() {
+  const { authTokens } = useAuth();
+  const [applications, setApplications] = useState([]); 
+  const [editingId, setEditingId] = useState(null);
+  useEffect(() => {
+    fetchApplications();
+    fetchTheme();
+  }, []); 
+
+
+  //Handlers
+  const fetchApplications = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/application/get_applications", {
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setApplications(data);
+      } else {
+        throw new Error('Failed to fetch applications');
+      }
+    } catch (err) {
+      setError('Error fetching applications');
+    }
+  };
+  const handleInputChange = (e, applicationId) => {
+    const { name, value } = e.target;
+    setApplications(prevApplications => prevApplications.map(app => 
+      app.id === applicationId ? { ...app, [name]: value } : app
+    ));
+  };
+  const handleSubmit = async (applicationId) => {
+
+    try {
+      const updatedApplication = applications.find(app => app.id === applicationId);
+      const response = await fetch(`http://localhost:8000/application/update_application`, {
+        method: 'PUT',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authTokens}`
+        },
+        body: JSON.stringify(updatedApplication)
+      });
+
+      if (response.ok) {
+        setEditingId(null);
+        fetchApplications();
+      } else {
+        throw new Error('Failed to update application');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8000/application/delete_application?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+
+      if (response.ok) {
+        fetchApplications();
+      } else {
+        throw new Error('Failed to delete application');
+      }
+    } catch (err) {
+      setError('Error deleting application');
+    }
+  };
+
+
+  //Themes
+  const [theme, setTheme] = useState('light');
+  const fetchTheme = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/settings/get_settings", {
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTheme(data.theme || 'light');
+      } else {
+        throw new Error('Failed to fetch theme');
+      }
+    } catch (err) {
+      setError('Error fetching theme');
+    }
+  };
+  useEffect(() => {
+    // Apply the theme by toggling class on the root element
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
 
   return (
     <div>
@@ -55,10 +155,90 @@ function Tabbing() {
                             Or buttons that move it to rejected/interviewing tab depending
                         </p> */}
 
-                    <TabPanel>
-                        
-                        
 
+
+                    <TabPanel>
+                          
+                        <div className="applications-list">
+                            {applications.map((application) => (
+                            <div key={application.id} className="application-item">
+                                <h3>{application.company} - {application.position}</h3>
+                                {editingId === application.id ? (
+                                <div className="application-edit-form">
+                                    <input
+                                    type="text"
+                                    name="company"
+                                    value={application.company}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Company"
+                                    required
+                                    />
+                                    <input
+                                    type="text"
+                                    name="position"
+                                    value={application.position}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Position"
+                                    required
+                                    />
+                                    <input
+                                    type="text"
+                                    name="location"
+                                    value={application.location}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Location"
+                                    required
+                                    />
+                                    <input
+                                    type="text"
+                                    name="status"
+                                    value={application.status}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Status"
+                                    required
+                                    />
+                                    <input
+                                    type="text"
+                                    name="salary"
+                                    value={application.salary}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Salary"
+                                    required
+                                    />
+                                    <textarea
+                                    name="job_description"
+                                    value={application.job_description}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Job Description"
+                                    />
+                                    <textarea
+                                    name="notes"
+                                    value={application.notes}
+                                    onChange={(e) => handleInputChange(e, application.id)}
+                                    placeholder="Notes"
+                                    />
+                                    <div className="button-group">
+                                    <button onClick={() => handleSubmit(application.id)} className="save">Save</button>
+                                    <button onClick={() => setEditingId(null)} className="cancel">Cancel</button>
+                                    </div>
+                                </div>
+                                ) : (
+                                <div className="application-display">
+                                    <p>Stage: {application.status}</p>
+                                    <p>Applied Date: {application.applied_date}</p>
+                                    <p>Last Update: {application.last_update}</p>
+                                    <p>Notes: {application.notes}</p>
+                                    <div className="button-group">
+                                    <button onClick={() => setEditingId(application.id)} className="edit">Edit</button>
+                                    <button onClick={() => handleDelete(application.id)} className="delete">Delete</button>
+                                    </div>
+                                </div>
+                                )}
+                            </div>
+                            ))}
+                        </div>                      
+
+                        
                     </TabPanel>
 
                     <TabPanel>

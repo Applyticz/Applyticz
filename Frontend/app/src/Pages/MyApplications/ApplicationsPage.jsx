@@ -14,73 +14,11 @@ import Tabs from './Tabbing.jsx';
 
 function Applications() {
   const { authTokens } = useAuth();
-  const [applications, setApplications] = useState([]);
   const [error, setError] = useState('');
-  const [theme, setTheme] = useState('light');
+  
 
   //Create Application Dialogue Box
   const [creatingApplication, setCreatingApplication] = useState(false);
- 
-
-
-
-
-
-  //Old STuff
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({
-    company: '',
-    position: '',
-    status: '',
-    applied_date: '',
-    notes: ''
-  });
-  const fetchApplications = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/application/get_applications", {
-        headers: {
-          "Authorization": `Bearer ${authTokens}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setApplications(data);
-      } else {
-        throw new Error('Failed to fetch applications');
-      }
-    } catch (err) {
-      setError('Error fetching applications');
-    }
-  };
-  const handleInputChange = (e, applicationId) => {
-    const { name, value } = e.target;
-    setApplications(prevApplications => prevApplications.map(app => 
-      app.id === applicationId ? { ...app, [name]: value } : app
-    ));
-  };
-  const handleSubmit = async (applicationId) => {
-
-    try {
-      const updatedApplication = applications.find(app => app.id === applicationId);
-      const response = await fetch(`http://localhost:8000/application/update_application`, {
-        method: 'PUT',
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${authTokens}`
-        },
-        body: JSON.stringify(updatedApplication)
-      });
-
-      if (response.ok) {
-        setEditingId(null);
-        fetchApplications();
-      } else {
-        throw new Error('Failed to update application');
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
   const handleCreate = async () => {
     try {
       const response = await fetch("http://localhost:8000/application/create_application", {
@@ -102,30 +40,17 @@ function Applications() {
       setError(err.message);
     }
   };
-  const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`http://localhost:8000/application/delete_application?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          "Authorization": `Bearer ${authTokens}`
-        }
-      });
-
-      if (response.ok) {
-        fetchApplications();
-      } else {
-        throw new Error('Failed to delete application');
-      }
-    } catch (err) {
-      setError('Error deleting application');
-    }
-  };
+  const [formData, setFormData] = useState({
+    company: '',
+    position: '',
+    status: '',
+    applied_date: '',
+    notes: ''
+  });
 
 
-  useEffect(() => {
-    fetchApplications();
-    fetchTheme();
-  }, []);
+  //Themes
+  const [theme, setTheme] = useState('light');
   const fetchTheme = async () => {
     try {
       const response = await fetch("http://localhost:8000/settings/get_settings", {
@@ -222,7 +147,7 @@ function Applications() {
                   <GridItem>
                     <FormControl id="status">
                       <FormLabel>Stage</FormLabel>
-                        <RadioGroup onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))} value={formData.status}>
+                        <RadioGroup onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))} value={formData.status} defaultValue='Awaiting Response'>
                           <Radio value="Awaiting Response">Awaiting Response</Radio>
                           <Radio value="Positive Response">Positive Response</Radio>
                           <Radio value="Interviewing">Interviewing</Radio>
@@ -269,94 +194,8 @@ function Applications() {
         </Modal>
       </ChakraProvider>
       
-
       
       <Tabs />
-
-
-      
-
-
-
-
-      <div className="applications-list">
-        {applications.map((application) => (
-          <div key={application.id} className="application-item">
-            <h3>{application.company} - {application.position}</h3>
-            {editingId === application.id ? (
-              <div className="application-edit-form">
-                <input
-                  type="text"
-                  name="company"
-                  value={application.company}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Company"
-                  required
-                />
-                <input
-                  type="text"
-                  name="position"
-                  value={application.position}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Position"
-                  required
-                />
-                <input
-                  type="text"
-                  name="location"
-                  value={application.location}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Location"
-                  required
-                />
-                <input
-                  type="text"
-                  name="status"
-                  value={application.status}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Status"
-                  required
-                />
-                <input
-                  type="text"
-                  name="salary"
-                  value={application.salary}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Salary"
-                  required
-                />
-                <textarea
-                  name="job_description"
-                  value={application.job_description}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Job Description"
-                />
-                <textarea
-                  name="notes"
-                  value={application.notes}
-                  onChange={(e) => handleInputChange(e, application.id)}
-                  placeholder="Notes"
-                />
-                <div className="button-group">
-                  <button onClick={() => handleSubmit(application.id)} className="save">Save</button>
-                  <button onClick={() => setEditingId(null)} className="cancel">Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div className="application-display">
-                <p>Stage: {application.status}</p>
-                <p>Applied Date: {application.applied_date}</p>
-                <p>Last Update: {application.last_update}</p>
-                <p>Notes: {application.notes}</p>
-                <div className="button-group">
-                  <button onClick={() => setEditingId(application.id)} className="edit">Edit</button>
-                  <button onClick={() => handleDelete(application.id)} className="delete">Delete</button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
 
       {error && <p className="error">{error}</p>}
     </div>
