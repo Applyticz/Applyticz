@@ -1,13 +1,38 @@
+:root.light {
+  --back-color: #ffffff;
+  --text-color: #000000;
+  --heading-color: #2f333b;
+}
+
+:root.dark {
+  --back-color: #222222;
+  --text-color: #ffffff;
+  --heading-color: #e0e0e0;
+}
+
+body{
+  background-color: var(--back-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h2{
+  color: var(--heading-color);
+}
 .settings-container {
   padding: 20px;
   max-width: 600px;
   margin: 0 auto;
+  background-color: var(--back-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .settings-form {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  color: var(--text-color);
 }
 
 .settings-form label {
@@ -19,14 +44,16 @@
 .settings-form input,
 .settings-form select {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #8f8f8f;
+  color:var(--text-color);
+  background-color: var(--back-color);
   border-radius: 4px;
 }
 
 .settings-form button {
   padding: 10px;
   background-color: #28a745;
-  color: white;
+  color: var(--back-color);
   border: none;
   border-radius: 4px;
   cursor: pointer;

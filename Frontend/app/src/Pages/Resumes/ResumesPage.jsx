@@ -5,6 +5,7 @@ import "./ResumesPage.css";
 function Resumes() {
   const { authTokens } = useAuth();
   const [resumes, setResumes] = useState([]);
+  const [theme, setTheme] = useState('light');
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [editingData, setEditingData] = useState({
@@ -20,7 +21,34 @@ function Resumes() {
 
   useEffect(() => {
     fetchResumes();
+    fetchTheme();
   }, []);
+
+
+  const fetchTheme = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/settings/get_settings", {
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTheme(data.theme || 'light');
+      } else {
+        throw new Error('Failed to fetch theme');
+      }
+    } catch (err) {
+      setError('Error fetching theme');
+    }
+  };
+
+  useEffect(() => {
+    // Apply the theme by toggling class on the root element
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
 
   const fetchResumes = async () => {
     try {
@@ -187,7 +215,7 @@ function Resumes() {
       return (
         <div>
           <div className="button-bar">
-            <h1>My Resumes</h1>
+            <h2>My Resumes</h2>
             <button onClick={() => setIsCreating(true)} className="create">Create New Resume</button>
             <button onClick={handleDeleteAll} className="delete-all">Delete All Resumes</button>
           </div>

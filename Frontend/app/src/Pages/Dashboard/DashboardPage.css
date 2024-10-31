@@ -1,10 +1,20 @@
 .dashboard-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f4f4f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+:root.light {
+  --back-color: #ffffff;
+  --text-color: #000000;
+  --heading-color: #2f333b;
+}
+
+:root.dark {
+  --back-color: #222222;
+  --text-color: #ffffff;
+  --heading-color: #e0e0e0;
+  --summary-color: #494949;
 }
 
 .dashboard-summary, .activity-section {
@@ -16,8 +26,43 @@
 }
 
 .summary-card {
-    text-align: center;
-    margin-bottom: 10px;
+  background-color: var(--summary-color);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.summary-card h3 {
+  margin-top: 0;
+  color: var(--heading-color);
+}
+
+.summary-card p {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+  margin: 10px 0 0;
+}
+
+.recent-activity {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.activity-section {
+  background-color: var(--summary-color);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.activity-section h3 {
+  margin-top: 0;
+  color: var(--heading-color);
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 10px;
 }
 
 .activity-list {

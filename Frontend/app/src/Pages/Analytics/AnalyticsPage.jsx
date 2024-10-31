@@ -1,14 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import { Bar, Pie, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
+import useAuth from "../../utils";
 import './AnalyticsPage.css';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
 
 function Analytics() {
+  const { authTokens } = useAuth();
   const [applicationData, setApplicationData] = useState(null); // Store the real data
   const [loading, setLoading] = useState(true); // Handle loading state
   const [errorMessage, setErrorMessage] = useState(""); // Store error messages if any
+  const [theme, setTheme] = useState('light');
+  const [error, setError] = useState('');
+
+  // Fetch the theme from the backend
+  const fetchTheme = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/settings/get_settings", {
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Theme response:", data.theme);
+        setTheme(data.theme || 'light');
+      } else {
+        throw new Error('Failed to fetch theme');
+      }
+    } catch (err) {
+      console.log('Error fetching theme:', err);
+      setError('Error fetching theme');
+    }
+  };
+
+  useEffect(() => {
+    // Apply the theme by toggling class on the root element
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
+  useEffect(() => { fetchTheme(); }, []);
 
   // Fetch application data from the backend
   const getApplicationData = async () => {
@@ -157,8 +191,8 @@ function Analytics() {
   // Return the JSX with real data
   return (
     <div className="analytics-page">
-      <h1>Application Analytics</h1>
-      
+      <h2>Application Analytics</h2>
+
       <section className="analytics-section">
         <h2>Total Applications: {applicationData.length}</h2>
       </section>

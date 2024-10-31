@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from "../../utils";
+
 import "./SettingsPage.css";
 
 function Settings() {
@@ -20,6 +21,13 @@ function Settings() {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    // Apply the theme by toggling class on the root element
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(settings.theme);
+  }, [settings.theme]);
 
   const fetchSettings = async () => {
     try {
@@ -76,8 +84,11 @@ function Settings() {
     }
   };
 
+ 
+  
   return (
-    <div className="settings-container">
+    
+    <div className={`settings-container ${settings.theme}`}>
       <h2>User Settings</h2>
       <form onSubmit={handleSubmit} className="settings-form">
         <label>

@@ -7,7 +7,7 @@ function NavBar() {
 
   function PrivateHeader() {
     return (
-      <header className="Header">
+      <header style={{fontWeight: 'bold'}} className="Header">
         <h2>
           <Link to="/dashboard" className="Header">Applyticz</Link>  
         </h2>

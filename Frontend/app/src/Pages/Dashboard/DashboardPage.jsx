@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from "../../utils";
 import "./DashboardPage.css";
+import { Show } from '@chakra-ui/react';
 
 function Dashboard() {
   const { authTokens } = useAuth();
@@ -10,13 +11,16 @@ function Dashboard() {
     recentApplications: [],
     recentResumes: []
   });
+  const [theme, setTheme] = useState('light');
   const [error, setError] = useState('');
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
+    fetchTheme();
     fetchDashboardData();
     fetchUpcomingEvents();
   }, []);
+
 
   const fetchDashboardData = async () => {
     try {
@@ -54,11 +58,37 @@ function Dashboard() {
     catch (err) {
       setError('Error fetching events');
   }
-  }
+  };
+
+  const fetchTheme = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/settings/get_settings", {
+        headers: {
+          "Authorization": `Bearer ${authTokens}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTheme(data.theme || 'light');
+      } else {
+        throw new Error('Failed to fetch theme');
+      }
+    } catch (err) {
+      setError('Error fetching theme');
+    }
+  };
+
+  useEffect(() => {
+    // Apply the theme by toggling class on the root element
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
+
 
   return (
     <div className="dashboard-container">
-      <h2>Dashboard</h2>
+      <h2 style={{ textAlign: 'left'}}>Dashboard</h2>
       <div className="dashboard-summary">
         <div className="summary-card">
           <h3>Total Applications</h3>
