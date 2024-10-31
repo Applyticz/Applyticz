@@ -91,6 +91,4 @@ def parse_email_data_hardcoded(email_body):
         else:
             position = "Unknown"
 
-        
-    
     return {"company": company, "position": position, "status": status}

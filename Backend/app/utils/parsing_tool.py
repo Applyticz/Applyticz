@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 
+
 def extract_plain_text(html_body):
     # Create a BeautifulSoup object with the HTML content
     soup = BeautifulSoup(html_body, "html.parser")
@@ -12,4 +13,3 @@ def extract_plain_text(html_body):
     plain_text = re.sub(r'\s+', ' ', plain_text)  # Replace multiple whitespace characters with a single space
 
     return plain_text
-

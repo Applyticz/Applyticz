@@ -22,6 +22,7 @@ Base = declarative_base()
 
 # Dependency to get a session for each request
 def get_db():
+    
     db = SessionLocal()
     try:
         yield db
@@ -30,8 +31,7 @@ def get_db():
 
 
 # Create tables (if needed) when this script is run directly
-  
 db_dependency = Annotated[Session, Depends(get_db)]
-        
+
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)

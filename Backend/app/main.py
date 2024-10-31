@@ -1,17 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.db.database import get_db, engine, Base, db_dependency
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from fastapi import FastAPI, Depends 
+from app.db.database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 from app.routers import test, auth, resume, application, dashboard, user_settings, gmail_api, outlook_api
-from app.models.database_models import Test, User
 from contextlib import asynccontextmanager
 from typing import Annotated
-from fastapi import status
 from app.routers.auth import get_current_user
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,10 +44,12 @@ app.include_router(outlook_api.router, prefix="/outlook_api")
 # def test_(dependencies):
     #     pass  # Placeholder for actual dependency injection logic
     #     return {"message": "Hello, World!"}
+
     
 @app.get("/")
 async def entry():
     return {"message": "Welcome to the backend!"}
+
 
 @app.get("/health")
 def health_check():

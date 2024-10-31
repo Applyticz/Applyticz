@@ -12,17 +12,16 @@ function useAuth() {
       if (!response.ok) {
         throw new Error('Token verification failed');
       }
-      return authTokens;
+      if (!authTokens) {
+        console.log("Access token not found.");
+        navigate("/login"); // Redirect to login if no token is found
+      } else {
+        console.log("Access token found:", authTokens);
+        return authTokens; // Return the valid auth token
+      }
     } catch (error) {
       localStorage.removeItem('access_token');
       navigate('/login');
-    }
-    if (!authTokens) {
-      //console.log("Access token not found.");
-      navigate("/login"); // Redirect to login if no token is found
-    } else {
-      //console.log("Access token found:", authTokens);
-      return authTokens; // Return the valid auth token
     }
   };
 
