@@ -47,7 +47,10 @@ else
     echo "requirements.txt not found. Skipping package installation."
 fi
 
-# Inform the user that the virtual environment is activated
+# Download the spaCy model
+echo "Installing spaCy model 'en_core_web_sm'..."
+python -m spacy download en_core_web_sm
+
 echo "Virtual environment activated using Python 3.11 and required packages installed."
 
 # Ask the user if they want to use Docker and Docker Compose
