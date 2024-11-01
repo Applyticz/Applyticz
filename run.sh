@@ -1,14 +1,20 @@
 #!/bin/bash
+
 # Change to the backend directory
 cd backend || { echo "Failed to change directory to backend. Exiting..."; exit 1; }
 
-# Check if Python 3.11 is available and use it
-if command -v /opt/homebrew/bin/python3.11 &>/dev/null; then
-    PYTHON_EXEC=/opt/homebrew/bin/python3.11
-    PIP_EXEC=/opt/homebrew/bin/python3.11 -m pip  # Use pip for Python 3.11
+# Determine Python executable (supports both Python 3.11 or fallback to python3/python)
+if command -v python3.11 &>/dev/null; then
+    PYTHON_EXEC=python3.11
     echo "Python 3.11 is available."
+elif command -v python3 &>/dev/null; then
+    PYTHON_EXEC=python3
+    echo "Using default Python 3."
+elif command -v python &>/dev/null; then
+    PYTHON_EXEC=python
+    echo "Using default Python."
 else
-    echo "Python 3.11 is not installed. Please install Python 3.11."
+    echo "Python 3 is not installed. Please install Python 3."
     exit 1
 fi
 
@@ -20,14 +26,11 @@ else
     echo "Virtual environment already exists."
 fi
 
-# Activate the virtual environment
-# Detect the operating system
+# Activate the virtual environment based on the OS
 if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "darwin"* ]]; then
-    # For Linux and macOS
     echo "Activating the virtual environment for Linux/macOS..."
     source .venv/bin/activate
 elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-    # For Windows
     echo "Activating the virtual environment for Windows..."
     source .venv/Scripts/activate
 else
@@ -35,9 +38,12 @@ else
     exit 1
 fi
 
-# Ensure setuptools, wheel, and pip are up-to-date
-echo "Upgrading pip, setuptools, and wheel..."
-pip install --upgrade pip setuptools wheel
+# Upgrade pip, setuptools, and wheel separately
+echo "Upgrading pip..."
+$PYTHON_EXEC -m pip install --upgrade pip
+
+echo "Upgrading setuptools and wheel..."
+pip install --upgrade setuptools wheel
 
 # Install required packages from requirements.txt with verbose output
 if [[ -f requirements.txt ]]; then
@@ -49,14 +55,11 @@ fi
 
 # Download the spaCy model
 echo "Installing spaCy model 'en_core_web_sm'..."
-# check if python or python3 
-if command -v python3 &>/dev/null; then
-    python3 -m spacy download en_core_web_sm
-else
-    python -m spacy download en_core_web_sm
-fi
+$PYTHON_EXEC -m spacy download en_core_web_sm
 
-echo "Virtual environment activated using Python 3.11 and required packages installed."
+echo "Virtual environment activated, using Python 3.11 where available, and required packages installed."
+
+
 
 # Ask the user if they want to use Docker and Docker Compose
 echo -n "Do you want to use Docker (y/n): "
