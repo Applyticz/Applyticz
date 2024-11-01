@@ -1,49 +1,48 @@
 import React, { useState, useEffect } from "react";
 
-
-
 const OutlookApi = () => {
-  const [userEmail, setUserEmail] = useState(""); // To store the user's email fetched from backend
-  const [search, setSearch] = useState(""); // To store the search phrase
-  const [messages, setMessages] = useState([]); // To store the fetched messages
-  const [errorMessage, setErrorMessage] = useState(""); // To store any error message
+  const [userEmail, setUserEmail] = useState("");
+  const [search, setSearch] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [lastRefreshTime, setLastRefreshTime] = useState("");
 
-  // Function to parse email and create a new application
-  const createApplicationFromEmail = async (msg) => {
-    const parsedApplication = parseApplicationData(msg);
+  const lastUpdateTime = lastRefreshTime;
 
-    // Call the create_application API to save the parsed application
+  const getCurrentTime = () => {
+    const date = new Date();
+    return date.toISOString().split(".")[0] + "Z";
+  };
+
+  const createApplicationFromEmail = async (parsedApplication) => {
     try {
-      const response = await fetch("http://localhost:8000/application/create_application", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify({
-          company: parsedApplication.company,
-          position: parsedApplication.position,
-          location: parsedApplication.location,
-          status: parsedApplication.status,
-          salary: parsedApplication.salary,
-          job_description: parsedApplication.job_description,
-          notes: parsedApplication.notes,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8000/application/create_application",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          body: JSON.stringify(parsedApplication),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         console.log("Application created successfully:", data);
       } else {
         const errorData = await response.json();
-        console.error("Failed to create application:", errorData.detail || "Unknown error");
+        console.error(
+          "Failed to create application:",
+          errorData.detail || "Unknown error"
+        );
       }
     } catch (error) {
       console.error("Error creating application:", error);
     }
   };
 
-  // Function to fetch the logged-in user's email from the /user endpoint
   const fetchUserEmail = async () => {
     try {
       const response = await fetch("http://localhost:8000/auth/get_account", {
@@ -59,52 +58,19 @@ const OutlookApi = () => {
         setUserEmail(data.email);
       } else {
         const errorData = await response.json();
-        console.error("Failed to fetch user:", errorData.detail || "Unknown error");
+        console.error(
+          "Failed to fetch user:",
+          errorData.detail || "Unknown error"
+        );
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
     }
   };
 
-  // Fetch messages and then create applications based on the parsed data
-  const fetchAndCreateApplications = async () => {
-    try {
-      if (!userEmail) {
-        setErrorMessage("User email not found.");
-        return;
-      }
-
-      const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages?email=${userEmail}`, {
-        headers: {
-          "accept": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-        }
-      }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.value);
-        console.log("Messages Data:", data); // Log or use the returned messages
-
-        // Parse each message and create an application
-        data.value.forEach((msg) => {
-          const parsedApplication = parseApplicationData(msg);
-          createApplicationFromEmail(msg);
-        });
-      } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.detail || "Failed to fetch messages.");
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setErrorMessage("An error occurred. Please try again.");
-    }
-  };
-
-  // Fetch messages based on phrases in the email body and then create applications
   const fetchAndCreateApplicationsBySearch = async () => {
+    const currentRefreshTime = getCurrentTime();
+    setLastRefreshTime(currentRefreshTime);
     try {
       if (!userEmail) {
         setErrorMessage("User email not found.");
@@ -112,21 +78,30 @@ const OutlookApi = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`, {
-        headers: {
-          "accept": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}&last_refresh_time=${currentRefreshTime}`,
+        {
+          headers: {
+            accept: "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
         }
-      }
       );
 
       if (response.ok) {
         const data = await response.json();
-        setMessages(data);
-        // Parse each message and create an application
-        data.forEach((msg) => {
-          const parsedApplication = parseApplicationData(msg);
-          createApplicationFromEmail(msg);
+        setMessages(data.emails);
+        console.log("Messages Data:", data);
+
+        if (!data.emails || data.emails.length === 0) {
+          setErrorMessage("No new messages found.");
+          return;
+        }
+
+        data.emails.forEach((msg) => {
+          if (msg && Object.keys(msg).length > 0) {
+            const parsedApplication = parseApplicationData(msg);
+            createApplicationFromEmail(parsedApplication);
+          }
         });
       } else {
         const errorData = await response.json();
@@ -139,80 +114,16 @@ const OutlookApi = () => {
   };
 
   const parseApplicationData = (msg) => {
-  const defaultApplication = {
-    company: "Unknown",
-    position: "Unknown",
-    location: "Unknown",
-    status: "Unknown",
-    salary: "Unknown",
-    job_description: "Not provided",
-    notes: "",
+    return {
+      company: msg.company || "Unknown",
+      position: msg.position || "Unknown",
+      location: msg.location || "Unknown",
+      status: msg.status || "Unknown",
+      salary: msg.salary || "Unknown",
+      job_description: msg.job_description || "Not provided",
+      notes: msg.notes || "",
+    };
   };
-
-
-  return defaultApplication;
-};
-
-const fetchUserMessages = async () => {
-    try {
-      if (!userEmail) {
-        setErrorMessage("User email not found.");
-        return;
-      }
-
-      const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages?email=${userEmail}`, {
-        headers: {
-          "accept": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-        }
-      }
-      );
-        console.log("User Email for fetch:", userEmail);
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Messages Data:", data); // Log or use the returned messages
-        setMessages(data.value); // Assuming the messages are returned directly
-      } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.detail || "Failed to fetch messages.");
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setErrorMessage("An error occurred. Please try again.");
-    }
-  };
-
-  // Function to fetch search messages
-  const fetchMessagesByPhrase = async () => {
-    try {
-      if (!userEmail || !search) {
-        setErrorMessage("Please enter a search phrase.");
-        return;
-      }
-
-      const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`, {
-        headers: {
-          "accept": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
-        }
-      }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data); // Assuming the messages are returned directly
-      } else {
-        const errorData = await response.json();
-        setErrorMessage(errorData.detail || "Failed to fetch messages.");
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setErrorMessage("An error occurred. Please try again.");
-    }
-  };
-
 
   useEffect(() => {
     fetchUserEmail();
@@ -221,9 +132,7 @@ const fetchUserMessages = async () => {
   return (
     <div className="outlook-api-container">
       <h2>Fetch Outlook Messages and Create Applications</h2>
-
-      <button onClick={fetchAndCreateApplications}>Fetch and Create Applications</button>
-
+      <h3>Last Refresh Time: {lastUpdateTime}</h3>
 
       <input
         type="text"
@@ -231,17 +140,9 @@ const fetchUserMessages = async () => {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <button onClick={fetchAndCreateApplicationsBySearch}>Fetch and Create Applications by Search</button>
-
-      <button onClick={fetchUserMessages}>Fetch Messages</button>
-
-      <input
-        type="text"
-        placeholder="Search phrase"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <button onClick={fetchMessagesByPhrase}>Fetch Messages by Phrase</button>
+      <button onClick={fetchAndCreateApplicationsBySearch}>
+        Fetch and Create Applications by Search
+      </button>
 
       {errorMessage && <p className="error-message">{errorMessage}</p>}
 
@@ -252,7 +153,8 @@ const fetchUserMessages = async () => {
             {messages.map((msg, index) => (
               <li key={index}>
                 <strong>Subject:</strong> {msg.subject} <br />
-                <strong>From:</strong> {typeof msg.from === "object"
+                <strong>From:</strong>{" "}
+                {typeof msg.from === "object"
                   ? msg.from?.emailAddress?.address || "Unknown"
                   : msg.from || "Unknown"}{" "}
                 <br />
@@ -262,6 +164,7 @@ const fetchUserMessages = async () => {
               </li>
             ))}
           </ul>
+          <h3>Last Refresh Time: {lastRefreshTime}</h3>
         </div>
       )}
     </div>

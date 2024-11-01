@@ -186,7 +186,7 @@ async def get_user_messages(user: user_dependency):
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db_dependency):
+async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
@@ -207,87 +207,38 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
-        # Parse the response to get only the specific email fields you need (e.g., subject, from, receivedDateTime)
         email_data = response.json()
         filtered_emails = []
 
-        # Extract necessary email fields and plain text body
+        # Convert last_refresh_time to datetime object
+        last_refresh_dt = datetime.fromisoformat(last_refresh_time.replace('Z', '+00:00'))
+
+        # Filter emails by receivedDateTime based on last_refresh_time
         for email in email_data.get('value', []):
-            filtered_emails.append({
-                'subject': email.get('subject'),
-                'from': email.get('from', {}).get('emailAddress', {}).get('address'),
-                'receivedDateTime': email.get('receivedDateTime'),
-                'bodyPreview': extract_plain_text(email.get('bodyPreview')),
-                'body': extract_plain_text(email.get('body', {}).get('content', ''))
-            })
-            
+            received_time_str = email.get('receivedDateTime')
+            received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
+
+            # Only add emails received after the last refresh time
+            if received_time > last_refresh_dt:
+                filtered_emails.append({
+                    'subject': email.get('subject'),
+                    'from': email.get('from', {}).get('emailAddress', {}).get('address'),
+                    'receivedDateTime': received_time_str,
+                    'bodyPreview': extract_plain_text(email.get('bodyPreview')),
+                    'body': extract_plain_text(email.get('body', {}).get('content', ''))
+                })
+            else:
+                print(f"Skipping email received at {received_time} as it is older than {last_refresh_dt}")
+        
         # Sort emails by 'receivedDateTime' (oldest first)
         filtered_emails.sort(key=lambda x: x['receivedDateTime'])
 
-        location = "Unknown"
-        salary = "Unknown"
-
-        # Process emails in chronological order
-        for email in filtered_emails:
-            # Convert the email's receivedDateTime to a naive datetime object (removing timezone info)
-            email_received_time = datetime.fromisoformat(email['receivedDateTime'].replace('Z', '+00:00')).replace(tzinfo=None)
-
-            # Convert to the desired format: MM-DD-YYYY HH:MM AM/PM
-            formatted_applied_date = email_received_time.strftime("%m-%d-%Y %I:%M %p")
-
-            hard_coded_data = parse_email_data_hardcoded(email.get('body'))
-            print("COMPANY AND POSITION HARD CODED: ", hard_coded_data)
-
-            # Check if there is an application in the db with the same company name
-            existing_applications = db.query(Application).filter(Application.company == hard_coded_data['company']).all()
-
-            if not existing_applications:
-                # No existing application, so create a new one
-                new_application = Application(
-                    user_id=user_id,
-                    company=hard_coded_data['company'],
-                    position=hard_coded_data['position'],
-                    applied_date=formatted_applied_date,  # Store formatted applied date
-                    last_update=formatted_applied_date,  # Store formatted last update
-                    location=location,
-                    salary=salary,
-                    status=hard_coded_data.get('status', "Received")  # Default to "Received"
-                )
-                db.add(new_application)
-                db.commit()
-                print("New application created")
-            else:
-                # Application already exists, so check if the email is newer than the last update
-                existing_application = existing_applications[0]  # Assuming one application per company
-
-                # Convert the last_update field to a naive datetime object
-                last_updated_time = existing_application.last_update
-                if isinstance(last_updated_time, str):
-                    # Convert string to datetime
-                    last_updated_time = datetime.strptime(last_updated_time, "%m-%d-%Y %I:%M %p")
-
-                # Remove timezone info to make both datetime objects naive
-                last_updated_time = last_updated_time.replace(tzinfo=None)
-
-                # Process the email only if it's newer than the last updated time
-                if email_received_time > last_updated_time:
-                    # Update the application with newer status or position
-                    existing_application.last_update = formatted_applied_date  # Store formatted last update
-
-                    # Only update status if a more specific one is found (e.g., 'Rejected')
-                    if hard_coded_data.get('status') and hard_coded_data['status'] != 'Received':
-                        existing_application.status = hard_coded_data['status']
-
-                    # Optionally update position if it's not 'Unknown'
-                    if hard_coded_data.get('position') and hard_coded_data['position'] != 'Unknown':
-                        existing_application.position = hard_coded_data['position']
-
-                    db.commit()
-                    print(f"Application status for {hard_coded_data['company']} updated.")
-                else:
-                    print(f"Skipping email for {hard_coded_data['company']} as it's older than the last update.")
+        # If no new emails are found, return an empty list and the refresh time
+        if not filtered_emails:
+            return JSONResponse(content={"emails": [], "last_refresh_time": last_refresh_time})
         
-        return filtered_emails
+        # Return the filtered emails with the last refresh time
+        return JSONResponse(content={"emails": filtered_emails, "last_refresh_time": last_refresh_time})
 
     else:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")

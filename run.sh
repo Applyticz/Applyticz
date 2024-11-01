@@ -49,7 +49,12 @@ fi
 
 # Download the spaCy model
 echo "Installing spaCy model 'en_core_web_sm'..."
-python -m spacy download en_core_web_sm
+# check if python or python3 
+if command -v python3 &>/dev/null; then
+    python3 -m spacy download en_core_web_sm
+else
+    python -m spacy download en_core_web_sm
+fi
 
 echo "Virtual environment activated using Python 3.11 and required packages installed."
 
