@@ -183,8 +183,62 @@ async def get_user_messages(user: user_dependency):
     else:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
     
-
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
+@router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
+async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db_dependency):
+    # Define headers with the access token
+    user_id = user.get("id")
+    email = user.get("email")
+    access_token = user_tokens.get(user_id)
+    
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    # Construct the full URL with the user's email and $search query to look for the phrase
+    url = CURRENT_USER_EMAILS_URL.format(email=email) + f"?$search=\"{phrase}\""
+
+    # Make the request to Microsoft Graph API
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        email_data = response.json()
+        filtered_emails = []
+
+
+        # Filter emails by receivedDateTime based on last_refresh_time
+        for email in email_data.get('value', []):
+            received_time_str = email.get('receivedDateTime')
+            received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
+
+            # Only add emails received after the last refresh time
+            filtered_emails.append({
+                'subject': email.get('subject'),
+                'from': email.get('from', {}).get('emailAddress', {}).get('address'),
+                'receivedDateTime': received_time_str,
+                'bodyPreview': extract_plain_text(email.get('bodyPreview')),
+                'body': extract_plain_text(email.get('body', {}).get('content', ''))
+            })
+        
+        # Sort emails by 'receivedDateTime' (oldest first)
+        filtered_emails.sort(key=lambda x: x['receivedDateTime'])
+
+        # If no new emails are found, return an empty list and the refresh time
+        if not filtered_emails:
+            return JSONResponse(content={"emails": []})
+        
+        # Return the filtered emails with the last refresh time
+        return JSONResponse(content={"emails": filtered_emails})
+
+    else:
+        raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
+
+
+# Function to get user's messages filtered by a keyword appearing anywhere in the email and received after a certain time
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
 async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
     # Define headers with the access token

@@ -68,7 +68,50 @@ const OutlookApi = () => {
     }
   };
 
-  const fetchAndCreateApplicationsBySearch = async () => {
+    const fetchAndCreateApplicationsBySearch = async () => {
+      try {
+        if (!userEmail) {
+          setErrorMessage("User email not found.");
+          return;
+        }
+
+        const response = await fetch(
+          `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data.emails);
+          console.log("Messages Data:", data);
+
+          if (!data.emails || data.emails.length === 0) {
+            setErrorMessage("No new messages found.");
+            return;
+          }
+
+          data.emails.forEach((msg) => {
+            if (msg && Object.keys(msg).length > 0) {
+              const parsedApplication = parseApplicationData(msg);
+              createApplicationFromEmail(parsedApplication);
+            }
+          });
+        } else {
+          const errorData = await response.json();
+          setErrorMessage(errorData.detail || "Failed to fetch messages.");
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        setErrorMessage("An error occurred. Please try again.");
+      }
+    };
+
+  const fetchAndCreateApplicationsBySearchAndRefresh = async () => {
     const currentRefreshTime = getCurrentTime();
     setLastRefreshTime(currentRefreshTime);
     try {
