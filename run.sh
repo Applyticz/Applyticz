@@ -3,7 +3,7 @@
 # Change to the backend directory
 cd backend || { echo "Failed to change directory to backend. Exiting..."; exit 1; }
 
-# Determine Python executable (supports both Python 3.11 or fallback to python3/python)
+# Determine Python executable, prioritizing Python 3.11
 if command -v python3.11 &>/dev/null; then
     PYTHON_EXEC=python3.11
     echo "Python 3.11 is available."
@@ -18,9 +18,9 @@ else
     exit 1
 fi
 
-# Create a virtual environment if it doesn't exist
+# Create a virtual environment using Python 3.11 if it doesn't exist
 if [[ ! -d .venv ]]; then
-    echo "Creating a virtual environment..."
+    echo "Creating a virtual environment with Python 3.11..."
     $PYTHON_EXEC -m venv .venv
 else
     echo "Virtual environment already exists."
@@ -38,27 +38,26 @@ else
     exit 1
 fi
 
-# Upgrade pip, setuptools, and wheel separately
+# Upgrade pip, setuptools, and wheel using Python 3.11
 echo "Upgrading pip..."
 $PYTHON_EXEC -m pip install --upgrade pip
 
 echo "Upgrading setuptools and wheel..."
-pip install --upgrade setuptools wheel
+$PYTHON_EXEC -m pip install --upgrade setuptools wheel
 
-# Install required packages from requirements.txt with verbose output
+# Install required packages from requirements.txt
 if [[ -f requirements.txt ]]; then
-    echo "Installing required packages..."
-    pip install --no-cache-dir -r requirements.txt -v
+    echo "Installing required packages from requirements.txt..."
+    $PYTHON_EXEC -m pip install --no-cache-dir -r requirements.txt -v
 else
     echo "requirements.txt not found. Skipping package installation."
 fi
 
-# Download the spaCy model
+# Download the spaCy model using Python 3.11
 echo "Installing spaCy model 'en_core_web_sm'..."
 $PYTHON_EXEC -m spacy download en_core_web_sm
 
-echo "Virtual environment activated, using Python 3.11 where available, and required packages installed."
-
+echo "Setup complete. Virtual environment activated with Python 3.11 and required packages installed."
 
 
 # Ask the user if they want to use Docker and Docker Compose
