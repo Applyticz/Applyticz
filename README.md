@@ -1,7 +1,7 @@
 # Applyticz
 
 ## About
-Applyticz is a web application that allows students to manage, track, and analyze their job applications. Students can connect their Gmail/Outlook accounts to enable autonomous tracking every time they recieve a new email. The application data will be automatically parsed, organized, and added to their applications page for easy monitoring.
+Applyticz is a web application that allows students to manage, track, and analyze their job applications. Students can connect their Gmail/Outlook accounts to enable autonomous tracking every time they recieve a new email. The application data will be automatically parsed, organized, and added to their applications page.
 
 Students can also utilize the metrics page to gain statistical insights about their job search. Applyticz generates detailed reports on which applications provide the highest interview and response rates, as well as other numerical data.
 
