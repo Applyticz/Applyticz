@@ -6,19 +6,21 @@
 
 :root.light {
   --back-color: #ffffff;
+  --back-color2: #ffffff;
   --text-color: #000000;
   --heading-color: #2f333b;
 }
 
 :root.dark {
   --back-color: #222222;
+  --back-color2: #252525;
   --text-color: #ffffff;
   --heading-color: #e0e0e0;
   --summary-color: #494949;
 }
 
 .dashboard-summary, .activity-section {
-    background-color: #fff;
+    background-color: var(--back-color2);
     margin-bottom: 20px;
     padding: 20px;
     border-radius: 8px;
@@ -71,7 +73,7 @@
 }
 
 .activity-item {
-    background-color: #f9f9f9;
+    background-color: var(--back-color);
     margin-bottom: 10px;
     padding: 10px;
     border-radius: 8px;
