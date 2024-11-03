@@ -5,13 +5,18 @@ const OutlookApi = () => {
   const [search, setSearch] = useState("");
   const [messages, setMessages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [lastRefreshTime, setLastRefreshTime] = useState("");
-
-  const lastUpdateTime = lastRefreshTime;
+  const [lastRefreshTime, setLastRefreshTime] = useState(
+    localStorage.getItem("lastRefreshTime") || ""
+  );
 
   const getCurrentTime = () => {
     const date = new Date();
     return date.toISOString().split(".")[0] + "Z";
+  };
+
+  const saveLastRefreshTime = (time) => {
+    setLastRefreshTime(time);
+    localStorage.setItem("lastRefreshTime", time);
   };
 
   const createApplicationFromEmail = async (parsedApplication) => {
@@ -68,52 +73,7 @@ const OutlookApi = () => {
     }
   };
 
-    const fetchAndCreateApplicationsBySearch = async () => {
-      try {
-        if (!userEmail) {
-          setErrorMessage("User email not found.");
-          return;
-        }
-
-        const response = await fetch(
-          `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`,
-          {
-            headers: {
-              accept: "application/json",
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setMessages(data.emails);
-          console.log("Messages Data:", data);
-
-          if (!data.emails || data.emails.length === 0) {
-            setErrorMessage("No new messages found.");
-            return;
-          }
-
-          data.emails.forEach((msg) => {
-            if (msg && Object.keys(msg).length > 0) {
-              const parsedApplication = parseApplicationData(msg);
-              createApplicationFromEmail(parsedApplication);
-            }
-          });
-        } else {
-          const errorData = await response.json();
-          setErrorMessage(errorData.detail || "Failed to fetch messages.");
-        }
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        setErrorMessage("An error occurred. Please try again.");
-      }
-    };
-
-  const fetchAndCreateApplicationsBySearchAndRefresh = async () => {
-    const currentRefreshTime = getCurrentTime();
-    setLastRefreshTime(currentRefreshTime);
+  const fetchAndCreateApplicationsBySearch = async () => {
     try {
       if (!userEmail) {
         setErrorMessage("User email not found.");
@@ -121,7 +81,7 @@ const OutlookApi = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}&last_refresh_time=${currentRefreshTime}`,
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?email=${userEmail}&phrase=${search}`,
         {
           headers: {
             accept: "application/json",
@@ -131,18 +91,18 @@ const OutlookApi = () => {
       );
 
       if (response.ok) {
-        const data = await response.json();
-        setMessages(data.emails);
-        console.log("Messages Data:", data);
+        const emails = await response.json();
+        setMessages(emails);
+        console.log("Fetched messages:", emails);
 
-        if (!data.emails || data.emails.length === 0) {
+        if (emails.length === 0) {
           setErrorMessage("No new messages found.");
           return;
         }
 
-        data.emails.forEach((msg) => {
+        emails.forEach((msg) => {
           if (msg && Object.keys(msg).length > 0) {
-            const parsedApplication = parseApplicationData(msg);
+            const parsedApplication = (msg);
             createApplicationFromEmail(parsedApplication);
           }
         });
@@ -175,7 +135,6 @@ const OutlookApi = () => {
   return (
     <div className="outlook-api-container">
       <h2>Fetch Outlook Messages and Create Applications</h2>
-      <h3>Last Refresh Time: {lastUpdateTime}</h3>
 
       <input
         type="text"
@@ -207,7 +166,6 @@ const OutlookApi = () => {
               </li>
             ))}
           </ul>
-          <h3>Last Refresh Time: {lastRefreshTime}</h3>
         </div>
       )}
     </div>

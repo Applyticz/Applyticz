@@ -57,6 +57,7 @@ rejection_keywords = [ "not been selected", "not selected", "application unsucce
 def parse_email_data_hardcoded(email_body):
     company = None
     position = None
+    status = "Unknown"  # Default status
 
     # Lowercase the email body for case-insensitive matching
     email_body_lower = email_body.lower()

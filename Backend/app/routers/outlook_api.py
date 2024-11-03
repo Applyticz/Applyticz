@@ -61,7 +61,7 @@ async def login():
         f"&redirect_uri={REDIRECT_URL}"
         f"&scope={SCOPE.replace(' ', '%20')}"
     )
-    print(authorization_url)
+    #print(authorization_url)
     return RedirectResponse(url=authorization_url)
 
 # Simple in-memory storage for access tokens (use a proper store in production)
@@ -104,7 +104,7 @@ async def secure_endpoint(token: str = Depends(oauth2_scheme)):
 async def get_user(user: user_dependency, db: db_dependency):
     compare_user_id = str(user.get("id"))  # Ensure user_id is a string
     user_id = user.get("id")
-    print("User ID:", user_id)
+    # print("User ID:", user_id)
     
     # Fetch the access token for the current user
     access_token = user_tokens.get(user_id)
@@ -121,7 +121,7 @@ async def get_user(user: user_dependency, db: db_dependency):
     # Make a request to the Outlook API to get the user information
     response = requests.get(GET_USER, headers=headers)
     outlook_data = response.json()
-    print(outlook_data)
+    # print(outlook_data)
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve user data: {response.text}")
@@ -137,7 +137,7 @@ async def get_user(user: user_dependency, db: db_dependency):
     if db_user.email != outlook_email:
         db_user.email = outlook_email  # Update the email in the database
         db.commit()
-        print(f"Email updated to {outlook_email}")
+        #print(f"Email updated to {outlook_email}")
     
     # Return the updated user data from the Outlook API
     return outlook_data
@@ -208,39 +208,52 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
     if response.status_code == 200:
         email_data = response.json()
         filtered_emails = []
+        
+        # Dictionary to track processed companies
+        processed_companies = {}
 
-
-        # Filter emails by receivedDateTime based on last_refresh_time
+        # Extract company, position, and status from each email
         for email in email_data.get('value', []):
-            received_time_str = email.get('receivedDateTime')
-            received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
+            email_body = extract_plain_text(email.get('body', {}).get('content', ''))
+            bodyPreview = extract_plain_text(email.get('bodyPreview'))
+            entities = parse_email_data_hardcoded(email_body)
+            parsed_data = parse_email_data_hardcoded(email_body)
 
-            # Only add emails received after the last refresh time
-            filtered_emails.append({
-                'subject': email.get('subject'),
-                'from': email.get('from', {}).get('emailAddress', {}).get('address'),
-                'receivedDateTime': received_time_str,
-                'bodyPreview': extract_plain_text(email.get('bodyPreview')),
-                'body': extract_plain_text(email.get('body', {}).get('content', ''))
-            })
-        
-        # Sort emails by 'receivedDateTime' (oldest first)
-        filtered_emails.sort(key=lambda x: x['receivedDateTime'])
+            company_name = entities['company']
+            received_time = email.get('receivedDateTime')
+            status = parsed_data['status']
 
-        # If no new emails are found, return an empty list and the refresh time
-        if not filtered_emails:
-            return JSONResponse(content={"emails": []})
-        
-        # Return the filtered emails with the last refresh time
-        return JSONResponse(content={"emails": filtered_emails})
+            # Check if this company has already been processed
+            if company_name in processed_companies:
+                # Update status and receivedDateTime if the email is more recent
+                existing_entry = processed_companies[company_name]
+                if received_time > existing_entry['receivedDateTime']:
+                    existing_entry['status'] = status
+                    existing_entry['receivedDateTime'] = received_time
+            else:
+                # If it's a new company, add the full email details
+                processed_companies[company_name] = {
+                    'subject': email.get('subject'),
+                    'from': email.get('from', {}).get('emailAddress', {}).get('address'),
+                    'receivedDateTime': received_time,
+                    'bodyPreview': bodyPreview,
+                    'body': email_body,
+                    'company': company_name,
+                    'position': entities['position'],
+                    'status': status
+                }
 
-    else:
-        raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
+    # Convert the dictionary of processed companies to a list
+    filtered_emails = list(processed_companies.values())
+
+    # print("Filtered emails:", filtered_emails)
+    return filtered_emails
+
 
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email and received after a certain time
-@router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
+#@router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
+#async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
