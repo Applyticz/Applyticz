@@ -8,7 +8,7 @@ from typing import Annotated
 from app.utils.utils import get_current_user
 from app.utils.parsing_tool import extract_plain_text
 from app.db.database import db_dependency
-from app.models.database_models import User, Application
+from app.models.database_models import User, OutlookAuth
 from app.models.pydantic_models import UpdateEmailRequest
 from app.utils.email_parser import extract_company_and_position, parse_email_data_hardcoded
 from app.routers.application import create_application, update_application
@@ -19,7 +19,6 @@ load_dotenv()
 router = APIRouter()
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
-
 
 # MSAL configuration from environment variables
 CLIENT_ID = os.getenv('CLIENT_ID')
@@ -62,15 +61,11 @@ async def login():
         f"&redirect_uri={REDIRECT_URL}"
         f"&scope={SCOPE.replace(' ', '%20')}"
     )
-    #print(authorization_url)
     return RedirectResponse(url=authorization_url)
-
-# Simple in-memory storage for access tokens (use a proper store in production)
-user_tokens = {}
 
 # Callback route updates
 @router.get("/callback", tags=["Outlook API"])
-async def callback(code: str, user: user_dependency):
+async def callback(code: str, user: user_dependency, db: db_dependency):
     token_data = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
@@ -91,11 +86,21 @@ async def callback(code: str, user: user_dependency):
             "expires_in": token_json["expires_in"],
         }
         
-        # Store the access token in memory
         user_id = user.get("id")
-        user_tokens[user_id] = access_token
-        print("User tokens:", user_tokens)
         
+        # Calculate the token expiry time
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(seconds=access_token["expires_in"])
+        
+        # Save the access token and refresh token
+        create_access_token = OutlookAuth(
+            user_id=user_id,
+            access_token=access_token["access_token"],
+            refresh_token=access_token["refresh_token"],
+            token_expiry=token_expiry_time  # Store as a DateTime object
+        )
+        
+        db.add(create_access_token)
+        db.commit()
         
         return {"message": "Access token saved", "access_token": access_token}
 
@@ -104,35 +109,54 @@ async def callback(code: str, user: user_dependency):
 TOKEN_EXPIRATION_TIME = timedelta(hours=1)
 
 def token_is_expired(token_issue_time):
-    return (datetime.now(timezone.utc) - token_issue_time) > TOKEN_EXPIRATION_TIME
+    # Ensure token_issue_time is a DateTime object
+    if not isinstance(token_issue_time, datetime):
+        raise ValueError("token_issue_time must be a DateTime object")
 
-async def get_access_token(user_id):
-    tokens = user_tokens.get(user_id)
+    # Make current_time offset-aware
+    current_time = datetime.now(timezone.utc)
+
+    # Ensure token_issue_time is also offset-aware
+    if token_issue_time.tzinfo is None:
+        token_issue_time = token_issue_time.replace(tzinfo=timezone.utc)
+
+    return current_time > token_issue_time + TOKEN_EXPIRATION_TIME
+
+async def get_access_token(user_id, db: db_dependency):
+    user_id_str = str(user_id)  # Ensure `user_id` is a string
+    tokens = db.query(OutlookAuth).filter(OutlookAuth.user_id == user_id_str).first()
+    print("Tokens found:", tokens)
 
     if not tokens:
         # If tokens are missing, prompt re-login
         raise HTTPException(status_code=401, detail="Tokens not found. Please log in.")
 
-    access_token = tokens.get("access_token")
-    refresh_token = tokens.get("refresh_token")
+    access_token = tokens.access_token
+    refresh_token = tokens.refresh_token
+    
+    # Log the token_expiry for debugging
+    print(f"Token expiry: {tokens.token_expiry}")
     
     # Check if access token exists and is expired
-    if not access_token or token_is_expired(tokens.get("issue_time", datetime.now(timezone.utc))):
-        # Attempt to refresh using the stored refresh token
-        if not refresh_token:
-            raise HTTPException(status_code=401, detail="Refresh token not available. Please log in again.")
-
-        new_tokens = await refresh_outlook_token(refresh_token)
-        
-        if new_tokens:
-            user_tokens[user_id] = {
-                "access_token": new_tokens["access_token"],
-                "refresh_token": new_tokens.get("refresh_token", refresh_token),
-                "issue_time": datetime.now(timezone.utc)
-            }
-            return new_tokens["access_token"]
-        else:
-            raise HTTPException(status_code=401, detail="Failed to refresh access token. Please log in again.")
+    try:
+        if not access_token or token_is_expired(tokens.token_expiry):
+            # If access token is expired, refresh it
+            new_tokens = await refresh_outlook_token(refresh_token)
+            
+            if new_tokens:
+                # Update the access token and refresh token in the database
+                tokens.access_token = new_tokens["access_token"]
+                tokens.refresh_token = new_tokens["refresh_token"]
+                tokens.token_expiry = new_tokens["expires_in"]
+                db.commit()
+                access_token = new_tokens["access_token"]
+                
+            else:
+                raise HTTPException(status_code=401, detail="Failed to refresh access token. Please log in again.")
+    except ValueError as e:
+        # Log the error for debugging
+        print(f"Error checking token expiry: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error while checking token expiry.")
 
     return access_token
 
@@ -149,9 +173,13 @@ async def refresh_outlook_token(refresh_token):
     token_json = token_response.json()
 
     if "access_token" in token_json:
+        # Calculate the new token expiry time
+        token_expiry_time = datetime.now(timezone.utc) + timedelta(seconds=token_json["expires_in"])
+        
         return {
             "access_token": token_json["access_token"],
-            "refresh_token": token_json.get("refresh_token", refresh_token)  # Update only if new refresh token is provided
+            "refresh_token": token_json.get("refresh_token", refresh_token),
+            "expires_in": token_expiry_time  # Return as a DateTime object
         }
     else:
         return None
@@ -166,10 +194,9 @@ async def secure_endpoint(token: str = Depends(oauth2_scheme)):
 async def get_user(user: user_dependency, db: db_dependency):
     compare_user_id = str(user.get("id"))  # Ensure user_id is a string
     user_id = user.get("id")
-    # print("User ID:", user_id)
     
     # Fetch the access token for the current user
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -183,7 +210,6 @@ async def get_user(user: user_dependency, db: db_dependency):
     # Make a request to the Outlook API to get the user information
     response = requests.get(GET_USER, headers=headers)
     outlook_data = response.json()
-    # print(outlook_data)
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve user data: {response.text}")
@@ -199,7 +225,6 @@ async def get_user(user: user_dependency, db: db_dependency):
     if db_user.email != outlook_email:
         db_user.email = outlook_email  # Update the email in the database
         db.commit()
-        #print(f"Email updated to {outlook_email}")
     
     # Return the updated user data from the Outlook API
     return outlook_data
@@ -221,13 +246,11 @@ async def update_email(user: user_dependency, db: db_dependency, email_request: 
     
     return {"message": "Email updated successfully", "new_email": new_email}
 
-
-
 @router.get("/get-user-messages", tags=["Outlook API"])
-async def get_user_messages(user: user_dependency):
+async def get_user_messages(user: user_dependency, db: db_dependency):
     # Define headers with the access token
     user_id = user.get("id")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -244,14 +267,14 @@ async def get_user_messages(user: user_dependency):
         return response.json()
     else:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
-    
+
 # Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
 async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db_dependency):
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -313,20 +336,17 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
                     'status_phases': [status]  # Initialize with the first status
                 }
                 
-    
     filtered_emails = list(processed_companies.values())
 
     return filtered_emails
 
- 
-    
-# Function to get user's messages filtered by a keyword appearing anywhere in the email and received after a the most recent refresh time
+# Function to get user's messages filtered by a keyword appearing anywhere in the email and received after the most recent refresh time
 @router.get("/get-user-messages-by-phrase-and-date", tags=["Outlook API"])
 async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
-    #Define headers with the access token
+    # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -351,8 +371,7 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         # Dictionary to track processed companies
         processed_companies = {}
         
-        # Filter for emails only recieved after most recent refresh time
-        # Filter emails by receivedDateTime based on last_refresh_time
+        # Filter for emails only received after the most recent refresh time
         for email in email_data.get('value', []):
             received_time_str = email.get('receivedDateTime')
             received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
@@ -391,11 +410,8 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
             
     # Convert the dictionary of processed companies to a list
     filtered_emails = list(processed_companies.values())
-
-    # print("Filtered emails:", filtered_emails)
     return filtered_emails
-            
-    
+
 # Function to get a refresh token for Outlook API
 @router.get("/refresh-token", tags=["Outlook API"], status_code=status.HTTP_200_OK)
 async def refresh_token(refresh_token: str):
@@ -416,15 +432,15 @@ async def refresh_token(refresh_token: str):
 
     return {"error": "Failed to refresh access token", "response": token_json}
 
-# Calander API
+# Calendar API
 
-CALANDER_URL = "https://graph.microsoft.com/v1.0/users/{email}/calendar/events"
+CALENDAR_URL = "https://graph.microsoft.com/v1.0/users/{email}/calendar/events"
 
 @router.post("/create-event", tags=["Outlook API"])
-async def create_event(event_data: dict, user: user_dependency):
+async def create_event(event_data: dict, user: user_dependency, db: db_dependency):
     user_id = user.get("id")
     email = user.get("email")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -434,7 +450,7 @@ async def create_event(event_data: dict, user: user_dependency):
         "Content-Type": "application/json"
     }
 
-    response = requests.post(CALANDER_URL.format(email=email), headers=headers, json=event_data)
+    response = requests.post(CALENDAR_URL.format(email=email), headers=headers, json=event_data)
 
     if response.status_code == 201:
         return {"message": "Event created successfully", "event_id": response.json().get("id")}
@@ -442,10 +458,10 @@ async def create_event(event_data: dict, user: user_dependency):
         raise HTTPException(status_code=response.status_code, detail=f"Failed to create event: {response.text}")
     
 @router.put("/update-event", tags=["Outlook API"])
-async def update_event(event_id: str, event_data: dict, user: user_dependency):
+async def update_event(event_id: str, event_data: dict, user: user_dependency, db: db_dependency):
     user_id = user.get("id")
     email = user.get("email")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -455,7 +471,7 @@ async def update_event(event_id: str, event_data: dict, user: user_dependency):
         "Content-Type": "application/json"
     }
 
-    response = requests.patch(CALANDER_URL.format(email=email) + f"/{event_id}", headers=headers, json=event_data)
+    response = requests.patch(CALENDAR_URL.format(email=email) + f"/{event_id}", headers=headers, json=event_data)
 
     if response.status_code == 200:
         return {"message": "Event updated successfully"}
@@ -463,10 +479,10 @@ async def update_event(event_id: str, event_data: dict, user: user_dependency):
         raise HTTPException(status_code=response.status_code, detail=f"Failed to update event: {response.text}")
     
 @router.delete("/delete-event", tags=["Outlook API"])
-async def delete_event(event_id: str, user: user_dependency):
+async def delete_event(event_id: str, user: user_dependency, db: db_dependency):
     user_id = user.get("id")
     email = user.get("email")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -476,7 +492,7 @@ async def delete_event(event_id: str, user: user_dependency):
         "Content-Type": "application/json"
     }
 
-    response = requests.delete(CALANDER_URL.format(email=email) + f"/{event_id}", headers=headers)
+    response = requests.delete(CALENDAR_URL.format(email=email) + f"/{event_id}", headers=headers)
 
     if response.status_code == 204:
         return {"message": "Event deleted successfully"}
@@ -484,10 +500,10 @@ async def delete_event(event_id: str, user: user_dependency):
         raise HTTPException(status_code=response.status_code, detail=f"Failed to delete event: {response.text}")
     
 @router.get("/get-events", tags=["Outlook API"])
-async def get_events(user: user_dependency):
+async def get_events(user: user_dependency, db: db_dependency):
     user_id = user.get("id")
     email = user.get("email")
-    access_token = await get_access_token(user_id)
+    access_token = await get_access_token(user_id, db)
     
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -497,7 +513,7 @@ async def get_events(user: user_dependency):
         "Content-Type": "application/json"
     }
 
-    response = requests.get(CALANDER_URL.format(email=email), headers=headers)
+    response = requests.get(CALENDAR_URL.format(email=email), headers=headers)
 
     if response.status_code == 200:
         return response.json()
