@@ -27,9 +27,24 @@ class User(Base):
     email = Column(String(255), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     
+    outlook_auth = relationship("OutlookAuth", back_populates="user", uselist=False)
     resumes = relationship("Resume", back_populates="user")
     applications = relationship("Application", back_populates="user")
     settings = relationship("UserSettings", back_populates="user", uselist=False)
+
+class OutlookAuth(Base):
+    __tablename__ = "outlook_auth"
+
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    user_id = Column(CHAR(36), ForeignKey('users.id'), nullable=False)  # Reference to User table
+
+    access_token = Column(String(2048), nullable=False)
+    refresh_token = Column(String(2048), nullable=False)
+    token_expiry = Column(DateTime, nullable=False)  # Store token expiration date/time
+    scope = Column(String(512), nullable=True)  # Store token scope for permissions
+
+    # Define relationship with the User model
+    user = relationship("User", back_populates="outlook_auth")
 
 class Resume(Base):
     __tablename__ = "resumes"

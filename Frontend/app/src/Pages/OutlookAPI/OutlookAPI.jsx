@@ -116,6 +116,19 @@ const OutlookApi = () => {
     }
   };
 
+  /* const fetchAndCreateApplicationBySearchAndDate = async () => {
+    try {
+      if (!userEmail) {
+        setErrorMessage("User email not found.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:8000/outlook_api/`
+      )
+  }
+      */
+
   const parseApplicationData = (msg) => {
     return {
       company: msg.company || "Unknown",
