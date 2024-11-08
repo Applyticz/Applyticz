@@ -8,7 +8,7 @@ from typing import Annotated
 from app.utils.utils import get_current_user
 from app.utils.parsing_tool import extract_plain_text
 from app.db.database import db_dependency
-from app.models.database_models import User, OutlookAuth
+from app.models.database_models import User, OutlookAuth, Application
 from app.models.pydantic_models import UpdateEmailRequest
 from app.utils.email_parser import extract_company_and_position, parse_email_data_hardcoded
 from app.routers.application import create_application, update_application
@@ -125,7 +125,6 @@ def token_is_expired(token_issue_time):
 async def get_access_token(user_id, db: db_dependency):
     user_id_str = str(user_id)  # Ensure `user_id` is a string
     tokens = db.query(OutlookAuth).filter(OutlookAuth.user_id == user_id_str).first()
-    print("Tokens found:", tokens)
 
     if not tokens:
         # If tokens are missing, prompt re-login
@@ -294,15 +293,33 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
         email_data = response.json()
         filtered_emails = []
         
-        # Dictionary to track processed companies
-        processed_companies = {}
+        #DB Query to get all applications for the user
+        print("User ID:", user_id)
+
+        # Check the type of user_id
+        print("Type of user_id:", type(user_id))
+
+        # Convert user_id to string for the query
+        user_id_str = str(user_id)
+
+        # Query the database
+        applications = db.query(Application).filter(Application.user_id == user_id_str).all()
+
+        # Debugging output
+        print("Applications found:", len(applications))
+        for app in applications:
+            print(f"Application ID: {app.id}, Company: {app.company}")
+
+        # Dictionary to track processed companies already in the application database
+        processed_companies = {app.company: {} for app in applications}
+        print("Processed companies:", processed_companies)
 
         # Extract company, position, and status from each email
         for email in email_data.get('value', []):
             email_body = extract_plain_text(email.get('body', {}).get('content', ''))
             bodyPreview = extract_plain_text(email.get('bodyPreview'))
-            entities = parse_email_data_hardcoded(email_body)
-            parsed_data = parse_email_data_hardcoded(email_body)
+            entities = parse_email_data_hardcoded(email_body, email.get('subject'))
+            parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
 
             company_name = entities['company']
             received_time = email.get('receivedDateTime')
@@ -313,12 +330,16 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
                 # Update receivedDateTime if the email is more recent
                 existing_entry = processed_companies[company_name]
                 
+                # Check current state of status phases
+                status_phases = existing_entry.get('status_phases', [])
+                
+                
                 # Append new status if it's different from the last in `status_phases`
-                if status != existing_entry['status_phases'][-1]:
-                    existing_entry['status_phases'].append(status)
+                if status_phases and status != status_phases[-1]:
+                    status_phases.append(status)
                 
                 # Update the most recent status and received time if this email is newer
-                if received_time > existing_entry['receivedDateTime']:
+                if received_time > existing_entry.get('receivedDateTime', received_time):
                     existing_entry['status'] = status
                     existing_entry['receivedDateTime'] = received_time
                     
@@ -332,11 +353,17 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
                     'body': email_body,
                     'company': company_name,
                     'position': entities['position'],
+                    'location': entities['location'] if 'location' in entities else "Unknown",
+                    'salary': entities['salary'] if 'salary' in entities else "Unknown",
                     'status': status,
                     'status_phases': [status]  # Initialize with the first status
                 }
                 
-    filtered_emails = list(processed_companies.values())
+    # Only add data to filtered_emails if its not empty
+    filtered_emails = [entry for entry in processed_companies.values() if entry]
+    
+    if not filtered_emails:
+        return {"message": "No new applcaions or status updates found"}
 
     return filtered_emails
 
@@ -365,11 +392,18 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         email_data = response.json()
         filtered_emails = []
         
+        # Convert user_id to string for the query
+        user_id_str = str(user_id)
+        
+        # Query the database
+        applications = db.query(Application).filter(Application.user_id == user_id_str).all()
+        
         # Convert last_refresh_time to datetime object
         last_refresh_dt = datetime.fromisoformat(last_refresh_time.replace('Z', '+00:00'))
         
-        # Dictionary to track processed companies
-        processed_companies = {}
+        # Dictionary to track processed companies already in the application database
+        processed_companies = {app.company: {} for app in applications}
+        print("Processed companies:", processed_companies)
         
         # Filter for emails only received after the most recent refresh time
         for email in email_data.get('value', []):
@@ -379,18 +413,27 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
             if received_time > last_refresh_dt:
                 email_body = extract_plain_text(email.get('body', {}).get('content', ''))
                 bodyPreview = extract_plain_text(email.get('bodyPreview'))
-                entities = parse_email_data_hardcoded(email_body)
-                parsed_data = parse_email_data_hardcoded(email_body)
+                entities = parse_email_data_hardcoded(email_body, email.get('subject'))
+                parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
 
                 company_name = entities['company']
-                received_time = email.get('receivedDateTime')
                 status = parsed_data['status']
                 
                 # Check if this company has already been processed
                 if company_name in processed_companies:
-                    # Update status and receivedDateTime if the email is more recent
+                    # Update receivedDateTime if the email is more recent
                     existing_entry = processed_companies[company_name]
-                    if received_time > existing_entry['receivedDateTime']:
+                    
+                    # Check current state of status phases
+                    status_phases = existing_entry.get('status_phases', [])
+                    
+                    
+                    # Append new status if it's different from the last in `status_phases`
+                    if status_phases and status != status_phases[-1]:
+                        status_phases.append(status)
+                    
+                    # Update the most recent status and received time if this email is newer
+                    if received_time > existing_entry.get('receivedDateTime', received_time):
                         existing_entry['status'] = status
                         existing_entry['receivedDateTime'] = received_time
                 else:
@@ -403,14 +446,19 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
                         'body': email_body,
                         'company': company_name,
                         'position': entities['position'],
-                        'status': status
-                }
-            else:
-                return {"message": "No new emails found"}
-            
-    # Convert the dictionary of processed companies to a list
-    filtered_emails = list(processed_companies.values())
-    return filtered_emails
+                        'location': entities['location'] if 'location' in entities else "Unknown",
+                        'salary': entities['salary'] if 'salary' in entities else "Unknown",
+                        'status': status,
+                        'status_phases': [status]  # Initialize with the first status
+                    }
+        
+        # Only add data to filtered_emails if its not empty
+        filtered_emails = [entry for entry in processed_companies.values() if entry]
+        
+        if not filtered_emails:
+            return {"message": "No new emails found"}
+        
+        return filtered_emails
 
 # Function to get a refresh token for Outlook API
 @router.get("/refresh-token", tags=["Outlook API"], status_code=status.HTTP_200_OK)
