@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import mailPic from '../../Images/mailImage.png'
 
 //Chakra
-import { Card, CardHeader, CardBody, CardFooter, Heading, Text, Image } from '@chakra-ui/react'
+import { Card, CardHeader, CardBody, CardFooter, Heading, Text, Image, Divider, ButtonGroup } from '@chakra-ui/react'
 import { ChakraProvider, Stack, HStack } from "@chakra-ui/react";
 import {
   Modal,
@@ -626,7 +626,61 @@ function Applications() {
 
             {/* INTERVIEWING */}
             <TabPanel>
-              
+              <Card maxW='sm'>
+                <CardBody>
+                  <Stack mt='6' spacing='3'>
+                    <Heading size='md'>Interview with Amazon</Heading>
+                    <Heading size='sm'>Round 2</Heading>
+                    <Text>
+                      Notes about the interview
+                      <br></br>
+                      Dress business casual
+                    </Text>
+                    
+                    <Text color='blue.600' fontSize='2xl'>
+                      Important Dates
+                    </Text>
+                    <p>Interview Scheduled for 10/4/24</p>
+                    
+                    
+                  </Stack>
+                </CardBody>
+                <Divider />
+                <CardFooter>
+                  <ButtonGroup spacing='2' justifyContent='center' width='100%'>
+                    <Button variant='solid' colorScheme='blue'>
+                      View
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Next Stage
+                      {/* Pops up allowing you to change any information */}
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Remove
+                    </Button>
+                  </ButtonGroup>
+                </CardFooter>
+              </Card>
+
+              <br></br>
+              <Divider />
+              <Accordion allowToggle>
+                <AccordionItem>
+                  <h2>
+                    <AccordionButton>
+                      <Box as="span" flex="1" textAlign="left">
+                      <h1 style={{ textAlign: "left", fontWeight: "bold", color: "gray" }}>Past Interviews</h1>
+                        
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel pb={4}>
+                    
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+      
             </TabPanel>
             
             {/* REJECTED */}
@@ -724,7 +778,64 @@ function Applications() {
 
             {/* OFFERS */}
             <TabPanel>
+              {/* Accept make it purple, denied make it red and put into past offers */}
+              <Card maxW='sm'>
+                <CardBody>
+                  <Stack mt='6' spacing='3'>
+                    <Heading size='md'>Offer from Amazon</Heading>
+                    <Text color='black.600' fontSize='xl'>
+                      San Francisco, CA 
+                    </Text>
+                    
+                    <Text color='blue.600' fontSize='2xl'>
+                      Interest: 
+                    </Text>
+                  
+                    <Text>
+                      Notes about the offer
+                      <br></br>
+                      
+                    </Text>
+                    
+                    
+                  </Stack>
+                </CardBody>
+                <Divider />
+                <CardFooter>
+                  <ButtonGroup spacing='2' justifyContent='center' width='100%'>
+                    <Button variant='solid' colorScheme='blue'>
+                      Edit
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Accept
+                      {/* Pops up allowing you to change any information */}
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Deny
+                    </Button>
+                  </ButtonGroup>
+                </CardFooter>
+              </Card>
               
+              <br></br>
+              <Divider />
+              <Accordion allowToggle>
+                <AccordionItem>
+                  <h2>
+                    <AccordionButton>
+                      <Box as="span" flex="1" textAlign="left">
+                      <h1 style={{ textAlign: "left", fontWeight: "bold", color: "gray" }}>Past Offers</h1>
+                        
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel pb={4}>
+                    
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+
             </TabPanel>
 
           </TabPanels>
