@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import mailPic from '../../Images/mailImage.png'
 
 //Chakra
-import { ChakraProvider, HStack } from "@chakra-ui/react";
+import { Card, CardHeader, CardBody, CardFooter, Heading, Text, Image } from '@chakra-ui/react'
+import { ChakraProvider, Stack, HStack } from "@chakra-ui/react";
 import {
   Modal,
   ModalContent,
@@ -601,11 +603,30 @@ function Applications() {
 
             {/* POSITIVE RESPONSE */}
             <TabPanel>
-              
+              <Card direction={{ base: 'column', sm: 'row' }} overflow='hidden' variant='outline'>
+                <Image objectFit='cover' maxW={{ base: '100%', sm: '200px' }} src={mailPic} alt='Mail'/>
+
+                <Stack>
+                  <CardBody>
+                    <Heading size='md'>Company</Heading>
+
+                    <Text py='2'>
+                      Trailing off email body...
+                    </Text>
+                  </CardBody>
+
+                  <CardFooter>
+                    <Button variant='solid' colorScheme='blue'>
+                      View
+                    </Button>
+                  </CardFooter>
+                </Stack>
+              </Card>
             </TabPanel>
 
             {/* INTERVIEWING */}
             <TabPanel>
+              
             </TabPanel>
             
             {/* REJECTED */}
