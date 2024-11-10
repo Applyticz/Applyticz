@@ -630,7 +630,7 @@ function Applications() {
                 <CardBody>
                   <Stack mt='6' spacing='3'>
                     <Heading size='md'>Interview with Amazon</Heading>
-                    <Heading size='sm'>Round 2</Heading>
+                    <Heading size='sm' color='blue.700'>(Round 2)</Heading>
                     <Text>
                       Notes about the interview
                       <br></br>
