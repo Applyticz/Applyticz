@@ -1,0 +1,151 @@
+[33m333fa40[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m updated run script for windows
+[33maf37b83[m[33m ([m[1;31morigin/alec-outlook-api[m[33m)[m email to application with refresh time updated
+[33m12c50b7[m Update README.md
+[33m97ad82e[m Update README.md
+[33ma0826d0[m dependency version changes
+[33m0902117[m spacy install for run script
+[33m58bb385[m Merge branch 'main' of https://github.com/Applyticz/Applyticz into alec-outlook-api
+[33md2ab885[m Fixed expired token logic, linting, and dependency addition for linting
+[33mc7633a5[m Merge pull request #10 from Applyticz/applications_page_dylan
+[33m26c8ef2[m[33m ([m[1;31morigin/applications_page_dylan[m[33m)[m Pretty solid applications page
+[33m9c89362[m Organized accordion content
+[33m61c1b1a[m Fixed styling inconsistencies
+[33m103bb3a[m button icons and tooltips
+[33me045cd9[m Search functionality and remodelling
+[33m3fc6886[m big ui changes for tabbing/buttons
+[33m0913ef3[m Restructured accordian layout applications
+[33m7c9ddc4[m Implemented accordian applications list
+[33mb3cac41[m Integrated applications list with tabbing
+[33mdc1fd33[m email parsing to application automation, resume tests, run script
+[33me662d93[m Update README.md
+[33me690c8c[m Update README.md
+[33m660fb99[m Update Readme
+[33m6e2b315[m Merge pull request #9 from Applyticz/dylanCurrent
+[33mfde2e17[m[33m ([m[1;31morigin/dylanCurrent[m[33m)[m Added Radios
+[33m3fdc656[m Rmved txt
+[33m235ba95[m Merge pull request #8 from Applyticz/dylanCurrent
+[33m67d806d[m Fixed styling of modal
+[33m5ed0cea[m Finished create application modal
+[33m219b8a1[m[33m ([m[1;32malec-outlook-api[m[33m)[m started working on email parsing logic
+[33mbb7cff0[m[33m ([m[1;31morigin/mergeBranch2[m[33m, [m[1;31morigin/mergeBranch[m[33m)[m Fixing the merge changes hopefully
+[33mfaf549b[m Added new fucntionality to analytics, dashboard, and landing pages
+[33m90368cb[m Update README.md
+[33m0fbee6a[m Merge branch 'alec-outlook-api'
+[33m13a71bc[m added calender events CRUD operations
+[33mc9bae66[m changes for tests and refresh outlook token
+[33m17cdc99[m added analytics linking to outlook api calls
+[33m1fbebf3[m updated logic to obtain correct email for Outlook API
+[33m61207b8[m added frontend logic to outlook emails
+[33mef774dd[m Merge branch 'alec-outlook-api' alec-outlook-api
+[33ma374bd0[m removed node_modules from main entry
+[33m6a0830e[m created outlook api endpoints
+[33m042a52e[m[33m ([m[1;31morigin/Alejandro[m[33m, [m[1;32mAlejandro[m[33m)[m Updated Analytics page
+[33me4d0067[m Fixed theme checking for dashboard page and normalized headers for other pages
+[33m0170f37[m Added Dark theme switching within the settings page, some elements still need to be fixed
+[33mb79757c[m minor changes
+[33m7161f07[m I think i got most of frontend workflow working for gmail Oauth2. Redirects to google authentication page, but backend callback url still needs work
+[33m89db377[m Added format of Linked Accounts, deleted unnecessary homepage
+[33m94662cc[m Merge branch 'main' of https://github.com/Applyticz/Applyticz
+[33m8a9a18e[m Refactored router names and added Linked Emails Page
+[33mf25f883[m Fixed Typo
+[33mfe1f566[m Update README.md
+[33m39f28a5[m Update README.md
+[33m0efa25f[m Update README.md
+[33m281633b[m Update README.md
+[33m677ad58[m Software Architecture for README.md
+[33m26a4a30[m Update README.md
+[33m3faf950[m Update README.md
+[33m09391d4[m Update README.md
+[33mf4d23e2[m Update README.md
+[33ma1d1cd6[m Update README.md
+[33m57c426c[m Added landing page as default page
+[33m0ec0f70[m Merge branch 'Dylan_ApplicationsPage'
+[33m1cc6452[m[33m ([m[1;31morigin/Dylan_ApplicationsPage[m[33m)[m update before merging
+[33m4209899[m Modded Applyticz styling logo
+[33m94ca27c[m Fixed Header on Nav ang Login
+[33m14ee941[m Refactored Directory Structure and Header
+[33m683f942[m Added 404 Error catch
+[33m5797a32[m Fixed routing to always route to login page, deleted unneeded homepage
+[33m36f4c50[m fixed non-docker frontend start command
+[33mc8251bd[m updated token expiration logic
+[33mf5c417c[m improved auth and token logic
+[33m68df109[m changed healthcheck interval
+[33me61be31[m[33m ([m[1;31morigin/alec-vite[m[33m)[m changed create react app to vite
+[33mcf86f07[m Landing page more detail
+[33m88bda23[m Created landing page content
+[33m702faf2[m Merge pull request #5 from Applyticz/Dylan_ApplicationsPage
+[33mfd39380[m added outline of applications tab strucuring
+[33m18085d9[m[33m ([m[1;31morigin/alec-login-and-token-fix[m[33m)[m Merge branch 'main' of https://github.com/Applyticz/Applyticz into alec-login-and-token-fix
+[33m080e26b[m changes for more efficient run script
+[33m64b9c22[m Merge pull request #4 from Applyticz/Dylan_ApplicationsPage
+[33ma1d9913[m minor change
+[33ma5e5087[m Merge pull request #3 from Applyticz/Dylan_ApplicationsPage
+[33m71bfc34[m added some buttons and tweaks
+[33m47e36c9[m Merge branch 'main' of https://github.com/Applyticz/Applyticz into alec-login-and-token-fix
+[33m492ad9a[m Merge pull request #2 from Applyticz/Dylan_ApplicationsPage
+[33med31de6[m Added Chakra and incorporated applications tabbing
+[33m00d677d[m Merge branch 'main' of https://github.com/Applyticz/Applyticz into alec-login-and-token-fix
+[33m645cf41[m Removed Chakra for now
+[33m4dfc127[m Before adding Chakra
+[33mcc0862f[m fixed bug
+[33m7e8da11[m Restructured Applications page directory
+[33m535b58d[m Updated Directory structure -Authentication
+[33mc837161[m Merge pull request #1 from Applyticz/Alejandro
+[33mb47b1d3[m Added Resume pdf functionality
+[33m326c219[m Merge branch 'main' of https://github.com/Applyticz/Applyticz into alec-login-and-token-fix
+[33m033d510[m fixed register error
+[33m2c6d9c5[m Added a delete all resumes button to the resumes page
+[33m526ed20[m auth token changes
+[33me55d54e[m docker ignore change
+[33m8f9b81c[m fixed auth redirect issue
+[33maf9660e[m updated applications and tests
+[33m4a0ced4[m styles added to register and login
+[33m73c9bda[m fixed runs script
+[33mf1214a8[m minor library changes
+[33meb6536e[m auth token check
+[33m8a8f1d0[m altered some analytics
+[33ma351076[m changes
+[33m0573a01[m updated resume info and dashboard display
+[33m153e74d[m updated CRUD for settings
+[33m13136c8[m dashboard, applications, settings crud opperations are mostly complete
+[33m18ac5be[m merge with updated run.sh
+[33m60b3861[m resume CRUD fully functioning
+[33m0d5b2a0[m startup frontend change
+[33m1fc4c32[m updated script to be windows friendly too
+[33mb96779a[m updated resumes display
+[33m5c7c592[m tests for resumes successful, frontend for user and resumes functional
+[33m927860d[m passed all tests for resume crud and updates for UUID logic
+[33ma1019e0[m Fixed docker hot reload and created a resume upload api
+[33mbcfe0fc[m Backend, frontend, and db all contained in Docker
+[33m4c0e467[m altered run script to allow for docker or local development
+[33m3848939[m better backend structure
+[33m14c7b2e[m moved helper functions to utils, created test for getting user data
+[33me5b3074[m sign out functionality with local storage token logic
+[33mf461dfb[m added frontend register and login functionality
+[33m4362180[m[33m ([m[1;31morigin/alec[m[33m)[m successful integration tests for account CRUD operations and docker file
+[33m3ab0cb6[m docker files
+[33ma0242d1[m fully functioning backend create, update and delete user routes
+[33m3144328[m auth logic changes
+[33m949e3f4[m added alembic files for db migrations
+[33mbe454cf[m added python dependecies and route guides
+[33me8f59ad[m added an example route of db and pydantic differences
+[33mf4b0e8d[m added a lot of test and example routes
+[33m84c26e9[m updated readme and frontend script
+[33m51f9e9a[m updated readme, backend script, and test suite
+[33m1db96a6[m tagged routes
+[33m1dc08e4[m updated script for python or python3
+[33m938db9f[m updated requirements.txt and backend script
+[33mc2d543c[m ignored pytest
+[33m3b2f270[m Merge branch 'main' of https://github.com/Applyticz/Applyticz
+[33me3a44c1[m Added  pytests, updated readme
+[33m21b90c3[m models, routes and db all connected
+[33m8ef241e[m altered script for any OS
+[33m6108129[m added routes and models
+[33mc976bf9[m connected db to backend, models file, and start scripts
+[33mdef4f27[m Merge branch 'main' of https://github.com/Applyticz/Applyticz
+[33m8b7acf4[m initial backend set up
+[33m96bc523[m Updated front-end UI
+[33m4306149[m Update README.md
+[33mf978a7e[m Created React App
+[33m2adc3ec[m test
+[33mc18eff5[m Initial commit

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import mailPic from '../../Images/mailImage.png'
 
 //Chakra
-import { ChakraProvider, HStack } from "@chakra-ui/react";
+import { Card, CardHeader, CardBody, CardFooter, Heading, Text, Image, Divider, ButtonGroup } from '@chakra-ui/react'
+import { ChakraProvider, Stack, HStack } from "@chakra-ui/react";
 import {
   Modal,
   ModalContent,
@@ -415,29 +417,12 @@ function Applications() {
             </Box>
           </Flex>
 
+
+
+          {/* INDIVIDUAL TABS */}
           <TabPanels mt={-4}>
-            {/* For each tab it should show different information? */}
-            {/* <p>IDEAS/STRUCTURE FOR EACH TAB:</p>
-              <br></br>
-              <p>ALL, AWIAITING RESPONSE, REJECTED</p>
-                  <p>it should be more like a table format with thin boxes one on top of other (Table format like - Since we have so many)
-                  </p>
-                  <p>Needs search functionality and default sort to newest first, but be able to change (by clicking up or down arrow - down currently selected)</p>
-                  <br></br>
-              <p> INTERVIEWING</p>
-              <p>Box format with tri column staging visual (with right and left arrows on each BOX to move between stages) - since not many at a time</p>
-              
-              <br>
-              </br>
-              <p>OFFERS</p>
-              <p>Have it be more like a comparison of salary, benefits, location, interest (shown in stars) 1-10 stars and order by priority</p>
-
-              <br></br>
-              <p>POSITIVE RESPONSES</p>
-              <p>These will be pulled from email and indicate a response that needs to done and maybe like staging area where you can go from like NeedsAction and move to SentMyResponse 
-                  Or buttons that move it to rejected/interviewing tab depending
-              </p> */}
-
+            
+            {/* ALL */}
             <TabPanel>
               {/* Headline */}
               <Flex justify="space-between" align="center">
@@ -478,7 +463,7 @@ function Applications() {
                             {application.position}
                           </Box>
                           <br />
-                          11/4/24
+                          Applied: 11/4/24
                         </Box>
                         <Box
                           as="span"
@@ -524,109 +509,335 @@ function Applications() {
                   </AccordionItem>
                 ))}
               </Accordion>
-
-              {/* <div className="applications-list">
-                    {applications.map((application) => (
-                    <div key={application.id} className="application-item">
-                        <h3>{application.company} - {application.position}</h3>
-                        {editingId === application.id ? (
-                        <div className="application-edit-form">
-                            <input
-                            type="text"
-                            name="company"
-                            value={application.company}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Company"
-                            required
-                            />
-                            <input
-                            type="text"
-                            name="position"
-                            value={application.position}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Position"
-                            required
-                            />
-                            <input
-                            type="text"
-                            name="location"
-                            value={application.location}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Location"
-                            required
-                            />
-                            <input
-                            type="text"
-                            name="status"
-                            value={application.status}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Status"
-                            required
-                            />
-                            <input
-                            type="text"
-                            name="salary"
-                            value={application.salary}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Salary"
-                            required
-                            />
-                            <textarea
-                            name="job_description"
-                            value={application.job_description}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Job Description"
-                            />
-                            <textarea
-                            name="notes"
-                            value={application.notes}
-                            onChange={(e) => handleInputChange(e, application.id)}
-                            placeholder="Notes"
-                            />
-                            <div className="button-group">
-                            <button onClick={() => handleSubmit(application.id)} className="save">Save</button>
-                            <button onClick={() => setEditingId(null)} className="cancel">Cancel</button>
-                            </div>
-                        </div>
-                        ) : (
-                        <div className="application-display">
-                            <p>Stage: {application.status}</p>
-                            <p>Applied Date: {application.applied_date}</p>
-                            <p>Last Update: {application.last_update}</p>
-                            <p>Notes: {application.notes}</p>
-                            <div className="button-group">
-                            <button onClick={() => setEditingId(application.id)} className="edit">Edit</button>
-                            <button onClick={() => handleDelete(application.id)} className="delete">Delete</button>
-                            </div>
-                        </div>
-                        )}
-                    </div>
-                    ))}
-                </div>                       */}
             </TabPanel>
-
-            <TabPanel></TabPanel>
-
+                
+            {/* AWAITING RESPONSE */}
             <TabPanel>
-              <p>
-                Depending on the positive response you can manually decide to
-                move to interview stage via a button
-              </p>
+              {/* Headline */}
+              <Flex justify="space-between" align="center">
+                <Flex align="center">
+                  <Input placeholder="Search" width="300px" />
+                  <Button
+                    colorScheme="gray"
+                    ml={2}
+                    rightIcon={<ArrowDownIcon />}
+                  >
+                    Recent
+                  </Button>
+                  <Button colorScheme="gray" ml={2} rightIcon={<ArrowUpIcon />}>
+                    Oldest
+                  </Button>
+                </Flex>
+                <h1 style={{ textAlign: "right" }}>
+                  Total: {applications.filter((application) => application.status === "Awaiting Response").length}
+                </h1>
+              </Flex>
+              <br></br>
+
+              {/* List */}
+              <Accordion allowToggle>
+                {applications.filter((application) => application.status === "Awaiting Response").map((application) => (
+                  <AccordionItem key={application.id}>
+                    {" "}
+                    {/* Iterating through each application (all tab) */}
+                    <h2>
+                      <AccordionButton
+                        _expanded={{ color: "white", bg: "blue.500" }}
+                      >
+                        <Box as="span" flex="1" textAlign="left">
+                          <Box as="span" fontWeight="bold">
+                            {application.company}
+                          </Box>
+                          ,{" "}
+                          <Box as="span" fontStyle="italic">
+                            {application.position}
+                          </Box>
+                          <br />
+                          Applied: 11/4/24
+                        </Box>
+                        <Box
+                          as="span"
+                          flex="1"
+                          textAlign="right"
+                          borderRadius="full"
+                          border="2px solid"
+                          borderColor="blue.500"
+                          px={3}
+                          py={1}
+                          display="inline-block"
+                          maxW="160px"
+                        >
+                          {application.status}
+                        </Box>
+                        <AccordionIcon />
+                      </AccordionButton>
+                    </h2>
+                    <AccordionPanel pb={4}>
+                      <p>Location:</p>
+                      <p style={{ textIndent: "20px" }}>
+                        {application.location}
+                      </p>
+                      <p>Salary:</p>
+                      <p style={{ textIndent: "20px" }}>{application.salary}</p>
+                      <p>Job Description:</p>
+                      <p style={{ textIndent: "20px" }}>
+                        {application.job_description}
+                      </p>
+                      <p>Notes:</p>
+                      <p style={{ textIndent: "20px" }}>{application.notes}</p>
+                      <br />
+                      <Button colorScheme="gray">Edit</Button>{" "}
+                      {/* Make circular */}
+                      <Button
+                        colorScheme="red"
+                        ml={2}
+                        onClick={() => handleDelete(application.id)}
+                      >
+                        Delete
+                      </Button>
+                    </AccordionPanel>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </TabPanel>
 
+            {/* POSITIVE RESPONSE */}
             <TabPanel>
-              <p>
-                In this tab we can have some sort of Interview tracker to track
-                all stages within. Maybe like 2-4 columns
-              </p>
-              {/* <p>Basically an entirely seperate tracker within... i think itd make it easier and be more detailed</p> */}
-              {/* that way you can use the overarching tabs as a main overview but wunna dial in on interview stuff so seperate thing */}
-              {/* Have them be displayed as boxes with arrows where you can move between 3 trifold columns (1st round, 2nd round, 3rd round -> and notes for each round) */}
+              <Card direction={{ base: 'column', sm: 'row' }} overflow='hidden' variant='outline'>
+                <Image objectFit='cover' maxW={{ base: '100%', sm: '200px' }} src={mailPic} alt='Mail'/>
+
+                <Stack>
+                  <CardBody>
+                    <Heading size='md'>Company</Heading>
+
+                    <Text py='2'>
+                      Trailing off email body...
+                    </Text>
+                  </CardBody>
+
+                  <CardFooter>
+                    <Button variant='solid' colorScheme='blue'>
+                      View
+                    </Button>
+                  </CardFooter>
+                </Stack>
+              </Card>
             </TabPanel>
 
+            {/* INTERVIEWING */}
             <TabPanel>
-              <p>5th Tab Content</p>
+              <Card maxW='sm'>
+                <CardBody>
+                  <Stack mt='6' spacing='3'>
+                    <Heading size='md'>Interview with Amazon</Heading>
+                    <Heading size='sm' color='blue.700'>(Round 2)</Heading>
+                    <Text>
+                      Notes about the interview
+                      <br></br>
+                      Dress business casual
+                    </Text>
+                    
+                    <Text color='blue.600' fontSize='2xl'>
+                      Important Dates
+                    </Text>
+                    <p>Interview Scheduled for 10/4/24</p>
+                    
+                    
+                  </Stack>
+                </CardBody>
+                <Divider />
+                <CardFooter>
+                  <ButtonGroup spacing='2' justifyContent='center' width='100%'>
+                    <Button variant='solid' colorScheme='blue'>
+                      View
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Next Stage
+                      {/* Pops up allowing you to change any information */}
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Remove
+                    </Button>
+                  </ButtonGroup>
+                </CardFooter>
+              </Card>
+
+              <br></br>
+              <Divider />
+              <Accordion allowToggle>
+                <AccordionItem>
+                  <h2>
+                    <AccordionButton>
+                      <Box as="span" flex="1" textAlign="left">
+                      <h1 style={{ textAlign: "left", fontWeight: "bold", color: "gray" }}>Past Interviews</h1>
+                        
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel pb={4}>
+                    
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+      
             </TabPanel>
+            
+            {/* REJECTED */}
+            <TabPanel>
+              {/* Headline */}
+              <Flex justify="space-between" align="center">
+                <Flex align="center">
+                  <Input placeholder="Search" width="300px" />
+                  <Button
+                    colorScheme="gray"
+                    ml={2}
+                    rightIcon={<ArrowDownIcon />}
+                  >
+                    Recent
+                  </Button>
+                  <Button colorScheme="gray" ml={2} rightIcon={<ArrowUpIcon />}>
+                    Oldest
+                  </Button>
+                </Flex>
+                <h1 style={{ textAlign: "right" }}>
+                  Total: {applications.filter((application) => application.status === "Rejected").length}
+                </h1>
+              </Flex>
+              <br></br>
+
+              {/* List */}
+              <Accordion allowToggle>
+                {applications.filter((application) => application.status === "Rejected").map((application) => (
+                  <AccordionItem key={application.id}>
+                    {" "}
+                    {/* Iterating through each application (all tab) */}
+                    <h2>
+                      <AccordionButton
+                        _expanded={{ color: "white", bg: "blue.500" }}
+                      >
+                        <Box as="span" flex="1" textAlign="left">
+                          <Box as="span" fontWeight="bold">
+                            {application.company}
+                          </Box>
+                          ,{" "}
+                          <Box as="span" fontStyle="italic">
+                            {application.position}
+                          </Box>
+                          <br />
+                          Applied: 11/4/24
+                          <br></br>
+                          Rejected: 11/5/24
+                          
+                        </Box>
+                        <Box
+                          as="span"
+                          flex="1"
+                          textAlign="right"
+                          borderRadius="full"
+                          border="2px solid"
+                          borderColor="blue.500"
+                          px={3}
+                          py={1}
+                          display="inline-block"
+                          maxW="160px"
+                        >
+                          {application.status}
+                        </Box>
+                        <AccordionIcon />
+                      </AccordionButton>
+                    </h2>
+                    <AccordionPanel pb={4}>
+                      <p>Location:</p>
+                      <p style={{ textIndent: "20px" }}>
+                        {application.location}
+                      </p>
+                      <p>Salary:</p>
+                      <p style={{ textIndent: "20px" }}>{application.salary}</p>
+                      <p>Job Description:</p>
+                      <p style={{ textIndent: "20px" }}>
+                        {application.job_description}
+                      </p>
+                      <p>Notes:</p>
+                      <p style={{ textIndent: "20px" }}>{application.notes}</p>
+                      <br />
+                      <Button colorScheme="gray">Edit</Button>{" "}
+                      {/* Make circular */}
+                      <Button
+                        colorScheme="red"
+                        ml={2}
+                        onClick={() => handleDelete(application.id)}
+                      >
+                        Delete
+                      </Button>
+                    </AccordionPanel>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </TabPanel>
+
+            {/* OFFERS */}
+            <TabPanel>
+              {/* Accept make it purple, denied make it red and put into past offers */}
+              <Card maxW='sm'>
+                <CardBody>
+                  <Stack mt='6' spacing='3'>
+                    <Heading size='md'>Offer from Amazon</Heading>
+                    <Text color='black.600' fontSize='xl'>
+                      San Francisco, CA 
+                    </Text>
+                    
+                    <Text color='blue.600' fontSize='2xl'>
+                      Interest: 
+                    </Text>
+                  
+                    <Text>
+                      Notes about the offer
+                      <br></br>
+                      
+                    </Text>
+                    
+                    
+                  </Stack>
+                </CardBody>
+                <Divider />
+                <CardFooter>
+                  <ButtonGroup spacing='2' justifyContent='center' width='100%'>
+                    <Button variant='solid' colorScheme='blue'>
+                      Edit
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Accept
+                      {/* Pops up allowing you to change any information */}
+                    </Button>
+                    <Button variant='ghost' colorScheme='blue'>
+                      Deny
+                    </Button>
+                  </ButtonGroup>
+                </CardFooter>
+              </Card>
+              
+              <br></br>
+              <Divider />
+              <Accordion allowToggle>
+                <AccordionItem>
+                  <h2>
+                    <AccordionButton>
+                      <Box as="span" flex="1" textAlign="left">
+                      <h1 style={{ textAlign: "left", fontWeight: "bold", color: "gray" }}>Past Offers</h1>
+                        
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel pb={4}>
+                    
+                  </AccordionPanel>
+                </AccordionItem>
+              </Accordion>
+
+            </TabPanel>
+
           </TabPanels>
         </Tabs>
       </ChakraProvider>
