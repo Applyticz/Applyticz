@@ -61,6 +61,16 @@ class ApplicationRequest(BaseModel):
     salary: str
     job_description: str = None
     notes: str = None
+    status_history: dict = None
+    applied_date: str
+    last_update: str
+    interview_notes: str = None
+    interview_dates: str = None
+    interview_round: str = None
+    is_active_interview: bool
+    offer_notes: str = None
+    offer_interest: int = None
+    is_active_offer: bool
 
 class ApplicationUpdateRequest(BaseModel):
     company: str
@@ -70,6 +80,16 @@ class ApplicationUpdateRequest(BaseModel):
     salary: str
     job_description: str
     notes: str
+    status_history: dict = None
+    applied_date: str = None
+    last_update: str = None
+    interview_notes: str = None
+    interview_dates: str = None
+    interview_round: str = None
+    is_active_interview: bool = None
+    offer_notes: str = None
+    offer_interest: int = None
+    is_active_offer: bool = None
 
 class UserSettingsRequest(BaseModel):
     first_name: Optional[str] = None

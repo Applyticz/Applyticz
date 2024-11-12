@@ -32,6 +32,7 @@ class User(Base):
     resumes = relationship("Resume", back_populates="user")
     applications = relationship("Application", back_populates="user")
     settings = relationship("UserSettings", back_populates="user", uselist=False)
+    emails = relationship("Email", back_populates="user")
 
 class OutlookAuth(Base):
     __tablename__ = "outlook_auth"
@@ -85,6 +86,7 @@ class Application(Base):
     is_active_offer = Column(Boolean, nullable=False)
 
     user = relationship("User", back_populates="applications")
+    emails = relationship("Email", back_populates="application")
     
     
 class Email(Base):
