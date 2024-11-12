@@ -29,7 +29,9 @@ const Login = () => {
         loginUser(data.access_token); // Save the app access token in the Auth context
 
         // Redirect to the Outlook OAuth2 login endpoint
-          window.location.href = `http://localhost:8000/outlook_api/login?state=${data.access_token}`;
+          //window.location.href = `http://localhost:8000/outlook_api/login?state=${data.access_token}`;
+          // redirct to dashboard
+          navigate('/dashboard');
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.detail || "Failed to login.");

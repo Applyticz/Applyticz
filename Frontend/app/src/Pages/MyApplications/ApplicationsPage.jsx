@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from "react";
-import mailPic from '../../Images/mailImage.png'
+import mailPic from "../../Images/mailImage.png";
 
 //Chakra
-import { Card, CardHeader, CardBody, CardFooter, Heading, Text, Image, Divider, ButtonGroup } from '@chakra-ui/react'
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
+  Heading,
+  Text,
+  Image,
+  Divider,
+  ButtonGroup,
+} from "@chakra-ui/react";
 import { ChakraProvider, Stack, HStack } from "@chakra-ui/react";
 import {
   Modal,
@@ -18,6 +28,7 @@ import {
   ArrowUpIcon,
   AddIcon,
   RepeatIcon,
+  EmailIcon,
 } from "@chakra-ui/icons";
 import {
   Input,
@@ -49,6 +60,7 @@ import "../../App.css";
 function Applications() {
   const { authTokens } = useAuth();
   const [error, setError] = useState("");
+  const [LastUpdateTime, setLastUpdateTime] = useState("");
 
   /* Create Application Dialogue Box */
   const [creatingApplication, setCreatingApplication] = useState(false);
@@ -202,6 +214,80 @@ function Applications() {
       setError("Error fetching theme");
     }
   };
+
+  const updateLastUpdateTime = () => {
+    const now = new Date();
+    const formattedTime = `${now.getUTCFullYear()}-${String(
+      now.getUTCMonth() + 1
+    ).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}T${String(
+      now.getUTCHours()
+    ).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(
+      2,
+      "0"
+    )}:${String(now.getUTCSeconds()).padStart(2, "0")}Z`;
+    setLastUpdateTime(formattedTime);
+    console.log("Last update time:", formattedTime);
+  };
+
+
+const getNewEmails = async () => {
+  try {
+    if (!LastUpdateTime) {
+      await getAllEmails(); // Fetch all emails if no update time is set
+    } else {
+      const response = await fetch(
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase-and-date?phrase=applying&last_refresh_time=${LastUpdateTime}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${authTokens}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("New emails:", data);
+        updateLastUpdateTime(); // Only update after successful fetch
+      } else {
+        throw new Error("Failed to get new emails");
+      }
+    }
+  } catch (err) {
+    setError("Error fetching new emails");
+  }
+};
+
+const getAllEmails = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrase=applying`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authTokens}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("All emails:", data);
+      updateLastUpdateTime();
+    } else {
+      throw new Error("Failed to get all emails");
+    }
+  } catch (err) {
+    setError("Error fetching all emails");
+  }
+};
+
+useEffect(() => {
+  if (!LastUpdateTime) {
+    getAllEmails();
+  }
+}, []);
+
   useEffect(() => {
     // Apply the theme by toggling class on the root element
     const root = document.documentElement;
@@ -403,9 +489,23 @@ function Applications() {
 
             {/* Buttons */}
             <Box ml="auto">
-              <Tooltip label="Update applications from email">
-                <IconButton colorScheme="gray" icon={<RepeatIcon />} mr={2} />
+              <Tooltip label="Check for new emails">
+                <IconButton
+                  colorScheme="gray"
+                  icon={<RepeatIcon />}
+                  onClick={getNewEmails}
+                />
               </Tooltip>
+              {error && <p className="error">{error}</p>}
+
+              <Tooltip label="Get all emails">
+                <IconButton
+                  colorScheme="gray"
+                  icon={<EmailIcon/>}
+                  onClick={getAllEmails}
+                />
+              </Tooltip>
+              {error && <p className="error">{error}</p>}
 
               <Tooltip label="Create new application">
                 <IconButton
@@ -417,11 +517,8 @@ function Applications() {
             </Box>
           </Flex>
 
-
-
           {/* INDIVIDUAL TABS */}
           <TabPanels mt={-4}>
-            
             {/* ALL */}
             <TabPanel>
               {/* Headline */}
@@ -510,7 +607,7 @@ function Applications() {
                 ))}
               </Accordion>
             </TabPanel>
-                
+
             {/* AWAITING RESPONSE */}
             <TabPanel>
               {/* Headline */}
@@ -529,94 +626,115 @@ function Applications() {
                   </Button>
                 </Flex>
                 <h1 style={{ textAlign: "right" }}>
-                  Total: {applications.filter((application) => application.status === "Awaiting Response").length}
+                  Total:{" "}
+                  {
+                    applications.filter(
+                      (application) =>
+                        application.status === "Awaiting Response"
+                    ).length
+                  }
                 </h1>
               </Flex>
               <br></br>
 
               {/* List */}
               <Accordion allowToggle>
-                {applications.filter((application) => application.status === "Awaiting Response").map((application) => (
-                  <AccordionItem key={application.id}>
-                    {" "}
-                    {/* Iterating through each application (all tab) */}
-                    <h2>
-                      <AccordionButton
-                        _expanded={{ color: "white", bg: "blue.500" }}
-                      >
-                        <Box as="span" flex="1" textAlign="left">
-                          <Box as="span" fontWeight="bold">
-                            {application.company}
-                          </Box>
-                          ,{" "}
-                          <Box as="span" fontStyle="italic">
-                            {application.position}
-                          </Box>
-                          <br />
-                          Applied: 11/4/24
-                        </Box>
-                        <Box
-                          as="span"
-                          flex="1"
-                          textAlign="right"
-                          borderRadius="full"
-                          border="2px solid"
-                          borderColor="blue.500"
-                          px={3}
-                          py={1}
-                          display="inline-block"
-                          maxW="160px"
+                {applications
+                  .filter(
+                    (application) => application.status === "Awaiting Response"
+                  )
+                  .map((application) => (
+                    <AccordionItem key={application.id}>
+                      {" "}
+                      {/* Iterating through each application (all tab) */}
+                      <h2>
+                        <AccordionButton
+                          _expanded={{ color: "white", bg: "blue.500" }}
                         >
-                          {application.status}
-                        </Box>
-                        <AccordionIcon />
-                      </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                      <p>Location:</p>
-                      <p style={{ textIndent: "20px" }}>
-                        {application.location}
-                      </p>
-                      <p>Salary:</p>
-                      <p style={{ textIndent: "20px" }}>{application.salary}</p>
-                      <p>Job Description:</p>
-                      <p style={{ textIndent: "20px" }}>
-                        {application.job_description}
-                      </p>
-                      <p>Notes:</p>
-                      <p style={{ textIndent: "20px" }}>{application.notes}</p>
-                      <br />
-                      <Button colorScheme="gray">Edit</Button>{" "}
-                      {/* Make circular */}
-                      <Button
-                        colorScheme="red"
-                        ml={2}
-                        onClick={() => handleDelete(application.id)}
-                      >
-                        Delete
-                      </Button>
-                    </AccordionPanel>
-                  </AccordionItem>
-                ))}
+                          <Box as="span" flex="1" textAlign="left">
+                            <Box as="span" fontWeight="bold">
+                              {application.company}
+                            </Box>
+                            ,{" "}
+                            <Box as="span" fontStyle="italic">
+                              {application.position}
+                            </Box>
+                            <br />
+                            Applied: 11/4/24
+                          </Box>
+                          <Box
+                            as="span"
+                            flex="1"
+                            textAlign="right"
+                            borderRadius="full"
+                            border="2px solid"
+                            borderColor="blue.500"
+                            px={3}
+                            py={1}
+                            display="inline-block"
+                            maxW="160px"
+                          >
+                            {application.status}
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <p>Location:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.location}
+                        </p>
+                        <p>Salary:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.salary}
+                        </p>
+                        <p>Job Description:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.job_description}
+                        </p>
+                        <p>Notes:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.notes}
+                        </p>
+                        <br />
+                        <Button colorScheme="gray">Edit</Button>{" "}
+                        {/* Make circular */}
+                        <Button
+                          colorScheme="red"
+                          ml={2}
+                          onClick={() => handleDelete(application.id)}
+                        >
+                          Delete
+                        </Button>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  ))}
               </Accordion>
             </TabPanel>
 
             {/* POSITIVE RESPONSE */}
             <TabPanel>
-              <Card direction={{ base: 'column', sm: 'row' }} overflow='hidden' variant='outline'>
-                <Image objectFit='cover' maxW={{ base: '100%', sm: '200px' }} src={mailPic} alt='Mail'/>
+              <Card
+                direction={{ base: "column", sm: "row" }}
+                overflow="hidden"
+                variant="outline"
+              >
+                <Image
+                  objectFit="cover"
+                  maxW={{ base: "100%", sm: "200px" }}
+                  src={mailPic}
+                  alt="Mail"
+                />
 
                 <Stack>
                   <CardBody>
-                    <Heading size='md'>Company</Heading>
+                    <Heading size="md">Company</Heading>
 
-                    <Text py='2'>
-                      Trailing off email body...
-                    </Text>
+                    <Text py="2">Trailing off email body...</Text>
                   </CardBody>
 
                   <CardFooter>
-                    <Button variant='solid' colorScheme='blue'>
+                    <Button variant="solid" colorScheme="blue">
                       View
                     </Button>
                   </CardFooter>
@@ -626,36 +744,36 @@ function Applications() {
 
             {/* INTERVIEWING */}
             <TabPanel>
-              <Card maxW='sm'>
+              <Card maxW="sm">
                 <CardBody>
-                  <Stack mt='6' spacing='3'>
-                    <Heading size='md'>Interview with Amazon</Heading>
-                    <Heading size='sm' color='blue.700'>(Round 2)</Heading>
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">Interview with Amazon</Heading>
+                    <Heading size="sm" color="blue.700">
+                      (Round 2)
+                    </Heading>
                     <Text>
                       Notes about the interview
                       <br></br>
                       Dress business casual
                     </Text>
-                    
-                    <Text color='blue.600' fontSize='2xl'>
+
+                    <Text color="blue.600" fontSize="2xl">
                       Important Dates
                     </Text>
                     <p>Interview Scheduled for 10/4/24</p>
-                    
-                    
                   </Stack>
                 </CardBody>
                 <Divider />
                 <CardFooter>
-                  <ButtonGroup spacing='2' justifyContent='center' width='100%'>
-                    <Button variant='solid' colorScheme='blue'>
+                  <ButtonGroup spacing="2" justifyContent="center" width="100%">
+                    <Button variant="solid" colorScheme="blue">
                       View
                     </Button>
-                    <Button variant='ghost' colorScheme='blue'>
+                    <Button variant="ghost" colorScheme="blue">
                       Next Stage
                       {/* Pops up allowing you to change any information */}
                     </Button>
-                    <Button variant='ghost' colorScheme='blue'>
+                    <Button variant="ghost" colorScheme="blue">
                       Remove
                     </Button>
                   </ButtonGroup>
@@ -669,20 +787,24 @@ function Applications() {
                   <h2>
                     <AccordionButton>
                       <Box as="span" flex="1" textAlign="left">
-                      <h1 style={{ textAlign: "left", fontWeight: "bold", color: "gray" }}>Past Interviews</h1>
-                        
+                        <h1
+                          style={{
+                            textAlign: "left",
+                            fontWeight: "bold",
+                            color: "gray",
+                          }}
+                        >
+                          Past Interviews
+                        </h1>
                       </Box>
                       <AccordionIcon />
                     </AccordionButton>
                   </h2>
-                  <AccordionPanel pb={4}>
-                    
-                  </AccordionPanel>
+                  <AccordionPanel pb={4}></AccordionPanel>
                 </AccordionItem>
               </Accordion>
-      
             </TabPanel>
-            
+
             {/* REJECTED */}
             <TabPanel>
               {/* Headline */}
@@ -701,122 +823,129 @@ function Applications() {
                   </Button>
                 </Flex>
                 <h1 style={{ textAlign: "right" }}>
-                  Total: {applications.filter((application) => application.status === "Rejected").length}
+                  Total:{" "}
+                  {
+                    applications.filter(
+                      (application) => application.status === "Rejected"
+                    ).length
+                  }
                 </h1>
               </Flex>
               <br></br>
 
               {/* List */}
               <Accordion allowToggle>
-                {applications.filter((application) => application.status === "Rejected").map((application) => (
-                  <AccordionItem key={application.id}>
-                    {" "}
-                    {/* Iterating through each application (all tab) */}
-                    <h2>
-                      <AccordionButton
-                        _expanded={{ color: "white", bg: "blue.500" }}
-                      >
-                        <Box as="span" flex="1" textAlign="left">
-                          <Box as="span" fontWeight="bold">
-                            {application.company}
-                          </Box>
-                          ,{" "}
-                          <Box as="span" fontStyle="italic">
-                            {application.position}
-                          </Box>
-                          <br />
-                          Applied: 11/4/24
-                          <br></br>
-                          Rejected: 11/5/24
-                          
-                        </Box>
-                        <Box
-                          as="span"
-                          flex="1"
-                          textAlign="right"
-                          borderRadius="full"
-                          border="2px solid"
-                          borderColor="blue.500"
-                          px={3}
-                          py={1}
-                          display="inline-block"
-                          maxW="160px"
+                {applications
+                  .filter((application) => application.status === "Rejected")
+                  .map((application) => (
+                    <AccordionItem key={application.id}>
+                      {" "}
+                      {/* Iterating through each application (all tab) */}
+                      <h2>
+                        <AccordionButton
+                          _expanded={{ color: "white", bg: "blue.500" }}
                         >
-                          {application.status}
-                        </Box>
-                        <AccordionIcon />
-                      </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                      <p>Location:</p>
-                      <p style={{ textIndent: "20px" }}>
-                        {application.location}
-                      </p>
-                      <p>Salary:</p>
-                      <p style={{ textIndent: "20px" }}>{application.salary}</p>
-                      <p>Job Description:</p>
-                      <p style={{ textIndent: "20px" }}>
-                        {application.job_description}
-                      </p>
-                      <p>Notes:</p>
-                      <p style={{ textIndent: "20px" }}>{application.notes}</p>
-                      <br />
-                      <Button colorScheme="gray">Edit</Button>{" "}
-                      {/* Make circular */}
-                      <Button
-                        colorScheme="red"
-                        ml={2}
-                        onClick={() => handleDelete(application.id)}
-                      >
-                        Delete
-                      </Button>
-                    </AccordionPanel>
-                  </AccordionItem>
-                ))}
+                          <Box as="span" flex="1" textAlign="left">
+                            <Box as="span" fontWeight="bold">
+                              {application.company}
+                            </Box>
+                            ,{" "}
+                            <Box as="span" fontStyle="italic">
+                              {application.position}
+                            </Box>
+                            <br />
+                            Applied: 11/4/24
+                            <br></br>
+                            Rejected: 11/5/24
+                          </Box>
+                          <Box
+                            as="span"
+                            flex="1"
+                            textAlign="right"
+                            borderRadius="full"
+                            border="2px solid"
+                            borderColor="blue.500"
+                            px={3}
+                            py={1}
+                            display="inline-block"
+                            maxW="160px"
+                          >
+                            {application.status}
+                          </Box>
+                          <AccordionIcon />
+                        </AccordionButton>
+                      </h2>
+                      <AccordionPanel pb={4}>
+                        <p>Location:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.location}
+                        </p>
+                        <p>Salary:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.salary}
+                        </p>
+                        <p>Job Description:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.job_description}
+                        </p>
+                        <p>Notes:</p>
+                        <p style={{ textIndent: "20px" }}>
+                          {application.notes}
+                        </p>
+                        <br />
+                        <Button colorScheme="gray">Edit</Button>{" "}
+                        {/* Make circular */}
+                        <Button
+                          colorScheme="red"
+                          ml={2}
+                          onClick={() => handleDelete(application.id)}
+                        >
+                          Delete
+                        </Button>
+                      </AccordionPanel>
+                    </AccordionItem>
+                  ))}
               </Accordion>
             </TabPanel>
 
             {/* OFFERS */}
             <TabPanel>
               {/* Accept make it purple, denied make it red and put into past offers */}
-              <Card maxW='sm'>
+              <Card maxW="sm">
                 <CardBody>
-                  <Stack mt='6' spacing='3'>
-                    <Heading size='md'>Offer from Amazon</Heading>
-                    <Text color='black.600' fontSize='xl'>
-                      San Francisco, CA 
+                  <Stack mt="6" spacing="3">
+                    <Heading size="md">Offer from Amazon</Heading>
+                    <Text color="black.600" fontSize="xl">
+                      San Francisco, CA
                     </Text>
-                    
-                    <Text color='blue.600' fontSize='2xl'>
-                      Interest: 
+
+                    <Text color="blue.600" fontSize="2xl">
+                      Interest:
                     </Text>
-                  
+
                     <Text>
                       Notes about the offer
                       <br></br>
-                      
                     </Text>
-                    
-                    
                   </Stack>
                 </CardBody>
                 <Divider />
                 <CardFooter>
-                  <ButtonGroup spacing='2' justifyContent='center' width='100%'>
-                    <Button variant='solid' colorScheme='blue'>
+                  <ButtonGroup spacing="2" justifyContent="center" width="100%">
+                    <Button variant="solid" colorScheme="blue">
                       Edit
                     </Button>
-                    <Button variant='ghost' colorScheme='blue'>
+                    <Button variant="ghost" colorScheme="blue">
                       Accept
                       {/* Pops up allowing you to change any information */}
                     </Button>
-                    <Button variant='ghost' colorScheme='blue'>
+                    <Button variant="ghost" colorScheme="blue">
                       Deny
                     </Button>
                   </ButtonGroup>
                 </CardFooter>
               </Card>
-              
+
               <br></br>
               <Divider />
               <Accordion allowToggle>
@@ -824,20 +953,23 @@ function Applications() {
                   <h2>
                     <AccordionButton>
                       <Box as="span" flex="1" textAlign="left">
-                      <h1 style={{ textAlign: "left", fontWeight: "bold", color: "gray" }}>Past Offers</h1>
-                        
+                        <h1
+                          style={{
+                            textAlign: "left",
+                            fontWeight: "bold",
+                            color: "gray",
+                          }}
+                        >
+                          Past Offers
+                        </h1>
                       </Box>
                       <AccordionIcon />
                     </AccordionButton>
                   </h2>
-                  <AccordionPanel pb={4}>
-                    
-                  </AccordionPanel>
+                  <AccordionPanel pb={4}></AccordionPanel>
                 </AccordionItem>
               </Accordion>
-
             </TabPanel>
-
           </TabPanels>
         </Tabs>
       </ChakraProvider>
