@@ -1,8 +1,9 @@
-from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary
+from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import relationship
 import uuid
+from sqlalchemy import JSON
 
 # Test Model
 class Test(Base):
@@ -69,13 +70,39 @@ class Application(Base):
     location = Column(String(255), nullable=False)
     position = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False)
+    status_history = Column(JSON, nullable=False)
     applied_date = Column(String(255), nullable=False)
     last_update = Column(String(255), nullable=False)
     salary = Column(String(255), nullable=False)
     job_description = Column(String(1000), nullable=True)
     notes = Column(String(1000), nullable=True)
+    interview_notes = Column(String(1000), nullable=True)
+    interview_dates = Column(String(255), nullable=True)
+    interview_round = Column(String(255), nullable=True)
+    is_active_interview = Column(Boolean, nullable=False)
+    offer_notes = Column(String(1000), nullable=True)
+    offer_interest = Column(Integer, nullable=True)
+    is_active_offer = Column(Boolean, nullable=False)
 
     user = relationship("User", back_populates="applications")
+    
+    
+class Email(Base):
+    __tablename__ = "emails"
+
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    app = Column(CHAR(36), ForeignKey('applications.id'), nullable=False)
+    user_id = Column(CHAR(36), ForeignKey('users.id'), nullable=False)
+    subject = Column(String(255), nullable=False)
+    sender = Column(String(255), nullable=False)
+    received_date = Column(String(255), nullable=False)
+    body = Column(String(1000), nullable=False)
+    body_preview = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False)
+
+
+    user = relationship("User", back_populates="emails")
+    application = relationship("Application", back_populates="emails")  
 
 class UserSettings(Base):
     __tablename__ = "user_settings"
