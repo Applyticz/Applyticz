@@ -1,39 +1,4 @@
-import spacy
 import re
-
-# Load spaCy's pre-trained English model
-nlp = spacy.load("en_core_web_sm")
-
-# List of common job titles (this can be expanded as needed)
-job_titles = [
-    "Software Engineer", "Software Developer", "Data Scientist", "Data Engineer",
-    "Project Manager", "Web Developer", "UX Designer", "DevOps Engineer", "Backend Developer",
-    "Frontend Developer", "Product Manager", "AI Engineer", "Research Scientist", "QA Engineer, Junior Software Developer"
-]
-
-# Function to extract company names and job positions
-def extract_company_and_position(email_body):
-    doc = nlp(email_body)
-    entities = {
-        "company": None,
-        "position": None
-    }
-    
-    print(doc.ents)
-    
-    # Extract company name (first ORG entity)
-    for ent in doc.ents:
-        if ent.label_ == "ORG" and not entities["company"]:
-            entities["company"] = ent.text  # First organization found is considered the company
-
-    # Extract job title by looking for keywords in the text
-    for sentence in doc.sents:  # Check each sentence in the email body
-        for job in job_titles:
-            if job.lower() in sentence.text.lower():
-                entities["position"] = job
-                break  # Stop after finding the first job title
-
-    return entities
 
 possible_companies = [
     "Google", "Microsoft", "Apple", "Amazon", "Facebook", "Mastercard", "Twitter", "LinkedIn", "Netflix", "Spotify",
