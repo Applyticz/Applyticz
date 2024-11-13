@@ -12,6 +12,7 @@ import {
   Image,
   Divider,
   ButtonGroup,
+  Alert,
 } from "@chakra-ui/react";
 import { ChakraProvider, Stack, HStack } from "@chakra-ui/react";
 import {
@@ -64,7 +65,10 @@ function Applications() {
 
   /* Create Application Dialogue Box */
   const [creatingApplication, setCreatingApplication] = useState(false);
-  const handleCreate = async () => {
+
+
+  const handleCreate = async (formData) => {
+    console.log("Creating application with data:", formData);
     try {
       const response = await fetch(
         "http://localhost:8000/application/create_application",
@@ -74,7 +78,7 @@ function Applications() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authTokens}`,
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(formData || formData),
         }
       );
 
@@ -90,6 +94,14 @@ function Applications() {
           salary: "",
           job_description: "",
           notes: "",
+          status_history: {},
+          interview_notes: "",
+          interview_dates: "",
+          interview_round: "",
+          is_active_interview: false,
+          offer_notes: "",
+          offer_interest: 0, // Reset to default integer
+          is_active_offer: false,
         });
       } else {
         throw new Error("Failed to create application");
@@ -98,12 +110,26 @@ function Applications() {
       setError(err.message);
     }
   };
+
+
   const [formData, setFormData] = useState({
     company: "",
     position: "",
     status: "",
     applied_date: "",
+    last_update: "",
     notes: "",
+    location: "",
+    salary: "",
+    job_description: "",
+    status_history: {},
+    interview_notes: "",
+    interview_dates: "",
+    interview_round: "",
+    is_active_interview: false,
+    offer_notes: "",
+    offer_interest: 0,
+    is_active_offer: false,
   });
 
   /* Applications List */
@@ -135,6 +161,8 @@ function Applications() {
       setError("Error fetching applications");
     }
   };
+
+
   const handleInputChange = (e, applicationId) => {
     const { name, value } = e.target;
     setApplications((prevApplications) =>
@@ -143,6 +171,8 @@ function Applications() {
       )
     );
   };
+
+
   const handleSubmit = async (applicationId) => {
     try {
       const updatedApplication = applications.find(
@@ -170,6 +200,8 @@ function Applications() {
       setError(err.message);
     }
   };
+
+
   const handleDelete = async (id) => {
     try {
       const response = await fetch(
@@ -233,6 +265,7 @@ function Applications() {
 const getNewEmails = async () => {
   try {
     if (!LastUpdateTime) {
+      console.log("No last update time set");
       await getAllEmails(); // Fetch all emails if no update time is set
     } else {
       const response = await fetch(
@@ -247,14 +280,47 @@ const getNewEmails = async () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("New emails:", data);
+        
+
+        if (data.message === "No new emails found") {
+          setError("No new emails found");
+          return;
+        }
+
+        // Iterate over each email and create an application
+        for (const email of data) {
+          // Populate formData with email details
+          const formData = {
+            company: email.company || "",
+            position: email.position || "",
+            location: email.location || "",
+            status: email.status || "",
+            applied_date: email.receivedDateTime || "",
+            last_update: email.receivedDateTime || "",
+            salary: email.salary || "",
+            job_description: email.job_description || "",
+            notes: email.notes || "",
+            status_history: email.status_history || {},
+            interview_notes: email.interview_notes || "",
+            interview_dates: email.interview_dates || "",
+            interview_round: email.interview_round || "",
+            is_active_interview: email.is_active_interview || false,
+            offer_notes: email.offer_notes || "",
+            offer_interest: email.offer_interest || 0,
+            is_active_offer: email.is_active_offer || false,
+          };
+
+          // Pass the populated formData to handleCreate
+          await handleCreate(formData); // Pass formData to handleCreate
+        }
+
         updateLastUpdateTime(); // Only update after successful fetch
       } else {
         throw new Error("Failed to get new emails");
       }
     }
   } catch (err) {
-    setError("Error fetching new emails");
+    setError(err.message);
   }
 };
 
@@ -272,21 +338,55 @@ const getAllEmails = async () => {
 
     if (response.ok) {
       const data = await response.json();
-      console.log("All emails:", data);
+
+      // Check if data is an array
+      if (!Array.isArray(data)) {
+        // Handle the case where data is not an array
+        throw new Error(data.message || "Unexpected response format");
+      }
+
+      // Handle if no emails are found
+      if (data.length === 0) {
+        throw new Error("No emails found");
+      }
+
+      // Iterate over each email and create an application
+      for (const email of data) {
+        // Populate formData with email details
+        const formData = {
+          company: email.company || "",
+          position: email.position || "",
+          location: email.location || "",
+          status: email.status || "",
+          applied_date: email.receivedDateTime || "",
+          last_update: email.receivedDateTime || "",
+          salary: email.salary || "",
+          job_description: email.job_description || "",
+          notes: email.notes || "",
+          status_history: email.status_history || {},
+          interview_notes: email.interview_notes || "",
+          interview_dates: email.interview_dates || "",
+          interview_round: email.interview_round || "",
+          is_active_interview: email.is_active_interview || false,
+          offer_notes: email.offer_notes || "",
+          offer_interest: email.offer_interest || 0,
+          is_active_offer: email.is_active_offer || false,
+        };
+
+        // Pass the populated formData to handleCreate
+        await handleCreate(formData); // Pass formData to handleCreate
+      }
+
       updateLastUpdateTime();
     } else {
-      throw new Error("Failed to get all emails");
+      const errorData = await response.json(); // Get error details from response
+      throw new Error(errorData.message || "Failed to get all emails");
     }
   } catch (err) {
-    setError("Error fetching all emails");
+    setError(err.message);
+    console.log(err);
   }
 };
-
-useEffect(() => {
-  if (!LastUpdateTime) {
-    getAllEmails();
-  }
-}, []);
 
   useEffect(() => {
     // Apply the theme by toggling class on the root element
@@ -553,14 +653,14 @@ useEffect(() => {
                       >
                         <Box as="span" flex="1" textAlign="left">
                           <Box as="span" fontWeight="bold">
-                            {application.company}
+                            {application.company || "Company Not Specified"}
                           </Box>
                           ,{" "}
                           <Box as="span" fontStyle="italic">
-                            {application.position}
+                            {application.position || "Position Not Specified"}
                           </Box>
                           <br />
-                          Applied: 11/4/24
+                          Applied: {new Date(application.applied_date).toLocaleDateString()}
                         </Box>
                         <Box
                           as="span"
@@ -653,14 +753,14 @@ useEffect(() => {
                         >
                           <Box as="span" flex="1" textAlign="left">
                             <Box as="span" fontWeight="bold">
-                              {application.company}
+                              {application.company || "Company Not Specified"}
                             </Box>
                             ,{" "}
                             <Box as="span" fontStyle="italic">
-                              {application.position}
+                              {application.position || "Position Not Specified"}
                             </Box>
                             <br />
-                            Applied: 11/4/24
+                            Applied: {new Date(application.applied_date).toLocaleDateString()}
                           </Box>
                           <Box
                             as="span"
@@ -847,14 +947,14 @@ useEffect(() => {
                         >
                           <Box as="span" flex="1" textAlign="left">
                             <Box as="span" fontWeight="bold">
-                              {application.company}
+                              {application.company || "Company Not Specified"}
                             </Box>
                             ,{" "}
                             <Box as="span" fontStyle="italic">
-                              {application.position}
+                              {application.position || "Position Not Specified"}
                             </Box>
                             <br />
-                            Applied: 11/4/24
+                            Applied: {new Date(application.applied_date).toLocaleDateString()}
                             <br></br>
                             Rejected: 11/5/24
                           </Box>
