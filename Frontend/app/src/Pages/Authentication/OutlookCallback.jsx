@@ -20,7 +20,7 @@ const OutlookCallback = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("Backend response:", data); // Log the entire response
+          // console.log("Backend response:", data); // Log the entire response
 
           if (data.access_token) {
             // Store the Outlook access token in localStorage

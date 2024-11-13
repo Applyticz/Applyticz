@@ -53,7 +53,7 @@ function LinkedAccounts() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log("Outlook Accounts:", data);
+        // console.log("Outlook Accounts:", data);
         setOutlookAccounts(data.userPrincipalName); // Store accounts in state
       } else {
         const errorData = await response.json();

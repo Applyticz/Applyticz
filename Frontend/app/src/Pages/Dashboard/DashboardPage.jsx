@@ -33,7 +33,7 @@ function Dashboard() {
       if (response.ok) {
         const data = await response.json();
         setDashboardData(data);
-        console.log(data);
+        // console.log(data);
       } else {
         throw new Error("Failed to fetch dashboard data");
       }
@@ -60,7 +60,7 @@ function Dashboard() {
         throw new Error("Failed to fetch events");
       }
     } catch (err) {
-      setError("Error fetching events");
+      setError("Please link your Outlook account to view events");
     }
   };
 

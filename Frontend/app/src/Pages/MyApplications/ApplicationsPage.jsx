@@ -68,7 +68,7 @@ function Applications() {
 
 
   const handleCreate = async (formData) => {
-    console.log("Creating application with data:", formData);
+    // console.log("Creating application with data:", formData);
     try {
       const response = await fetch(
         "http://localhost:8000/application/create_application",
@@ -265,7 +265,7 @@ function Applications() {
 const getNewEmails = async () => {
   try {
     if (!LastUpdateTime) {
-      console.log("No last update time set");
+      // console.log("No last update time set");
       await getAllEmails(); // Fetch all emails if no update time is set
     } else {
       const response = await fetch(

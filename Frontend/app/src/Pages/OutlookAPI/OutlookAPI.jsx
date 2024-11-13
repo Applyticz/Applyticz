@@ -35,7 +35,7 @@ const OutlookApi = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Application created successfully:", data);
+        // console.log("Application created successfully:", data);
       } else {
         const errorData = await response.json();
         console.error(
@@ -93,7 +93,7 @@ const OutlookApi = () => {
       if (response.ok) {
         const emails = await response.json();
         setMessages(emails);
-        console.log("Fetched messages:", emails);
+        // ("Fetched messages:", emails);
 
         if (emails.length === 0) {
           setErrorMessage("No new messages found.");

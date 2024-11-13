@@ -104,3 +104,13 @@ class UserSettingsRequest(BaseModel):
 
 class UpdateEmailRequest(BaseModel):
     email: str
+    
+    
+class EmailRequest(BaseModel):
+    app: str
+    subject: str
+    sender: str
+    received_date: str
+    body: str
+    body_preview: str
+    status: str
