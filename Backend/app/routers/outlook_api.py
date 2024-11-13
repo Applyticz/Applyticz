@@ -14,7 +14,6 @@ from app.utils.email_parser import parse_email_data_hardcoded
 from app.routers.application import create_application, update_application
 from datetime import datetime, timedelta, timezone
 from app.utils.spacy_parser import extract_company_and_position
-from app.utils.ner import extract_company_and_position_bert
 
 # Load environment variables from .env file
 load_dotenv()
@@ -516,42 +515,6 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         
         return filtered_emails
 
-
-# Routes for Outlook API using SpaCy NER logic
-@router.get("/get-emails-using-bert", tags=["Outlook API"])
-async def get_emails_using_bert(user: user_dependency, db: db_dependency):
-    # Header with access token
-    user_id = user.get("id")
-    email = user.get("email")
-    access_token = await get_access_token(user_id, db)
-    
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
-    
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-
-    # Make request to Microsoft Graph API
-    url = CURRENT_USER_EMAILS_URL.format(email=email)
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        email_data = response.json()
-        
-        # Use BERT NER to extract company and position from each email body
-        for email in email_data.get('value', []):
-            email_body = extract_plain_text(email.get('body', {}).get('content', ''))
-            entities = extract_company_and_position_bert(email_body)
-            email['company'] = entities['company']
-            email['position'] = entities['position']
-            
-        # Return emails with extracted data
-        return email_data.get('value', [])
-    else:
-        raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")      
-       
             
 
 

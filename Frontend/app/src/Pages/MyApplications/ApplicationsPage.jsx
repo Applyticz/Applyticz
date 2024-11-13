@@ -280,6 +280,8 @@ const getNewEmails = async () => {
 
       if (response.ok) {
         const data = await response.json();
+
+        console.log("New emails:", data);
         
 
         if (data.message === "No new emails found") {

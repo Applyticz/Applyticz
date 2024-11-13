@@ -40,5 +40,5 @@ Thank you,
 """
 
 # Call the parse_email function and print the result
-parsed_data = parse_email(dummy_email_body)
-print("Parsed Data:", parsed_data)
+#parsed_data = parse_email(dummy_email_body)
+#print("Parsed Data:", parsed_data)

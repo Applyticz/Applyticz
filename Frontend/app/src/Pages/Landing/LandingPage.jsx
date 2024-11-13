@@ -11,7 +11,7 @@ function LandingPage(){
             <PublicHeader />
             <div className="landing-container" style={{ backgroundImage: 'url("/path/to/your/background.jpg")', backgroundSize: 'cover', color: '#fff', padding: '50px 20px' }}>
                 <h1 className="main-title" style={{ fontSize: '3.5rem', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)' }}>Complete Autonomy</h1>
-                <p className="description" style={{ fontSize: '1.3rem', marginBottom: '30px' }}>Applytics allows you to connect your Gmail account so that you never have to manually track applications again! Our software automatically parses your email inbox for job applications, updates, and responses, allowing you to focus on what really matters - landing your dream job.</p>
+                <p className="description" style={{ fontSize: '1.3rem', marginBottom: '30px' }}>Applytics allows you to connect your Gmail and Outlook account so that you never have to manually track applications again! Our software automatically parses your email inbox for job applications, updates, and responses, allowing you to focus on what really matters - landing your dream job.</p>
                 
                 <div className="feature" style={{ backgroundColor: '#f0f0f0', padding: '15px', borderRadius: '5px', margin: '10px 0' }}>
                     <FaRocket size={50} color="#ff5722" />
@@ -29,12 +29,6 @@ function LandingPage(){
                     <FaClipboardList size={50} color="#ff5722" />
                     <h2 className="feature-title" style={{ color: '#333' }}>Stay Organized</h2>
                     <p className="feature-description" style={{ color: '#555' }}>Keep all your applications in one place and never miss an opportunity again.</p>
-                </div>
-
-                <div className="feature" style={{ backgroundColor: '#f0f0f0', padding: '15px', borderRadius: '5px', margin: '10px 0' }}>
-                    <FaUserCheck size={50} color="#ff5722" />
-                    <h2 className="feature-title" style={{ color: '#333' }}>Join Our Community</h2>
-                    <p className="feature-description" style={{ color: '#555' }}>Connect with others and share your experiences in the job market.</p>
                 </div>
 
                 <h1 className="cta-title" style={{ fontSize: '3rem', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.7)', marginTop: '40px' }}>Start Today! It's 100% FREE</h1>
