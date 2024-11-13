@@ -1,12 +1,14 @@
+/* Center the dashboard container */
 .dashboard-container {
   padding: 20px;
   max-width: 1000px;
   margin: 0 auto;
 }
 
+/* Light and Dark Theme Variables */
 :root.light {
   --back-color: #ffffff;
-  --back-color2: #ffffff;
+  --back-color2: #f8f9fa;
   --text-color: #000000;
   --heading-color: #2f333b;
 }
@@ -19,14 +21,16 @@
   --summary-color: #494949;
 }
 
+/* Summary and Activity Sections */
 .dashboard-summary, .activity-section {
-    background-color: var(--back-color2);
-    margin-bottom: 20px;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: var(--back-color2);
+  margin-bottom: 20px;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Summary Card Styling */
 .summary-card {
   background-color: var(--summary-color);
   border-radius: 8px;
@@ -47,6 +51,7 @@
   margin: 10px 0 0;
 }
 
+/* Layout for Recent Activity */
 .recent-activity {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -67,39 +72,70 @@
   padding-bottom: 10px;
 }
 
+/* Activity List Items */
 .activity-list {
-    list-style-type: none;
-    padding: 0;
+  list-style-type: none;
+  padding: 0;
 }
 
 .activity-item {
-    background-color: var(--back-color);
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
+  background-color: var(--back-color);
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
 }
 
 .application-info {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
+/* Button Styling */
 .details-button {
-    padding: 5px 10px;
-    font-size: 0.9em;
-    color: white;
-    background-color: #007BFF;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-left: auto; /* Pushes the button to the right */
+  padding: 6px 12px;
+  font-size: 0.9em;
+  color: white;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-left: auto;
 }
 
 .details-button:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
+}
+
+/* Modal Content Centering and Style */
+.chakra-modal__content {
+  background-color: var(--back-color);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 600px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  margin: 0 auto;
+}
+
+.chakra-modal__header {
+  font-weight: bold;
+  color: var(--heading-color);
+}
+
+.chakra-modal__body p {
+  margin: 5px 0;
+  font-size: 1em;
+  color: var(--text-color);
+}
+
+/* Error Message Styling */
+.error {
+  color: red;
+  font-size: 0.9em;
+  text-align: center;
+  margin-top: 10px;
 }

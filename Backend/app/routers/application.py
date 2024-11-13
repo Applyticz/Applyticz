@@ -89,6 +89,46 @@ async def get_applications(user: user_dependency, db: db_dependency):
     
     return application_list
 
+@router.get('/get_application/{id}', tags=['application'], status_code=status.HTTP_200_OK)
+async def get_application(user: user_dependency, db: db_dependency, id: str):
+    # Ensure user['id'] is a string
+    user_id_str = str(user['id'])
+    
+    # Query the User from the DB
+    user_in_db = db.query(User).filter(User.id == user_id_str).first()
+    if not user_in_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Query the Application associated with the user_id and application id
+    application = db.query(Application).filter(Application.user_id == user_id_str, Application.id == id).first()
+    
+    if not application:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    
+    # Convert the application to a dictionary
+    application_dict = {
+        'id': application.id,
+        'company': application.company,
+        'location': application.location,
+        'position': application.position,
+        'status': application.status,
+        'applied_date': application.applied_date,
+        'last_update': application.last_update,
+        'salary': application.salary,
+        'job_description': application.job_description,
+        'notes': application.notes,
+        'status_history': application.status_history,
+        'interview_notes': application.interview_notes,
+        'interview_dates': application.interview_dates,
+        'interview_round': application.interview_round,
+        'is_active_interview': application.is_active_interview,
+        'offer_notes': application.offer_notes,
+        'offer_interest': application.offer_interest,
+        'is_active_offer': application.is_active_offer
+    }
+    
+    return application_dict
+
 @router.put('/update_application', tags=['application'], status_code=status.HTTP_200_OK)
 async def update_application(application: ApplicationUpdateRequest, user: user_dependency, db: db_dependency, id: str):
     # Ensure user['id'] is a string
