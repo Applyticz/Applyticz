@@ -234,10 +234,10 @@ async def get_user(user: user_dependency, db: db_dependency):
             response = requests.get(GET_USER, headers=headers)
             outlook_data = response.json()
             
-            if response.status_code != 200:
-                raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve user data: {response.text}")
-        
-        raise HTTPException(status_code=401, detail="Access token expired. Please log in again.")
+            # Return the updated user data from the Outlook API
+            return outlook_data
+        else:
+            raise HTTPException(status_code=401, detail="Failed to refresh access token. Please log in again.")
         
     
     # Fetch the user from the database
@@ -331,15 +331,11 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
         def categorize_status(status):
             status = status.lower()
             if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
-                return "Awaiting response"
-            elif any(word in status for word in ["shortlisted", "accepted"]):
-                return "Positive response"
-            elif "interview" in status:
-                return "Interviewing"
+                return "Awaiting Response"
+            elif any(word in status for word in ["shortlisted", "accepted, offer", "hired", "onboarding", "completed", "interview"]):
+                return "Positive Response"
             elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
                 return "Rejected"
-            elif any(word in status for word in ["offer", "hired", "onboarding", "completed"]):
-                return "Offers"
             else:
                 return "Awaiting response"  # Default to 'Awaiting response' if no match is found
 
@@ -355,14 +351,7 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
             received_time = email.get('receivedDateTime')
             raw_status = parsed_data['status']
             categorized_status = categorize_status(raw_status)  # Apply categorization
-            
-            # Query for application id based on company name
-            application = db.query(Application).filter(Application.company == company_name).first()
-            
-            # if application is not found set to a default value
-            if not application:
-                application = None
-            
+        
 
             # Check if this company has already been processed
             if company_name in processed_companies:
@@ -394,7 +383,7 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
                     'status': categorized_status,  # Assign categorized status
                     'status_phases': [categorized_status]  # Initialize with the first categorized status
                 }
-                
+                                
             # Create a new email in the database for each email found
             
             
@@ -430,6 +419,8 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
 
     if response.status_code == 200:
         email_data = response.json()
+        
+        print("Email data:", email_data)
         filtered_emails = []
         
         # Convert user_id to string for the query
@@ -449,15 +440,11 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         def categorize_status(status):
             status = status.lower()
             if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
-                return "Awaiting response"
-            elif any(word in status for word in ["shortlisted", "accepted"]):
-                return "Positive response"
-            elif "interview" in status:
-                return "Interviewing"
+                return "Awaiting Response"
+            elif any(word in status for word in ["shortlisted", "accepted, offer", "hired", "onboarding", "completed", "interview"]):
+                return "Positive Response"
             elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
                 return "Rejected"
-            elif any(word in status for word in ["offer", "hired", "onboarding", "completed"]):
-                return "Offers"
             else:
                 return "Awaiting response"  # Default to 'Awaiting response' if no match is found
         

@@ -68,7 +68,7 @@ function Applications() {
 
 
   const handleCreate = async (formData) => {
-    // console.log("Creating application with data:", formData);
+    console.log("Creating application with data:", formData);
     try {
       const response = await fetch(
         "http://localhost:8000/application/create_application",
@@ -78,7 +78,10 @@ function Applications() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authTokens}`,
           },
-          body: JSON.stringify(formData || formData),
+          body: JSON.stringify({
+            ...formData,
+            applied_date: formData.applied_date || "",
+          }),
         }
       );
 
@@ -153,6 +156,7 @@ function Applications() {
       );
       if (response.ok) {
         const data = await response.json();
+        console.log("Applications:", data);
         setApplications(data);
       } else {
         throw new Error("Failed to fetch applications");
@@ -662,7 +666,10 @@ const getAllEmails = async () => {
                             {application.position || "Position Not Specified"}
                           </Box>
                           <br />
-                          Applied: {new Date(application.applied_date).toLocaleDateString()}
+                          Applied:{" "}
+                          {new Date(
+                            application.applied_date
+                          ).toLocaleDateString()}
                         </Box>
                         <Box
                           as="span"
@@ -762,7 +769,10 @@ const getAllEmails = async () => {
                               {application.position || "Position Not Specified"}
                             </Box>
                             <br />
-                            Applied: {new Date(application.applied_date).toLocaleDateString()}
+                            Applied:{" "}
+                            {new Date(
+                              application.applied_date
+                            ).toLocaleDateString()}
                           </Box>
                           <Box
                             as="span"
@@ -816,6 +826,30 @@ const getAllEmails = async () => {
 
             {/* POSITIVE RESPONSE */}
             <TabPanel>
+              <Flex justify="space-between" align="center">
+                <Flex align="center">
+                  <Input placeholder="Search" width="300px" />
+                  <Button
+                    colorScheme="gray"
+                    ml={2}
+                    rightIcon={<ArrowDownIcon />}
+                  >
+                    Recent
+                  </Button>
+                  <Button colorScheme="gray" ml={2} rightIcon={<ArrowUpIcon />}>
+                    Oldest
+                  </Button>
+                </Flex>
+                <h1 style={{ textAlign: "right" }}>
+                  Total:{" "}
+                  {
+                    applications.filter(
+                      (application) =>
+                        application.status === "Positive Response"
+                    ).length
+                  }
+                </h1>
+              </Flex>
               <Card
                 direction={{ base: "column", sm: "row" }}
                 overflow="hidden"
@@ -956,7 +990,10 @@ const getAllEmails = async () => {
                               {application.position || "Position Not Specified"}
                             </Box>
                             <br />
-                            Applied: {new Date(application.applied_date).toLocaleDateString()}
+                            Applied:{" "}
+                            {new Date(
+                              application.applied_date
+                            ).toLocaleDateString()}
                             <br></br>
                             Rejected: 11/5/24
                           </Box>

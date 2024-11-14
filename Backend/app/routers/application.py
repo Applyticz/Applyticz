@@ -20,8 +20,8 @@ async def create_application(application: ApplicationRequest, user: user_depende
         position=application.position,
         location=application.location,
         status=application.status,
-        applied_date=get_current_time(),
-        last_update="",
+        applied_date=application.applied_date,
+        last_update=application.applied_date,  # Set to appropriate value
         salary=application.salary,
         job_description=application.job_description,
         notes=application.notes,
@@ -149,7 +149,7 @@ async def update_application(application: ApplicationUpdateRequest, user: user_d
     application_to_update.position = application.position
     application_to_update.location = application.location
     application_to_update.status = application.status
-    application_to_update.last_update = get_current_time()
+    application_to_update.last_update = application.last_update
     application_to_update.salary = application.salary
     application_to_update.job_description = application.job_description
     application_to_update.notes = application.notes
