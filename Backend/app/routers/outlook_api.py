@@ -13,7 +13,7 @@ from app.models.pydantic_models import UpdateEmailRequest
 from app.utils.email_parser import parse_email_data_hardcoded
 from app.routers.application import create_application, update_application
 from datetime import datetime, timedelta, timezone
-from app.utils.spacy_parser import extract_company_and_position
+from app.utils.spacy.spacy_parser import extract_company_and_position
 
 # Load environment variables from .env file
 load_dotenv()
