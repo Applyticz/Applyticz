@@ -1,78 +1,77 @@
-import spacy
 import re
+import spacy
+import os
 
-# Load spaCy's pre-trained English model
-nlp = spacy.load("en_core_web_sm")
+# Resolve the absolute path to the trained model
+base_dir = os.path.dirname(__file__)  # Directory of spacy_parser.py
+output_dir = os.path.abspath(os.path.join(base_dir, "trained_model"))
 
-# List of common job titles
-job_titles = [
-    "Software Engineer", "Software Developer", "Data Scientist", "Data Engineer",
-    "Project Manager", "Web Developer", "UX Designer", "DevOps Engineer", "Backend Developer",
-    "Frontend Developer", "Product Manager", "AI Engineer", "Research Scientist", "QA Engineer", "Junior Software Developer"
+# Print the resolved path for debugging (optional)
+print(f"Loading model from: {output_dir}")
+
+# Load the trained spaCy model
+try:
+    nlp = spacy.load(output_dir)
+    print("Model loaded successfully.")
+except Exception as e:
+    raise OSError(f"Error loading model from {output_dir}: {e}")
+
+# Status updates and rejection keywords
+status_updates = [
+    "received", "declined", "rejected", "accepted", "interview", "offer", "candidate", 
+    "not been selected", "not selected", "application unsuccessful", "shortlisted", 
+    "reviewed", "pending", "in progress", "on hold", "withdrawn", "hired", 
+    "onboarding", "completed", "closed", "archived"
+]
+rejection_keywords = [
+    "not been selected", "not selected", "application unsuccessful", "declined", "rejected"
 ]
 
-# Compile a regex pattern from the job titles list for case-insensitive matching
-job_titles_pattern = re.compile(r"\b(" + "|".join(re.escape(job) for job in job_titles) + r")\b", re.IGNORECASE)
+# Updated email parser function
+def parse_email_data_spacy(email_body: str, subject: str) -> dict:
+    company = None
+    position = None
+    status = "Pending"  # Default status
 
-# Function to clean up job title if it has prefix (like JR1990357)
-def clean_job_title(text):
-    return re.sub(r"\b\w{2,6}\d+\b\s*", "", text)  # Remove prefix patterns like JR1990357
-
-def extract_company_and_position(email_body, sender_name=""):
+    # Use spaCy model to process the email body
     doc = nlp(email_body)
-    entities = {
-        "company": None,
-        "position": None
-    }
-    
-    # Extract company name (first ORG entity or fallback)
+
+    # Extract entities
     for ent in doc.ents:
-        if ent.label_ == "ORG" and not entities["company"]:
-            entities["company"] = ent.text  # First organization found is considered the company
+        if ent.label_ == "COMPANY":
+            company = ent.text
+        elif ent.label_ == "POSITION":
+            position = ent.text
 
-    # Fallback for company name if not found by spaCy
-    if not entities["company"]:
-        # Look for common phrases used to refer to company names
-        fallback_pattern = re.compile(r"(Thank you for applying to|at|join us at)\s+([A-Za-z]+)", re.IGNORECASE)
-        match = fallback_pattern.search(email_body)
-        if match:
-            entities["company"] = match.group(2)
+    # Search for status updates in the email body
+    email_body_lower = email_body.lower()
+    for update in status_updates:
+        if re.search(rf"\b{re.escape(update.lower())}[\s\.\,\!\?]*", email_body_lower):
+            # Check if it's a rejection
+            if any(re.search(rf"\b{re.escape(rj.lower())}[\s\.\,\!\?]*", email_body_lower) for rj in rejection_keywords):
+                status = "Rejected"
+            else:
+                status = update.capitalize()
+            break
 
-    # Extract job title by looking for keywords in the text
-    if sender_name:
-        sender_name_pattern = re.compile(rf"\b{re.escape(sender_name)}\b", re.IGNORECASE)
-        if re.search(sender_name_pattern, email_body):
-            entities["position"] = "Unknown"  # Default position if sender's name is found
-            return entities
+    # If no position or company found, check subject as a fallback
+    subject_lower = subject.lower()
+    if not company:
+        doc_subject = nlp(subject)
+        for ent in doc_subject.ents:
+            if ent.label_ == "COMPANY":
+                company = ent.text
+    if not position:
+        doc_subject = nlp(subject)
+        for ent in doc_subject.ents:
+            if ent.label_ == "POSITION":
+                position = ent.text
 
-    # Search for job titles in the email body and clean up prefix if present
-    for match in re.finditer(job_titles_pattern, email_body):
-        entities["position"] = clean_job_title(match.group())
-        break  # Stop after finding the first job title
+    return {"company": company, "position": position, "status": status}
 
-    return entities
-
-# Sample email body
-email_body = """Dear Alec-Nesat Colak -
-
-We want to confirm that your application for the JR1990357 AI Software Engineer, Copilots - New College Grad 2024 role has been received.
-
-We are always looking for amazing people to join us in doing their life’s work at NVIDIA, and we’re grateful that you took the time to apply for this opportunity.
-
-We will review your application against the open position, and contact you to arrange an interview if the role is a good match for your qualifications.
-
-Thanks again for your interest in NVIDIA.
-
-Best Regards,
-
-The NVIDIA Recruiting Team"""
-
-sender = "nvidia@myworkday.com"
-
-result = extract_company_and_position(email_body, sender)
-print(result)
-
-
-print(result)
-
-
+# Test the updated parser
+if __name__ == "__main__":
+    email_body = """Dear Alec-Nesat Colak, thank you for applying to the Software Engineering I role at Activision. We have received your application and will be in touch shortly."""
+    subject = "Your Application to Activision"
+    result = parse_email_data_spacy(email_body, subject)
+    print(result)

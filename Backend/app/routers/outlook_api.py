@@ -13,7 +13,7 @@ from app.models.pydantic_models import UpdateEmailRequest
 from app.utils.email_parser import parse_email_data_hardcoded
 from app.routers.application import create_application, update_application
 from datetime import datetime, timedelta, timezone
-from app.utils.spacy.spacy_parser import extract_company_and_position
+from app.utils.spacy.spacy_parser import parse_email_data_spacy
 
 # Load environment variables from .env file
 load_dotenv()
@@ -301,7 +301,7 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
     user_id = user.get("id")
     email = user.get("email")
     access_token = await get_access_token(user_id, db)
-    
+
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
     
@@ -310,91 +310,116 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
         "Content-Type": "application/json"
     }
 
-    # Construct the full URL with the user's email and $search query to look for the phrase
-    url = CURRENT_USER_EMAILS_URL.format(email=email) + f"?$search=\"{phrase}\""
+    # Set initial URL with $top parameter for up to 100 messages
+    url = (
+        CURRENT_USER_EMAILS_URL.format(email=email)
+        + f"?$search=\"{phrase}\"&$top=1000"
+    )
+    
+    all_emails = []
 
-    # Make the request to Microsoft Graph API
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        email_data = response.json()
-        filtered_emails = []
+    # Loop through pages using @odata.nextLink
+    while url:
+        response = requests.get(url, headers=headers)
         
-        # DB Query to get all applications for the user
-        user_id_str = str(user_id)
-        applications = db.query(Application).filter(Application.user_id == user_id_str).all()
+        if response.status_code == 200:
+            email_data = response.json()
+            all_emails.extend(email_data.get('value', []))
+            url = email_data.get('@odata.nextLink')  # Get the next page URL
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Error fetching emails.")
+    
+    # Dictionary to track processed companies
+    processed_companies = {}
 
-        # Dictionary to track processed companies already in the application database
-        processed_companies = {app.company: {} for app in applications}
+    # Function to categorize status updates
+    def categorize_status(status):
+        status = status.lower()
+        if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
+            return "Awaiting Response"
+        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
+            return "Positive Response"
+        elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
+            return "Rejected"
+        else:
+            return "Awaiting Response"  # Default to 'Awaiting Response' if no match is found
 
-        # Define a function to map status updates to categories
-        def categorize_status(status):
-            status = status.lower()
-            if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
-                return "Awaiting Response"
-            elif any(word in status for word in ["shortlisted", "accepted, offer", "hired", "onboarding", "completed", "interview"]):
-                return "Positive Response"
-            elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
-                return "Rejected"
-            else:
-                return "Awaiting response"  # Default to 'Awaiting response' if no match is found
+    # Process each email
+    for email in all_emails:
+        email_body = extract_plain_text(email.get('body', {}).get('content', ''))
+        bodyPreview = extract_plain_text(email.get('bodyPreview'))
+        entities = parse_email_data_hardcoded(email_body, email.get('subject'))
+        parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
 
-        # Extract company, position, and categorized status from each email
-        for email in email_data.get('value', []):
+        company_name = entities['company']
+        received_time = email.get('receivedDateTime')
+        raw_status = parsed_data['status']
+        categorized_status = categorize_status(raw_status)
+
+        # Check if this company has already been processed
+        if company_name in processed_companies:
+            existing_entry = processed_companies[company_name]
             
-            email_body = extract_plain_text(email.get('body', {}).get('content', ''))
-            bodyPreview = extract_plain_text(email.get('bodyPreview'))
-            entities = parse_email_data_hardcoded(email_body, email.get('subject'))
-            parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
-
-            company_name = entities['company']
-            received_time = email.get('receivedDateTime')
-            raw_status = parsed_data['status']
-            categorized_status = categorize_status(raw_status)  # Apply categorization
-        
-
-            # Check if this company has already been processed
-            if company_name in processed_companies:
-                existing_entry = processed_companies[company_name]
-                
-                # Check current state of status phases
-                status_phases = existing_entry.get('status_phases', [])
-                
-                # Append new status if it's different from the last in `status_phases`
-                if status_phases and categorized_status != status_phases[-1]:
-                    status_phases.append(categorized_status)
-                
-                # Update the most recent status and received time if this email is newer
-                if received_time > existing_entry.get('receivedDateTime', received_time):
-                    existing_entry['status'] = categorized_status
-                    existing_entry['receivedDateTime'] = received_time
-            else:
-                # If it's a new company, add the full email details with initial status in `status_phases`
-                processed_companies[company_name] = {
+            # Check current state of status phases
+            status_phases = existing_entry.get('status_phases', [])
+            
+            # Append new status if it's different from the last in `status_phases`
+            if status_phases and categorized_status != status_phases[-1]:
+                status_phases.append(categorized_status)
+            
+            # Update the most recent status and received time if this email is newer
+            if received_time > existing_entry.get('receivedDateTime', received_time):
+                existing_entry.update({
                     'subject': email.get('subject'),
                     'from': email.get('from', {}).get('emailAddress', {}).get('address'),
                     'receivedDateTime': received_time,
                     'bodyPreview': bodyPreview,
                     'body': email_body,
-                    'company': company_name,
                     'position': entities['position'],
-                    'location': entities['location'] if 'location' in entities else "Unknown",
-                    'salary': entities['salary'] if 'salary' in entities else "Unknown",
-                    'status': categorized_status,  # Assign categorized status
-                    'status_phases': [categorized_status]  # Initialize with the first categorized status
-                }
-                                
-            # Create a new email in the database for each email found
-            
-            
-            
-        # Only add data to filtered_emails if it’s not empty
-        filtered_emails = [entry for entry in processed_companies.values() if entry]
+                    'location': entities.get('location', "Unknown"),
+                    'salary': entities.get('salary', "Unknown"),
+                    'status': categorized_status
+                })
+        else:
+            # If it's a new company, add the full email details with initial status in `status_phases`
+            processed_companies[company_name] = {
+                'subject': email.get('subject'),
+                'from': email.get('from', {}).get('emailAddress', {}).get('address'),
+                'receivedDateTime': received_time,
+                'bodyPreview': bodyPreview,
+                'body': email_body,
+                'company': company_name,
+                'position': entities['position'],
+                'location': entities.get('location', "Unknown"),
+                'salary': entities.get('salary', "Unknown"),
+                'status': categorized_status,  # Assign categorized status
+                'status_phases': [categorized_status]  # Initialize with the first categorized status
+            }
 
-        if not filtered_emails:
-            return {"message": "No new applications or status updates found"}
+    # Finalize the data for filtered output
+    filtered_emails = [
+        {
+            'company': company,
+            'status_phases': data['status_phases'],
+            'subject': data['subject'],
+            'from': data['from'],
+            'receivedDateTime': data['receivedDateTime'],
+            'bodyPreview': data['bodyPreview'],
+            'body': data['body'],
+            'position': data['position'],
+            'location': data['location'],
+            'salary': data['salary'],
+            'status': data['status']
+        }
+        for company, data in processed_companies.items()
+    ]
 
-        return filtered_emails
+    if not filtered_emails:
+        return {"message": "No new applications or status updates found"}
+
+    return filtered_emails
+
+
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email and received after the most recent refresh time
 @router.get("/get-user-messages-by-phrase-and-date", tags=["Outlook API"])
@@ -412,7 +437,10 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         "Content-Type": "application/json"
     }
     
-    url = CURRENT_USER_EMAILS_URL.format(email=email) + f"?$search=\"{phrase}\""
+    url = (
+        CURRENT_USER_EMAILS_URL.format(email=email)
+        + f"?$search=\"{phrase}\"&$top=100&$select=sender,subject,bodyPreview,receivedDateTime"
+    )
     
     # Make the request to Microsoft Graph API
     response = requests.get(url, headers=headers)
@@ -502,10 +530,131 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         
         return filtered_emails
 
+
+# Get emails using SpaCy parser
+@router.get("/get-user-messages-spacy", tags=["Outlook API"])
+async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phrase: str):
+    # Define headers with the access token
+    user_id = user.get("id")
+    email = user.get("email")
+    access_token = await get_access_token(user_id, db)
+
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    # Set initial URL with $top parameter for up to 100 messages
+    url = (
+        CURRENT_USER_EMAILS_URL.format(email=email)
+        + f"?$search=\"{phrase}\"&$top=1000"
+    )
+    
+    all_emails = []
+
+    # Loop through pages using @odata.nextLink
+    while url:
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            email_data = response.json()
+            all_emails.extend(email_data.get('value', []))
+            url = email_data.get('@odata.nextLink')  # Get the next page URL
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Error fetching emails.")
+    
+    # Dictionary to track processed companies
+    processed_companies = {}
+
+    # Function to categorize status updates
+    def categorize_status(status):
+        status = status.lower()
+        if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
+            return "Awaiting Response"
+        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
+            return "Positive Response"
+        elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
+            return "Rejected"
+        else:
+            return "Awaiting Response"  # Default to 'Awaiting Response' if no match is found
+
+    # Process each email
+    for email in all_emails:
+        email_body = extract_plain_text(email.get('body', {}).get('content', ''))
+        bodyPreview = extract_plain_text(email.get('bodyPreview'))
+        entities = parse_email_data_spacy(email_body, email.get('subject'))
+        parsed_data = parse_email_data_spacy(email_body, email.get('subject'))
+
+        company_name = entities['company']
+        received_time = email.get('receivedDateTime')
+        raw_status = parsed_data['status']
+        categorized_status = categorize_status(raw_status)
+
+        # Check if this company has already been processed
+        if company_name in processed_companies:
+            existing_entry = processed_companies[company_name]
             
+            # Check current state of status phases
+            status_phases = existing_entry.get('status_phases', [])
+            
+            # Append new status if it's different from the last in `status_phases`
+            if status_phases and categorized_status != status_phases[-1]:
+                status_phases.append(categorized_status)
+            
+            # Update the most recent status and received time if this email is newer
+            if received_time > existing_entry.get('receivedDateTime', received_time):
+                existing_entry.update({
+                    'subject': email.get('subject'),
+                    'from': email.get('from', {}).get('emailAddress', {}).get('address'),
+                    'receivedDateTime': received_time,
+                    'bodyPreview': bodyPreview,
+                    'body': email_body,
+                    'position': entities['position'],
+                    'location': entities.get('location', "Unknown"),
+                    'salary': entities.get('salary', "Unknown"),
+                    'status': categorized_status
+                })
+        else:
+            # If it's a new company, add the full email details with initial status in `status_phases`
+            processed_companies[company_name] = {
+                'subject': email.get('subject'),
+                'from': email.get('from', {}).get('emailAddress', {}).get('address'),
+                'receivedDateTime': received_time,
+                'bodyPreview': bodyPreview,
+                'body': email_body,
+                'company': company_name,
+                'position': entities['position'],
+                'location': entities.get('location', "Unknown"),
+                'salary': entities.get('salary', "Unknown"),
+                'status': categorized_status,  # Assign categorized status
+                'status_phases': [categorized_status]  # Initialize with the first categorized status
+            }
 
+    # Finalize the data for filtered output
+    filtered_emails = [
+        {
+            'company': company,
+            'status_phases': data['status_phases'],
+            'subject': data['subject'],
+            'from': data['from'],
+            'receivedDateTime': data['receivedDateTime'],
+            'bodyPreview': data['bodyPreview'],
+            'body': data['body'],
+            'position': data['position'],
+            'location': data['location'],
+            'salary': data['salary'],
+            'status': data['status']
+        }
+        for company, data in processed_companies.items()
+    ]
 
+    if not filtered_emails:
+        return {"message": "No new applications or status updates found"}
 
+    return filtered_emails
         
 
         

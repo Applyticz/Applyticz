@@ -27,7 +27,7 @@ def parse_email_data_hardcoded(email_body, subject ):
 
     # Lowercase the email body for case-insensitive matching
     email_body_lower = email_body.lower()
-    print(email_body_lower)
+    print("Email Body: ", email_body_lower)
     subject_lower = subject.lower()
 
     # Find the company (stop at first match)

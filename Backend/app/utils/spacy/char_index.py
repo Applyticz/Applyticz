@@ -17,14 +17,14 @@ def find_substring(text: str, substring: str) -> Tuple[int, int]:
 
 # Test the function with a sample text and substring
 
-text="Thank you for applying to NVIDIA for the JR1990357 AI Software Engineer, Copilots - New College Grad 2024 role."
-substring = "NVIDIA"
+text = "Dear Alec, our team at Stitch Fix is reviewing your application for the AI Engineer role."
+substring = "Stitch Fix"
 
 start, end = find_substring(text, substring) #Company
 print(f"Start Index: {start}, End Index: {end}")
 
 #Position was not found in the text
-substring = "AI Software Engineer"
+substring = "AI Engineer"
 
 start, end = find_substring(text, substring) #Position
 print(f"Start Index: {start}, End Index: {end}")
