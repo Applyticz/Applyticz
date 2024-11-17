@@ -66,8 +66,7 @@ function Applications() {
   /* Create Application Dialogue Box */
   const [creatingApplication, setCreatingApplication] = useState(false);
 
-
-  const handleCreate = async (formData) => {
+  const handleCreate = async (formData, isManualEntry = false) => {
     console.log("Creating application with data:", formData);
     try {
       const response = await fetch(
@@ -80,7 +79,9 @@ function Applications() {
           },
           body: JSON.stringify({
             ...formData,
-            applied_date: formData.applied_date || "",
+            applied_date: isManualEntry
+              ? new Date().toISOString()
+              : formData.applied_date || "",
           }),
         }
       );
@@ -113,7 +114,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
 
   const [formData, setFormData] = useState({
     company: "",
@@ -166,7 +166,6 @@ function Applications() {
     }
   };
 
-
   const handleInputChange = (e, applicationId) => {
     const { name, value } = e.target;
     setApplications((prevApplications) =>
@@ -175,7 +174,6 @@ function Applications() {
       )
     );
   };
-
 
   const handleSubmit = async (applicationId) => {
     try {
@@ -204,7 +202,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
 
   const handleDelete = async (id) => {
     try {
@@ -265,15 +262,73 @@ function Applications() {
     console.log("Last update time:", formattedTime);
   };
 
+  const getNewEmails = async () => {
+    try {
+      if (!LastUpdateTime) {
+        // console.log("No last update time set");
+        await getAllEmails(); // Fetch all emails if no update time is set
+      } else {
+        const response = await fetch(
+          `http://localhost:8000/outlook_api/get-user-messages-by-phrase-and-date?phrase=applying&last_refresh_time=${LastUpdateTime}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${authTokens}`,
+            },
+          }
+        );
 
-const getNewEmails = async () => {
-  try {
-    if (!LastUpdateTime) {
-      // console.log("No last update time set");
-      await getAllEmails(); // Fetch all emails if no update time is set
-    } else {
+        if (response.ok) {
+          const data = await response.json();
+
+          console.log("New emails:", data);
+
+          if (data.message === "No new emails found") {
+            setError("No new emails found");
+            return;
+          }
+
+          // Iterate over each email and create an application
+          for (const email of data) {
+            // Populate formData with email details
+            const formData = {
+              company: email.company || "",
+              position: email.position || "",
+              location: email.location || "",
+              status: email.status || "",
+              applied_date: email.receivedDateTime || "",
+              last_update: email.receivedDateTime || "",
+              salary: email.salary || "",
+              job_description: email.job_description || "",
+              notes: email.notes || "",
+              status_history: email.status_history || {},
+              interview_notes: email.interview_notes || "",
+              interview_dates: email.interview_dates || "",
+              interview_round: email.interview_round || "",
+              is_active_interview: email.is_active_interview || false,
+              offer_notes: email.offer_notes || "",
+              offer_interest: email.offer_interest || 0,
+              is_active_offer: email.is_active_offer || false,
+            };
+
+            // Pass the populated formData to handleCreate
+            await handleCreate(formData); // Pass formData to handleCreate
+          }
+
+          updateLastUpdateTime(); // Only update after successful fetch
+        } else {
+          throw new Error("Failed to get new emails");
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const getAllEmails = async () => {
+    try {
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase-and-date?phrase=applying&last_refresh_time=${LastUpdateTime}`,
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrase=applying`,
         {
           method: "GET",
           headers: {
@@ -285,12 +340,15 @@ const getNewEmails = async () => {
       if (response.ok) {
         const data = await response.json();
 
-        console.log("New emails:", data);
-        
+        // Check if data is an array
+        if (!Array.isArray(data)) {
+          // Handle the case where data is not an array
+          throw new Error(data.message || "Unexpected response format");
+        }
 
-        if (data.message === "No new emails found") {
-          setError("No new emails found");
-          return;
+        // Handle if no emails are found
+        if (data.length === 0) {
+          throw new Error("No emails found");
         }
 
         // Iterate over each email and create an application
@@ -320,79 +378,16 @@ const getNewEmails = async () => {
           await handleCreate(formData); // Pass formData to handleCreate
         }
 
-        updateLastUpdateTime(); // Only update after successful fetch
+        updateLastUpdateTime();
       } else {
-        throw new Error("Failed to get new emails");
+        const errorData = await response.json(); // Get error details from response
+        throw new Error(errorData.message || "Failed to get all emails");
       }
+    } catch (err) {
+      setError(err.message);
+      console.log(err);
     }
-  } catch (err) {
-    setError(err.message);
-  }
-};
-
-const getAllEmails = async () => {
-  try {
-    const response = await fetch(
-      `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrase=applying`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${authTokens}`,
-        },
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-
-      // Check if data is an array
-      if (!Array.isArray(data)) {
-        // Handle the case where data is not an array
-        throw new Error(data.message || "Unexpected response format");
-      }
-
-      // Handle if no emails are found
-      if (data.length === 0) {
-        throw new Error("No emails found");
-      }
-
-      // Iterate over each email and create an application
-      for (const email of data) {
-        // Populate formData with email details
-        const formData = {
-          company: email.company || "",
-          position: email.position || "",
-          location: email.location || "",
-          status: email.status || "",
-          applied_date: email.receivedDateTime || "",
-          last_update: email.receivedDateTime || "",
-          salary: email.salary || "",
-          job_description: email.job_description || "",
-          notes: email.notes || "",
-          status_history: email.status_history || {},
-          interview_notes: email.interview_notes || "",
-          interview_dates: email.interview_dates || "",
-          interview_round: email.interview_round || "",
-          is_active_interview: email.is_active_interview || false,
-          offer_notes: email.offer_notes || "",
-          offer_interest: email.offer_interest || 0,
-          is_active_offer: email.is_active_offer || false,
-        };
-
-        // Pass the populated formData to handleCreate
-        await handleCreate(formData); // Pass formData to handleCreate
-      }
-
-      updateLastUpdateTime();
-    } else {
-      const errorData = await response.json(); // Get error details from response
-      throw new Error(errorData.message || "Failed to get all emails");
-    }
-  } catch (err) {
-    setError(err.message);
-    console.log(err);
-  }
-};
+  };
 
   useEffect(() => {
     // Apply the theme by toggling class on the root element
@@ -416,7 +411,7 @@ const getAllEmails = async () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleCreate();
+                handleCreate(formData, true);
                 setCreatingApplication(false);
               }}
             >
