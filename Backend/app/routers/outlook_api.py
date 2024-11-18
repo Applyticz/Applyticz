@@ -78,7 +78,7 @@ async def callback(code: str, user: user_dependency, db: db_dependency):
 
     token_response = requests.post(TOKEN_URL, data=token_data)
     token_json = token_response.json()
-    print(token_json)
+    #print(token_json)
 
     if "access_token" in token_json:
         access_token = {
@@ -135,7 +135,7 @@ async def get_access_token(user_id, db: db_dependency):
     refresh_token = tokens.refresh_token
     
     # Log the token_expiry for debugging
-    print(f"Token expiry: {tokens.token_expiry}")
+    #print(f"Token expiry: {tokens.token_expiry}")
     
     # Check if access token exists and is expired
     try:
@@ -420,7 +420,6 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
     return filtered_emails
 
 
-
 # Function to get user's messages filtered by a keyword appearing anywhere in the email and received after the most recent refresh time
 @router.get("/get-user-messages-by-phrase-and-date", tags=["Outlook API"])
 async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
@@ -448,7 +447,7 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
     if response.status_code == 200:
         email_data = response.json()
         
-        print("Email data:", email_data)
+        #print("Email data:", email_data)
         filtered_emails = []
         
         # Convert user_id to string for the query
@@ -462,14 +461,14 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         
         # Dictionary to track processed companies already in the application database
         processed_companies = {app.company: {} for app in applications}
-        print("Processed companies:", processed_companies)
+        #print("Processed companies:", processed_companies)
         
         # Define a function to map status updates to categories
         def categorize_status(status):
             status = status.lower()
             if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
                 return "Awaiting Response"
-            elif any(word in status for word in ["shortlisted", "accepted, offer", "hired", "onboarding", "completed", "interview"]):
+            elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
                 return "Positive Response"
             elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
                 return "Rejected"
@@ -521,15 +520,14 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
                         'status': categorized_status,  # Assign categorized status
                         'status_phases': [categorized_status]  # Initialize with the first categorized status
                     }
-        
+                    
         # Only add data to filtered_emails if it's not empty
         filtered_emails = [entry for entry in processed_companies.values() if entry]
         
         if not filtered_emails:
             return {"message": "No new emails found"}
         
-        return filtered_emails
-
+        return filtered_emails 
 
 # Get emails using SpaCy parser
 @router.get("/get-user-messages-spacy", tags=["Outlook API"])
