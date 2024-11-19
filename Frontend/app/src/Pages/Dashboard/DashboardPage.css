@@ -3,6 +3,9 @@
   padding: 20px;
   max-width: 1000px;
   margin: 0 auto;
+  background-color: var(--back-color2);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Light and Dark Theme Variables */
@@ -130,6 +133,90 @@
   margin: 5px 0;
   font-size: 1em;
   color: var(--text-color);
+}
+
+/* Error Message Styling */
+.error {
+  color: red;
+  font-size: 0.9em;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Dashboard Title */
+.dashboard-title {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: var(--heading-color);
+}
+
+/* Notification Icon */
+.notification {
+  display: flex;
+  align-items: center;
+  background-color: #f0f8ff;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.notification-count {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+/* Notification Dropdown */
+.notification-dropdown {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  z-index: 1000;
+  width: 200px;
+}
+
+/* Activity List */
+.activity-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.activity-item {
+  background-color: var(--back-color);
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Content Centering and Style */
+.chakra-modal__content {
+  background-color: var(--back-color);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 600px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  margin: 0 auto;
+}
+
+.chakra-modal__header {
+  font-weight: bold;
+  color: var(--heading-color);
+}
+
+.chakra-modal__body p {
+  margin: 5px 0;
+  font-size: 1em;
+  color: var(--text-color);
+}
+
+/* Button Styling */
+.modal-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
 }
 
 /* Error Message Styling */

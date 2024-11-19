@@ -145,6 +145,7 @@ function Applications() {
   const [editingId, setEditingId] = useState(null);
   useEffect(() => {
     fetchApplications();
+    fetchEmails();
     fetchTheme();
   }, []);
 
