@@ -24,3 +24,7 @@ sqlalchemy==2.0.15
 spacy==3.7.3
 uvicorn==0.23.2
 pytz==2024.1
+google-api-python-client==2.70.0
+google-auth==2.20.0
+google-auth-oauthlib==0.4.6
+google-auth-httplib2==0.1.0

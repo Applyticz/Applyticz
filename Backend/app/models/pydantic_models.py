@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from pydantic.dataclasses import ConfigDict
 from typing import Optional
+from sqlalchemy import Date
 
 # Base model for common fields
 class TestBase(BaseModel):
@@ -53,6 +54,9 @@ class DeleteResumeRequest(BaseModel):
   title: str
 
 class ApplicationRequest(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True  # Allow arbitrary types like SQLAlchemy types
+
     id: str = None
     company: str
     position: str
@@ -62,8 +66,8 @@ class ApplicationRequest(BaseModel):
     job_description: str = None
     notes: str = None
     status_history: dict = None
-    applied_date: str
-    last_update: str
+    applied_date: Date
+    last_update: Date
     interview_notes: str = None
     interview_dates: str = None
     interview_round: str = None
@@ -71,6 +75,8 @@ class ApplicationRequest(BaseModel):
     offer_notes: str = None
     offer_interest: int = None
     is_active_offer: bool
+    previous_emails: dict = None
+    days_to_update: int = None
 
 class ApplicationUpdateRequest(BaseModel):
     company: str
@@ -90,6 +96,8 @@ class ApplicationUpdateRequest(BaseModel):
     offer_notes: str = None
     offer_interest: int = None
     is_active_offer: bool = None
+    previous_emails: dict = None
+    days_to_update: int = None
 
 class UserSettingsRequest(BaseModel):
     first_name: Optional[str] = None

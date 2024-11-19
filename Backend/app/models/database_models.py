@@ -33,6 +33,7 @@ class User(Base):
     applications = relationship("Application", back_populates="user")
     settings = relationship("UserSettings", back_populates="user", uselist=False)
     emails = relationship("Email", back_populates="user")
+    gmail_auth = relationship("GmailAuth", back_populates="user", uselist=False)
 
 class OutlookAuth(Base):
     __tablename__ = "outlook_auth"

@@ -32,7 +32,9 @@ async def create_application(application: ApplicationRequest, user: user_depende
         is_active_interview=False,  # Set default value
         offer_notes=None,  # Set to None or appropriate value
         offer_interest=None,  # Set to None or appropriate value
-        is_active_offer=False  # Set default value
+        is_active_offer=False,  # Set default value
+        previous_emails={},  # Set to None or appropriate value
+        days_to_update=None  # Set to None or appropriate value
     )
     
     # Add the new application to the database
@@ -83,7 +85,9 @@ async def get_applications(user: user_dependency, db: db_dependency):
             'is_active_interview': app.is_active_interview,
             'offer_notes': app.offer_notes,
             'offer_interest': app.offer_interest,
-            'is_active_offer': app.is_active_offer
+            'is_active_offer': app.is_active_offer,
+            'previous_emails': app.previous_emails,
+            'days_to_update': app.days_to_update
         }
         application_list.append(app_dict)
     
@@ -124,7 +128,9 @@ async def get_application(user: user_dependency, db: db_dependency, id: str):
         'is_active_interview': application.is_active_interview,
         'offer_notes': application.offer_notes,
         'offer_interest': application.offer_interest,
-        'is_active_offer': application.is_active_offer
+        'is_active_offer': application.is_active_offer,
+        'previous_emails': application.previous_emails,
+        'days_to_update': application.days_to_update
     }
     
     return application_dict
@@ -162,6 +168,8 @@ async def update_application(application: ApplicationUpdateRequest, user: user_d
     application_to_update.offer_notes = application.offer_notes  # Update offer_notes
     application_to_update.offer_interest = application.offer_interest  # Update offer_interest
     application_to_update.is_active_offer = application.is_active_offer  # Update is_active_offer
+    application_to_update.previous_emails = application.previous_emails  # Update previous_emails
+    application_to_update.days_to_update = application.days_to_update  # Update days_to_update
     
     db.commit()
     
