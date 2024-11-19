@@ -202,8 +202,6 @@ function Analytics() {
 
 
   const [timeFrame, setTimeFrame] = useState('week');
-
-  const phases = ['No Response', 'Interview', 'Offer'];
   
   const totalApplications = applications.length;
 
@@ -476,179 +474,102 @@ function Analytics() {
     return colors[phase];
   }
 
-  //Prepare data for the stacked bar chart (Application Progression vs Location)
-  const progressionByLocationData = {
-    labels: Object.keys(mockData.applicationProgressionByLocation),
-    datasets: phases.map((phase) => ({
+const phases = ['No Response', 'Interview', 'Offer'];
+const phaseChecker = ['Awaiting Response', 'Interview', 'Offer'];
+
+// Utility function to process data for charts
+const processDataForChart = (groupingAttribute, activePhases = phases) => {
+  const uniqueValues = [...new Set(applications.map(app => app[groupingAttribute]))];
+
+  const dataWithRatios = uniqueValues.map(value => {
+    const groupedApps = applications.filter(app => app[groupingAttribute] === value);
+
+    const phaseCounts = activePhases.map(() => 0);
+
+    groupedApps.forEach(app => {
+      let highestPhaseIndex = 0;
+      if (Array.isArray(app.status_history)) {
+        phaseChecker.forEach((checker, index) => {
+          if (activePhases.includes(phases[index]) && app.status_history.includes(checker)) {
+            highestPhaseIndex = index;
+          }
+        });
+      }
+      phaseCounts[highestPhaseIndex]++;
+    });
+
+    const total = groupedApps.length;
+    const percentages = phaseCounts.map(count => (count / total) * 100);
+
+    return {
+      value,
+      percentages,
+    };
+  });
+
+  // Sort the data based on percentage of the most advanced phase and break ties with next phases
+  dataWithRatios.sort((a, b) => {
+    for (let i = activePhases.length - 1; i >= 0; i--) {
+      const diff = b.percentages[i] - a.percentages[i];
+      if (diff !== 0) return diff;
+    }
+    return 0;
+  });
+
+  return {
+    labels: dataWithRatios.map(item => item.value),
+    datasets: activePhases.map((phase, phaseIndex) => ({
       label: phase,
-      data: Object.values(mockData.applicationProgressionByLocation).map(
-        (locationData) => {
-          const total = Object.values(locationData).reduce(
-            (sum, count) => sum + count,
-            0
-          );
-          const phaseCount = locationData[phase] || 0;
-          const percentage = (phaseCount / total) * 100;
-          return percentage.toFixed(2);
-        }
-      ),
+      data: dataWithRatios.map(item => item.percentages[phaseIndex].toFixed(2)),
       backgroundColor: getPhaseColor(phase),
     })),
   };
+};
 
-  const progressionByLocationOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          callback: (value) => `${value}%`,
-        },
-        title: {
-          display: true,
-          text: 'Percentage of Applications (%)',
-        },
-        stacked: true,
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Location',
-        },
-        stacked: true,
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y || 0;
-            return `${label}: ${value}%`;
-          },
-        },
-      },
-      legend: {
-        position: 'top',
-      },
-    },
-  };
+// Configure the data for each chart
 
-  // repare data for the stacked bar chart (Application Progression vs Company)
-  const progressionByCompanyData  = {
-    labels: Object.keys(mockData.applicationProgressionByCompany),
-    datasets: phases.map((phase) => ({
-      label: phase,
-      data: Object.values(mockData.applicationProgressionByCompany).map(
-        (companyData) => {
-          const total = Object.values(companyData).reduce(
-            (sum, count) => sum + count,
-            0
-          );
-          const phaseCount = companyData[phase] || 0;
-          const percentage = (phaseCount / total) * 100;
-          return percentage.toFixed(2);
-        }
-      ),
-      backgroundColor: getPhaseColor(phase),
-    })),
-  };
+const progressionByLocationData = processDataForChart('location');
+const progressionByJobTitleData = processDataForChart('position'); // Assuming 'position' is the column name for job titles
+const progressionByCompanyData = processDataForChart('company');
 
-  const progressionByCompanyOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          callback: (value) => `${value}%`,
-        },
-        title: {
-          display: true,
-          text: 'Percentage of Applications (%)',
-        },
-        stacked: true,
+// Options remain the same for all charts
+const progressionOptions = {
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: {
+        callback: (value) => `${value}%`,
       },
-      x: {
-        title: {
-          display: true,
-          text: 'Company',
+      title: {
+        display: true,
+        text: 'Percentage of Applications (%)',
+      },
+      stacked: true,
+    },
+    x: {
+      title: {
+        display: true,
+        text: 'Attribute',  // Group attribute (Location, Job Title, Company)
+      },
+      stacked: true,
+    },
+  },
+  plugins: {
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const label = context.dataset.label || '';
+          const value = context.parsed.y || 0;
+          return `${label}: ${value}%`;
         },
-        stacked: true,
       },
     },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y || 0;
-            return `${label}: ${value}%`;
-          },
-        },
-      },
-      legend: {
-        position: 'top',
-      },
+    legend: {
+      position: 'top',
     },
-  };
-
-  // Prepare data for the stacked bar chart (Application Progression vs Job Title)
-  const progressionByJobTitleData  = {
-    labels: Object.keys(mockData.applicationProgressionByJobTitle),
-    datasets: phases.map((phase) => ({
-      label: phase,
-      data: Object.values(mockData.applicationProgressionByJobTitle).map(
-        (jobData) => {
-          const total = Object.values(jobData).reduce(
-            (sum, count) => sum + count,
-            0
-          );
-          const phaseCount = jobData[phase] || 0;
-          const percentage = (phaseCount / total) * 100;
-          return percentage.toFixed(2);
-        }
-      ),
-      backgroundColor: getPhaseColor(phase),
-    })),
-  };
-
-  const progressionByJobTitleOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          callback: (value) => `${value}%`,
-        },
-        title: {
-          display: true,
-          text: 'Percentage of Applications (%)',
-        },
-        stacked: true,
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Job Title',
-        },
-        stacked: true,
-      },
-    },
-    plugins: {
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y || 0;
-            return `${label}: ${value}%`;
-          },
-        },
-      },
-      legend: {
-        position: 'top',
-      },
-    },
-  };
+  },
+};
 
   const getNewEmails = async () => {
     try {
@@ -800,21 +721,21 @@ function Analytics() {
       <section className="analytics-section">
         <h2>Application Progression vs Location</h2>
         <div className="chart-container">
-          <Bar data={progressionByLocationData} options={progressionByLocationOptions} />
+          <Bar data={progressionByLocationData} options={progressionOptions} />
         </div>
       </section>
 
       <section className="analytics-section">
         <h2>Application Progression vs Company</h2>
         <div className="chart-container">
-          <Bar data={progressionByCompanyData} options={progressionByCompanyOptions} />
+          <Bar data={progressionByCompanyData} options={progressionOptions} />
         </div>
       </section>
 
       <section className="analytics-section">
         <h2>Application Progression vs Job Title</h2>
         <div className="chart-container">
-          <Bar data={progressionByJobTitleData} options={progressionByJobTitleOptions} />
+          <Bar data={progressionByJobTitleData} options={progressionOptions} />
         </div>
       </section>
     </div>
