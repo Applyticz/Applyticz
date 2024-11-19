@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.utils.utils import get_current_user
 from typing import Annotated
 from app.db.database import db_dependency
-from app.models.database_models import Email
+from app.models.database_models import Email, Application
 from fastapi import Query
 from app.models.pydantic_models import EmailRequest
 
@@ -10,18 +10,18 @@ router = APIRouter()
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
-from fastapi import APIRouter, Depends
-
-
-
-router = APIRouter()
-
 @router.post("/create-email/", tags=['emails'], status_code=status.HTTP_201_CREATED)
-async def create_email(email_request: EmailRequest, db: db_dependency):
-    
-    
+async def create_email(email_request: EmailRequest, db: db_dependency, user: user_dependency):
+    # Find the application associated with the same application id
+    application = db.query(Application).filter(Application.id == email_request.app).first()
+
+    if not application:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No matching application found.")
+
+    # Create a new Email object
     new_email = Email(
-        app = email_request.app,
+        app=application.id,  # Use the found application ID
+        user_id=user['id'], 
         subject=email_request.subject,
         sender=email_request.sender,
         received_date=email_request.received_date,

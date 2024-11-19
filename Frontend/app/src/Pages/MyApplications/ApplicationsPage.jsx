@@ -67,7 +67,7 @@ function Applications() {
   const [creatingApplication, setCreatingApplication] = useState(false);
 
   const handleCreate = async (formData, isManualEntry = false) => {
-    console.log("Creating application with data:", formData);
+    // // console.log("Creating application with data:", formData);
     try {
       const response = await fetch(
         "http://localhost:8000/application/create_application",
@@ -87,6 +87,9 @@ function Applications() {
       );
 
       if (response.ok) {
+        // obtain the new application ID
+        const data = await response.json();
+
         fetchApplications();
         setFormData({
           company: "",
@@ -107,6 +110,7 @@ function Applications() {
           offer_interest: 0, // Reset to default integer
           is_active_offer: false,
         });
+        return data;
       } else {
         throw new Error("Failed to create application");
       }
@@ -137,6 +141,7 @@ function Applications() {
 
   /* Applications List */
   const [applications, setApplications] = useState([]);
+  const [emails, setEmail] = useState([]);
   const [editingId, setEditingId] = useState(null);
   useEffect(() => {
     fetchApplications();
@@ -156,13 +161,35 @@ function Applications() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log("Applications:", data);
+        // // console.log("Applications:", data);
         setApplications(data);
       } else {
         throw new Error("Failed to fetch applications");
       }
     } catch (err) {
       setError("Error fetching applications");
+    }
+  };
+
+  const fetchEmails = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/email/emails`,
+        {
+          headers: {
+            Authorization: `Bearer ${authTokens}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // console.log("EMAILS:", data);
+        setEmail(data);
+      } else {
+        throw new Error("Failed to fetch emails");
+      }
+    } catch (err) {
+      setError("Error fetching emails");
     }
   };
 
@@ -195,6 +222,7 @@ function Applications() {
       if (response.ok) {
         setEditingId(null);
         fetchApplications();
+        fetchEmails();
       } else {
         throw new Error("Failed to update application");
       }
@@ -259,13 +287,13 @@ function Applications() {
       "0"
     )}:${String(now.getUTCSeconds()).padStart(2, "0")}Z`;
     setLastUpdateTime(formattedTime);
-    console.log("Last update time:", formattedTime);
+    //// console.log("Last update time:", formattedTime);
   };
 
   const getNewEmails = async () => {
     try {
       if (!LastUpdateTime) {
-        // console.log("No last update time set");
+        // // console.log("No last update time set");
         await getAllEmails(); // Fetch all emails if no update time is set
       } else {
         const response = await fetch(
@@ -281,7 +309,7 @@ function Applications() {
         if (response.ok) {
           const data = await response.json();
 
-          console.log("New emails:", data);
+          // console.log("New emails:", data);
 
           if (data.message === "No new emails found") {
             setError("No new emails found");
@@ -325,6 +353,30 @@ function Applications() {
     }
   };
 
+  const createEmail = async (emailFormData) => {
+    try {
+      const response = await fetch("http://localhost:8000/email/create-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authTokens}`,
+        },
+        body: JSON.stringify({
+          ...emailFormData,
+        }),
+      });
+
+      if (response.ok) {
+        // // console.log("Email created successfully");
+        fetchEmails();
+      } else {
+        throw new Error("Failed to create email");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const getAllEmails = async () => {
     try {
       const response = await fetch(
@@ -340,6 +392,8 @@ function Applications() {
       if (response.ok) {
         const data = await response.json();
 
+        // console.log("All emails:", data);
+
         // Check if data is an array
         if (!Array.isArray(data)) {
           // Handle the case where data is not an array
@@ -353,7 +407,7 @@ function Applications() {
 
         // Iterate over each email and create an application
         for (const email of data) {
-          // Populate formData with email details
+          // Populate formData with application details
           const formData = {
             company: email.company || "",
             position: email.position || "",
@@ -375,8 +429,26 @@ function Applications() {
           };
 
           // Pass the populated formData to handleCreate
-          await handleCreate(formData); // Pass formData to handleCreate
-        }
+          const data = await handleCreate(formData); // Pass formData to handleCreate
+          
+          // console.log("Application data:", data);
+
+          // Create email if it's not a manual entry
+
+            const emailFormData = {
+              app: data.application_id,
+              subject: email.subject || "",
+              sender: email.from || "",
+              body: email.body || "",
+              body_preview: email.bodyPreview || "",
+              received_date: email.receivedDateTime || "",
+              status: email.status || "",
+            };
+            // console.log("Email data:", emailFormData);
+            createEmail({
+              ...emailFormData
+            });
+          }
 
         updateLastUpdateTime();
       } else {
@@ -385,7 +457,7 @@ function Applications() {
       }
     } catch (err) {
       setError(err.message);
-      console.log(err);
+      // console.log(err);
     }
   };
 
@@ -602,7 +674,7 @@ function Applications() {
               <Tooltip label="Get all emails">
                 <IconButton
                   colorScheme="gray"
-                  icon={<EmailIcon/>}
+                  icon={<EmailIcon />}
                   onClick={getAllEmails}
                 />
               </Tooltip>
@@ -696,6 +768,21 @@ function Applications() {
                       </p>
                       <p>Notes:</p>
                       <p style={{ textIndent: "20px" }}>{application.notes}</p>
+                      <p>Emails:</p>
+                      {emails
+                        .filter((email) => email.app === application.id)
+                        .map((email) => (
+                          <div key={email.id} style={{ marginBottom: "10px" }}>
+                            <p style={{ fontWeight: "bold" }}>
+                              Email Subject: {email.subject || "No Subject"}
+                            </p>
+                            <p style={{ textIndent: "20px" }}>
+                              Email Body:
+                              {email.body ||
+                                "Email body content not available."}
+                            </p>
+                          </div>
+                        ))}
                       <br />
                       <Button colorScheme="gray">Edit</Button>{" "}
                       {/* Make circular */}
@@ -789,20 +876,44 @@ function Applications() {
                       <AccordionPanel pb={4}>
                         <p>Location:</p>
                         <p style={{ textIndent: "20px" }}>
-                          {application.location}
+                          {application.location || "Location Not Specified"}
                         </p>
                         <p>Salary:</p>
                         <p style={{ textIndent: "20px" }}>
-                          {application.salary}
+                          {application.salary || "Salary Not Specified"}
                         </p>
                         <p>Job Description:</p>
                         <p style={{ textIndent: "20px" }}>
-                          {application.job_description}
+                          {application.job_description ||
+                            "Job Description Not Available"}
                         </p>
                         <p>Notes:</p>
                         <p style={{ textIndent: "20px" }}>
-                          {application.notes}
+                          {application.notes || "No Notes Available"}
                         </p>
+                        <p>Emails:</p>
+                        {emails
+                          .filter((email) => email.app === application.id)
+                          .map((email) => (
+                            <div
+                              key={email.id}
+                              style={{ marginBottom: "10px" }}
+                            >
+                              <p style={{ fontWeight: "bold" }}>
+                                Email Subject: {email.subject || "No Subject"}
+                              </p>
+                              <p style={{ textIndent: "20px" }}>
+                                {email.body ||
+                                  "Email body content not available."}
+                              </p>
+                            </div>
+                          ))}
+                        {emails.filter((email) => email.app === application.id)
+                          .length === 0 && (
+                          <p style={{ textIndent: "20px", color: "gray" }}>
+                            No emails associated with this application.
+                          </p>
+                        )}
                         <br />
                         <Button colorScheme="gray">Edit</Button>{" "}
                         {/* Make circular */}
@@ -990,7 +1101,7 @@ function Applications() {
                               application.applied_date
                             ).toLocaleDateString()}
                             <br></br>
-                            Rejected: 11/5/24
+                            Rejected: {application.last_update}
                           </Box>
                           <Box
                             as="span"
@@ -1026,6 +1137,16 @@ function Applications() {
                         <p style={{ textIndent: "20px" }}>
                           {application.notes}
                         </p>
+                        {emails
+                          .filter((email) => email.app === application.id)
+                          .map((email) => (
+                            <div>
+                              <p>Email:</p>
+                              <p style={{ textIndent: "20px" }}>
+                                {email.body || "Unknown"}
+                              </p>
+                            </div>
+                          ))}
                         <br />
                         <Button colorScheme="gray">Edit</Button>{" "}
                         {/* Make circular */}

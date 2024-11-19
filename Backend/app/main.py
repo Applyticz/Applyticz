@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends 
 from app.db.database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import test, auth, resume, application, dashboard, user_settings, gmail_api, outlook_api
+from app.routers import test, auth, resume, application, dashboard, user_settings, gmail_api, outlook_api, emails
 from contextlib import asynccontextmanager
 from typing import Annotated
 from app.routers.auth import get_current_user
@@ -39,6 +39,7 @@ app.include_router(application.router, prefix='/application')
 app.include_router(dashboard.router, prefix='/dashboard')
 app.include_router(user_settings.router, prefix="/settings", tags=["settings"])
 app.include_router(outlook_api.router, prefix="/outlook_api")
+app.include_router(emails.router, prefix='/email')
 # Example endpoint template
 # @app.get('/test')
 # def test_(dependencies):
