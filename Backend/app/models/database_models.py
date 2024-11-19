@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary, Boolean
+from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary, Boolean, Date
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import relationship
@@ -48,6 +48,19 @@ class OutlookAuth(Base):
     # Define relationship with the User model
     user = relationship("User", back_populates="outlook_auth")
 
+class GmailAuth(Base):
+    __tablename__ = "gmail_auth"
+
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    user_id = Column(CHAR(36), ForeignKey('users.id'), nullable=False)  # Reference to User table
+
+    access_token = Column(String(2048), nullable=False)
+    refresh_token = Column(String(2048), nullable=False)
+    token_expiry = Column(DateTime, nullable=False)  # Store token expiration date/time
+
+    # Define relationship with the User model
+    user = relationship("User", back_populates="gmail_auth")
+
 class Resume(Base):
     __tablename__ = "resumes"
 
@@ -72,18 +85,20 @@ class Application(Base):
     position = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False)
     status_history = Column(JSON, nullable=False)
-    applied_date = Column(String(255), nullable=False)
-    last_update = Column(String(255), nullable=False)
+    applied_date = Column(Date, nullable=False)
+    last_update = Column(Date, nullable=False)
     salary = Column(String(255), nullable=False)
     job_description = Column(String(1000), nullable=True)
     notes = Column(String(1000), nullable=True)
     interview_notes = Column(String(1000), nullable=True)
-    interview_dates = Column(String(255), nullable=True)
+    interview_dates = Column(Date, nullable=True)
     interview_round = Column(String(255), nullable=True)
     is_active_interview = Column(Boolean, nullable=False)
     offer_notes = Column(String(1000), nullable=True)
     offer_interest = Column(Integer, nullable=True)
     is_active_offer = Column(Boolean, nullable=False)
+    previous_emails = Column(String(1000), nullable=True)
+    days_to_update = Column(Integer, nullable=True)
 
     user = relationship("User", back_populates="applications")
     emails = relationship("Email", back_populates="application")

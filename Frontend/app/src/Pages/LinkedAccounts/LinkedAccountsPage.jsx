@@ -24,7 +24,7 @@ function LinkedAccounts() {
   const clientID =
     "client_id=540720712071-3ki8o3kpog4int741skr5rb817lo2543.apps.googleusercontent.com";
   const redirectURI =
-    "&redirect_uri=https%3A%2F%2Flocalhost%3A8000%2Fgmail_api%2Fcallback";
+    "&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fgmail_api%2Fcallback";
   const responseType = "&response_type=code";
   const scopes =
     "&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly";
@@ -33,6 +33,32 @@ function LinkedAccounts() {
     const gmailAuthenticationLink =
       gmailAuthServer + clientID + redirectURI + responseType + scopes;
     window.location.href = gmailAuthenticationLink;
+  };
+
+  const addGmail = () => {
+    window.location.href = `http://localhost:8000/gmail_api/login?state=${authTokens}`;
+  }
+  
+  const getGmailAccounts = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/gmail_api/get-accounts", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authTokens}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Gmail Accounts:", data);
+        setGmailAccounts(data.emailAddresses); // Store Gmail accounts in state
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || "Failed to get Gmail accounts.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setError("An error occurred while fetching Gmail accounts. Please try again.");
+    }
   };
 
   // Outlook Adding & Authentication
@@ -68,6 +94,7 @@ function LinkedAccounts() {
   // Fetch Outlook accounts when component mounts
   useEffect(() => {
     getOutlookAccounts();
+    getGmailAccounts();
   }, []);
 
   return (
@@ -114,7 +141,7 @@ function LinkedAccounts() {
               >
                 Cancel
               </Button>
-              <Button colorScheme="gray" onClick={redirectToOAuthConsentScreen}>
+              <Button colorScheme="gray" onClick={addGmail}>
                 Authenticate
               </Button>
             </ModalFooter>
