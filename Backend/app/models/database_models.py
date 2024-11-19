@@ -97,7 +97,7 @@ class Application(Base):
     offer_notes = Column(String(1000), nullable=True)
     offer_interest = Column(Integer, nullable=True)
     is_active_offer = Column(Boolean, nullable=False)
-    previous_emails = Column(String(1000), nullable=True)
+    previous_emails = Column(JSON, nullable=True)
     days_to_update = Column(Integer, nullable=True)
 
     user = relationship("User", back_populates="applications")
