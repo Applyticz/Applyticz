@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from pydantic.dataclasses import ConfigDict
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 
 # Base model for common fields
 class TestBase(BaseModel):
@@ -110,6 +110,7 @@ class UserSettingsRequest(BaseModel):
     desired_role: Optional[str] = None
     theme: str
     notification_preferences: Optional[str] = None
+    last_refresh_time: Optional[datetime] = None
 
 class UpdateEmailRequest(BaseModel):
     email: str

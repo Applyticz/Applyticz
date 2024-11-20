@@ -4,6 +4,8 @@ from typing import Annotated
 from app.models.pydantic_models import UserSettingsRequest
 from app.db.database import get_db, db_dependency
 from app.models.database_models import UserSettings, User
+from datetime import datetime
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -29,7 +31,8 @@ async def get_settings(user: user_dependency, db: db_dependency):
         "gender": user_settings.gender,
         "desired_role": user_settings.desired_role,
         "theme": user_settings.theme,
-        "notification_preferences": user_settings.notification_preferences
+        "notification_preferences": user_settings.notification_preferences,
+        "last_refresh_time": user_settings.last_refresh_time if user_settings.last_refresh_time else None
     }
 
 @router.put('/update_settings', tags=['settings'], status_code=status.HTTP_200_OK)
@@ -59,6 +62,7 @@ async def update_settings(settings: UserSettingsRequest, user: user_dependency, 
             "gender": user_settings.gender,
             "desired_role": user_settings.desired_role,
             "theme": user_settings.theme,
-            "notification_preferences": user_settings.notification_preferences
+            "notification_preferences": user_settings.notification_preferences,
+            "last_refresh_time": user_settings.last_refresh_time
         }
     }

@@ -61,7 +61,7 @@ import "../../App.css";
 function Applications() {
   const { authTokens } = useAuth();
   const [error, setError] = useState("");
-  const [LastUpdateTime, setLastUpdateTime] = useState("");
+  const [lastRefreshTime, setlastRefreshTime] = useState("");
 
   /* Create Application Dialogue Box */
   const [creatingApplication, setCreatingApplication] = useState(false);
@@ -279,7 +279,7 @@ function Applications() {
     }
   };
 
-  const updateLastUpdateTime = () => {
+  const updatelastRefreshTime = () => {
     const now = new Date();
     const formattedTime = `${now.getUTCFullYear()}-${String(
       now.getUTCMonth() + 1
@@ -289,18 +289,43 @@ function Applications() {
       2,
       "0"
     )}:${String(now.getUTCSeconds()).padStart(2, "0")}Z`;
-    setLastUpdateTime(formattedTime);
-    //// console.log("Last update time:", formattedTime);
+    setlastRefreshTime(formattedTime);
+    // Update the last refresh time in the database
+    updateLastRefreshTime();
   };
+
+  async function updateLastRefreshTime() {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/settings/update_settings`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authTokens}`,
+          },
+          body: JSON.stringify({
+            last_refresh_time: formattedTime,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update last refresh time");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   const getNewEmails = async () => {
     try {
-      if (!LastUpdateTime) {
+      if (!lastRefreshTime) {
         // // console.log("No last update time set");
         await getAllEmails(); // Fetch all emails if no update time is set
       } else {
         const response = await fetch(
-          `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrases=applying&phrases=recruitment&phrases=position&phrases=application&phrases=recruitinglast_refresh_time=${LastUpdateTime}`,
+          `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrases=applying&phrases=recruitment&phrases=position&phrases=application&phrases=recruitinglast_refresh_time=${lastRefreshTime}`,
           {
             method: "GET",
             headers: {
@@ -348,7 +373,7 @@ function Applications() {
             await handleCreate(formData); // Pass formData to handleCreate
           }
 
-          updateLastUpdateTime(); // Only update after successful fetch
+          updatelastRefreshTime(); // Only update after successful fetch
         } else {
           throw new Error("Failed to get new emails");
         }
@@ -458,7 +483,7 @@ function Applications() {
             });
           }
 
-        updateLastUpdateTime();
+        updatelastRefreshTime();
       } else {
         const errorData = await response.json(); // Get error details from response
         throw new Error(errorData.message || "Failed to get all emails");

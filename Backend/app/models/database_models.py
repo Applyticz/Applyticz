@@ -136,5 +136,6 @@ class UserSettings(Base):
     desired_role = Column(String(100), nullable=True)
     theme = Column(String(50), nullable=False, default="light")
     notification_preferences = Column(String(255), nullable=True)
+    last_refresh_time = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="settings")

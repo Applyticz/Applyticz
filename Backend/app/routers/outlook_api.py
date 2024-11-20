@@ -386,32 +386,42 @@ async def get_user_messages_by_phrase(
             if categorized_status != existing_entry["status"]:
                 existing_entry["previous_emails"].append(existing_entry["body"])
 
-            # Append new status to status_history if it's not a duplicate
-            if categorized_status not in existing_entry['status_history']:
-                existing_entry['status_history'].append(categorized_status)
+            # Update status history
+            existing_entry['status_history'].append(categorized_status)
 
-            # Update details if the email is newer
-            if applied_date > existing_entry['applied_date']:
+            # if the email is more recent, update the entry
+            if formatted_applied_date > existing_entry['applied_date']:
                 existing_entry.update({
                     'subject': email_subject,
                     'sender': email.get('from', {}).get('emailAddress', {}).get('address'),
-                    'applied_date': applied_date,
-                    'formatted_applied_date': formatted_applied_date,
+                    'latest_update': formatted_applied_date,
                     'interview_dates': formatted_interview_date,
                     'body_preview': body_preview,
                     'body': email_body,
                     'position': entities['position'],
                     'location': entities.get('location', "Unknown"),
                     'salary': entities.get('salary', "Unknown"),
-                    'status': categorized_status
+                    'status': categorized_status,
+                    'previous_emails': existing_entry['previous_emails'],  # Keep previous emails
+                    'num_of_emails': existing_entry['num_of_emails'] + 1
                 })
+                
+                # Check if it's the first email after the initial application email
+                if existing_entry['num_of_emails'] == 2:
+                    existing_entry['days_to_update'] = (applied_date - existing_entry['first_email_date']).days + 1
+                    
+                    existing_entry.update({
+                        'days_to_update': existing_entry['days_to_update']
+                    })
+                    
+                
         else:
             # Initialize for a new company
             processed_companies[company] = {
                 'subject': email_subject,
                 'sender': email.get('from', {}).get('emailAddress', {}).get('address'),
-                'applied_date': applied_date,
-                'formatted_applied_date': formatted_applied_date,
+                'applied_date': formatted_applied_date,
+                'latest_update': formatted_applied_date,
                 'interview_dates': formatted_interview_date,
                 'body_preview': body_preview,
                 'body': email_body,
@@ -421,7 +431,10 @@ async def get_user_messages_by_phrase(
                 'salary': entities.get('salary', "Unknown"),
                 'status': categorized_status,
                 'status_history': [categorized_status],  # Start with the first status
-                'previous_emails': []  # Initialize as an empty list
+                'previous_emails': [],  # Initialize as an empty list
+                'first_email_date': applied_date,  # Track the first email date
+                'days_to_update': 0,  # Initialize days_to_update
+                'num_of_emails': 1
             }
 
     # Finalizing the payload for the API response
@@ -432,14 +445,16 @@ async def get_user_messages_by_phrase(
             'previous_emails': data['previous_emails'],
             'subject': data['subject'],
             'sender': data['sender'],
-            'applied_date': data['formatted_applied_date'],
+            'applied_date': data['applied_date'],
+            'latest_update': data['latest_update'],
             'interview_dates': data['interview_dates'],
             'body_preview': data['body_preview'],
             'body': data['body'],
             'position': data['position'],
             'location': data['location'],
             'salary': data['salary'],
-            'status': data['status']
+            'status': data['status'],
+            'days_to_update': data.get('days_to_update', 0)
         }
         for company, data in processed_companies.items()
     ]
@@ -452,7 +467,7 @@ async def get_user_messages_by_phrase(
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email and received after the most recent refresh time
 @router.get("/get-user-messages-by-phrase-and-date", tags=["Outlook API"])
-async def get_user_messages_by_phrase(
+async def update_user_messages_by_phrase_and_date(
     last_refresh_time: str,
     user: user_dependency,
     db: db_dependency,
@@ -480,85 +495,148 @@ async def get_user_messages_by_phrase(
         + f"?$search={combined_phrases}&$top=1000"
     )
     
-    # Make the request to Microsoft Graph API
-    response = requests.get(url, headers=headers)
+    all_emails = []
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Error fetching emails from Microsoft Graph API")
+    # Loop through pages using @odata.nextLink
+    while url:
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            email_data = response.json()
+            all_emails.extend(email_data.get('value', []))
+            url = email_data.get('@odata.nextLink')  # Get the next page URL
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Error fetching emails.")
     
-    email_data = response.json()
-    filtered_emails = []
-    user_id_str = str(user_id)
-
     # Convert last_refresh_time to datetime object
     last_refresh_dt = datetime.fromisoformat(last_refresh_time.replace('Z', '+00:00'))
 
-    # Query the database for existing applications
-    applications = db.query(Application).filter(Application.user_id == user_id_str).all()
-    processed_companies = {app.company: {} for app in applications}
+    # Dictionary to track processed companies
+    processed_companies = {}
 
+    # Function to categorize status updates
     def categorize_status(status):
         status = status.lower()
         if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
             return "Awaiting Response"
-        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
+        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "schedule an interview"]):
             return "Positive Response"
         elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
             return "Rejected"
         else:
-            return "Awaiting response"  # Default if no match is found
+            return "Awaiting Response"  # Default to 'Awaiting Response' if no match is found
 
-    # Process emails received after the last refresh
-    for email in email_data.get('value', []):
+    all_emails.sort(key=lambda email: email.get('receivedDateTime'))  # Ensure chronological order
+
+    # Iterate through sorted emails to process them
+    for email in all_emails:
         received_time_str = email.get('receivedDateTime')
         received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
 
-        if received_time > last_refresh_dt:
-            email_body = extract_plain_text(email.get('body', {}).get('content', ''))
-            bodyPreview = extract_plain_text(email.get('bodyPreview'))
-            entities = parse_email_data_hardcoded(email_body, email.get('subject'))
-            parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
+        # Skip emails received before the last refresh time
+        if received_time <= last_refresh_dt:
+            continue
 
-            company_name = entities.get('company', "Unknown")
-            raw_status = parsed_data.get('status', "Unknown")
-            categorized_status = categorize_status(raw_status)
+        email_body = extract_plain_text(email.get('body', {}).get('content', ''))
+        email_subject = email.get('subject', "")
+        
+        if not any(phrase.lower() in email_body.lower() or phrase.lower() in email_subject.lower() for phrase in phrases):
+            continue
 
-            interview_date_str = entities.get("interview_date", None)
-            interview_date = (
-                datetime.fromisoformat(interview_date_str).date()
-                if interview_date_str
-                else None
-            )  # Parse a single interview date
+        body_preview = extract_plain_text(email.get('bodyPreview'))
+        entities = parse_email_data_hardcoded(email_body, email_subject)
+        parsed_data = parse_email_data_hardcoded(email_body, email_subject)
 
-            if company_name in processed_companies:
-                existing_entry = processed_companies[company_name]
-                if categorized_status != existing_entry.get("status"):
-                    existing_entry["status"] = categorized_status
-                if received_time > existing_entry.get("receivedDateTime", received_time):
-                    existing_entry["receivedDateTime"] = received_time
-                    existing_entry["interview_dates"] = interview_date  # Update single date
-            else:
-                processed_companies[company_name] = {
-                    "subject": email.get("subject"),
-                    "from": email.get("from", {}).get("emailAddress", {}).get("address"),
-                    "receivedDateTime": received_time,
-                    "bodyPreview": bodyPreview,
-                    "body": email_body,
-                    "company": company_name,
-                    "position": entities.get("position", "Unknown"),
-                    "location": entities.get("location", "Unknown"),
-                    "salary": entities.get("salary", "Unknown"),
-                    "status": categorized_status,
-                    "interview_dates": interview_date,  # Single date field
-                    "status_history": [categorized_status],
-                    "previous_emails": {},
-                }
+        company = entities['company']
+        applied_date_str = email.get('receivedDateTime')
+        applied_date = datetime.fromisoformat(applied_date_str.replace('Z', '+00:00'))
+        formatted_applied_date = applied_date.strftime('%m-%d-%Y')
+        raw_status = parsed_data['status']
+        categorized_status = categorize_status(raw_status)
+
+        interview_date_str = entities.get("interview_date", None)
+        interview_date = (
+            datetime.fromisoformat(interview_date_str).date()
+            if interview_date_str
+            else None
+        )
+        formatted_interview_date = interview_date.strftime('%m-%d-%Y') if interview_date else None
+
+        if company in processed_companies:
+            existing_entry = processed_companies[company]
+
+            # Append to previous_emails if the status has changed
+            if categorized_status != existing_entry.get("status"):
+                existing_entry["previous_emails"].append(existing_entry["body"])
+
+            # Update status history if not a duplicate
+            if categorized_status not in existing_entry['status_history']:
+                existing_entry['status_history'].append(categorized_status)
+
+            # Update details if the email is more recent
+            if formatted_applied_date > existing_entry['applied_date']:
+                existing_entry.update({
+                    'subject': email_subject,
+                    'sender': email.get('from', {}).get('emailAddress', {}).get('address'),
+                    'latest_update': formatted_applied_date,
+                    'interview_dates': formatted_interview_date,
+                    'body_preview': body_preview,
+                    'body': email_body,
+                    'position': entities['position'],
+                    'location': entities.get('location', "Unknown"),
+                    'salary': entities.get('salary', "Unknown"),
+                    'status': categorized_status,
+                    'previous_emails': existing_entry['previous_emails'],  # Keep previous emails
+                })
                 
+                # Calculate days_to_update if this is the first update
+                if 'days_to_update' not in existing_entry and 'first_email_date' in existing_entry:
+                    existing_entry['days_to_update'] = (applied_date - existing_entry['first_email_date']).days + 1
+        else:
+            # Initialize for a new company
+            processed_companies[company] = {
+                'subject': email_subject,
+                'sender': email.get('from', {}).get('emailAddress', {}).get('address'),
+                'applied_date': formatted_applied_date,
+                'latest_update': formatted_applied_date,
+                'interview_dates': formatted_interview_date,
+                'body_preview': body_preview,
+                'body': email_body,
+                'company': company,
+                'position': entities['position'],
+                'location': entities.get('location', "Unknown"),
+                'salary': entities.get('salary', "Unknown"),
+                'status': categorized_status,
+                'status_history': [categorized_status],  # Start with the first status
+                'previous_emails': [],  # Initialize as an empty list
+                'first_email_date': applied_date,  # Track the first email date
+                'days_to_update': 0  # Initialize days_to_update
+            }
 
-    filtered_emails = [entry for entry in processed_companies.values() if entry]
+    # Finalizing the payload for the API response
+    filtered_emails = [
+        {
+            'company': company,
+            'status_history': data['status_history'],
+            'previous_emails': data['previous_emails'],
+            'subject': data['subject'],
+            'sender': data['sender'],
+            'applied_date': data['applied_date'],
+            'latest_update': data['latest_update'],
+            'interview_dates': data['interview_dates'],
+            'body_preview': data['body_preview'],
+            'body': data['body'],
+            'position': data['position'],
+            'location': data['location'],
+            'salary': data['salary'],
+            'status': data['status'],
+            'days_to_update': data.get('days_to_update', 0)
+        }
+        for company, data in processed_companies.items()
+    ]
 
     if not filtered_emails:
-        return {"message": "No new emails found"}
+        return {"message": "No new applications or status updates found"}
 
     return filtered_emails
 
