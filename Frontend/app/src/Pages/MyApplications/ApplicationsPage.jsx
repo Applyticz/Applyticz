@@ -67,7 +67,6 @@ function Applications() {
   const [creatingApplication, setCreatingApplication] = useState(false);
 
   const handleCreate = async (formData, isManualEntry = false) => {
-    // // console.log("Creating application with data:", formData);
     try {
       const response = await fetch(
         "http://localhost:8000/application/create_application",
@@ -80,16 +79,15 @@ function Applications() {
           body: JSON.stringify({
             ...formData,
             applied_date: isManualEntry
-              ? new Date().toISOString()
-              : formData.applied_date || "",
+              ? new Date().toISOString().split('T')[0]
+              : formData.applied_date ? new Date(formData.applied_date).toISOString().split('T')[0] : "",
+            last_update: formData.last_update ? new Date(formData.last_update).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           }),
         }
       );
 
       if (response.ok) {
-        // obtain the new application ID
         const data = await response.json();
-
         fetchApplications();
         setFormData({
           company: "",
@@ -101,14 +99,16 @@ function Applications() {
           salary: "",
           job_description: "",
           notes: "",
-          status_history: {},
+          status_history: [],
           interview_notes: "",
-          interview_dates: "",
+          interview_dates: null,
           interview_round: "",
           is_active_interview: false,
           offer_notes: "",
-          offer_interest: 0, // Reset to default integer
+          offer_interest: 0,
           is_active_offer: false,
+          previous_emails: [],
+          days_to_update: 0,
         });
         return data;
       } else {
@@ -129,14 +129,16 @@ function Applications() {
     location: "",
     salary: "",
     job_description: "",
-    status_history: {},
+    status_history: [],
     interview_notes: "",
-    interview_dates: "",
+    interview_dates: null,
     interview_round: "",
     is_active_interview: false,
     offer_notes: "",
     offer_interest: 0,
     is_active_offer: false,
+    previous_emails: [],
+    days_to_update: 0,
   });
 
   /* Applications List */
@@ -298,7 +300,7 @@ function Applications() {
         await getAllEmails(); // Fetch all emails if no update time is set
       } else {
         const response = await fetch(
-          `http://localhost:8000/outlook_api/get-user-messages-by-phrase-and-date?phrase=applying&last_refresh_time=${LastUpdateTime}`,
+          `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrases=applying&phrases=recruitment&phrases=position&phrases=application&phrases=recruitinglast_refresh_time=${LastUpdateTime}`,
           {
             method: "GET",
             headers: {
@@ -325,19 +327,21 @@ function Applications() {
               position: email.position || "",
               location: email.location || "",
               status: email.status || "",
-              applied_date: email.receivedDateTime || "",
-              last_update: email.receivedDateTime || "",
+              applied_date: email.applied_date || "",
+              last_update: email.applied_date || "",
               salary: email.salary || "",
               job_description: email.job_description || "",
               notes: email.notes || "",
-              status_history: email.status_history || {},
+              status_history: email.status_history || [],
               interview_notes: email.interview_notes || "",
-              interview_dates: email.interview_dates || "",
+              interview_dates: email.interview_dates || null,
               interview_round: email.interview_round || "",
               is_active_interview: email.is_active_interview || false,
               offer_notes: email.offer_notes || "",
               offer_interest: email.offer_interest || 0,
               is_active_offer: email.is_active_offer || false,
+              previous_emails: email.previous_emails || [],
+              days_to_update: email.days_to_update || 0,
             };
 
             // Pass the populated formData to handleCreate
@@ -381,7 +385,7 @@ function Applications() {
   const getAllEmails = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrase=applying`,
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrases=applying&phrases=recruitment&phrases=position&phrases=application&phrases=recruiting`,
         {
           method: "GET",
           headers: {
@@ -409,24 +413,27 @@ function Applications() {
         // Iterate over each email and create an application
         for (const email of data) {
           // Populate formData with application details
+          console.log("Email data:", email);
           const formData = {
             company: email.company || "",
             position: email.position || "",
             location: email.location || "",
             status: email.status || "",
-            applied_date: email.receivedDateTime || "",
-            last_update: email.receivedDateTime || "",
+            applied_date: email.applied_date || "",
+            last_update: email.applied_date || "",
             salary: email.salary || "",
             job_description: email.job_description || "",
             notes: email.notes || "",
-            status_history: email.status_history || {},
+            status_history: email.status_history || [],
             interview_notes: email.interview_notes || "",
-            interview_dates: email.interview_dates || "",
+            interview_dates: email.interview_dates || null,
             interview_round: email.interview_round || "",
             is_active_interview: email.is_active_interview || false,
             offer_notes: email.offer_notes || "",
             offer_interest: email.offer_interest || 0,
             is_active_offer: email.is_active_offer || false,
+            previous_emails: email.previous_emails || [],
+            days_to_update: email.days_to_update || 0,
           };
 
           // Pass the populated formData to handleCreate
@@ -442,7 +449,7 @@ function Applications() {
               sender: email.from || "",
               body: email.body || "",
               body_preview: email.bodyPreview || "",
-              received_date: email.receivedDateTime || "",
+              applied_date: email.applied_date || "",
               status: email.status || "",
             };
             // console.log("Email data:", emailFormData);
@@ -778,8 +785,7 @@ function Applications() {
                               Email Subject: {email.subject || "No Subject"}
                             </p>
                             <p style={{ textIndent: "20px" }}>
-                              Email Body:
-                              {email.body ||
+                              Email Body: {email.body ||
                                 "Email body content not available."}
                             </p>
                           </div>

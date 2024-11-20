@@ -24,7 +24,7 @@ async def create_email(email_request: EmailRequest, db: db_dependency, user: use
         user_id=user['id'], 
         subject=email_request.subject,
         sender=email_request.sender,
-        received_date=email_request.received_date,
+        received_date=email_request.applied_date,
         body=email_request.body,
         body_preview=email_request.body_preview,
         status=email_request.status
@@ -64,7 +64,7 @@ async def update_email(email_id: int, email_request: EmailRequest, db: db_depend
         
         email.subject = email_request.subject
         email.sender = email_request.sender
-        email.received_date = email_request.received_date
+        email.received_date = email_request.applied_date
         email.body = email_request.body
         email.body_preview = email_request.body_preview
         email.status = email_request.status

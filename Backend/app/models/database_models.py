@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary, Boolean, Date
+from sqlalchemy import Integer, String, Column, Float, ForeignKey, CHAR, DateTime, LargeBinary, Boolean, Date, Text
 from sqlalchemy.dialects.postgresql import UUID
 from app.db.database import get_db, engine, Base, db_dependency
 from sqlalchemy.orm import relationship
@@ -85,20 +85,20 @@ class Application(Base):
     location = Column(String(255), nullable=False)
     position = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False)
-    status_history = Column(JSON, nullable=False)
+    status_history = Column(JSON, nullable=False, default=lambda: [])
     applied_date = Column(Date, nullable=False)
     last_update = Column(Date, nullable=False)
     salary = Column(String(255), nullable=False)
-    job_description = Column(String(1000), nullable=True)
-    notes = Column(String(1000), nullable=True)
-    interview_notes = Column(String(1000), nullable=True)
+    job_description = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    interview_notes = Column(Text, nullable=True)
     interview_dates = Column(Date, nullable=True)
     interview_round = Column(String(255), nullable=True)
     is_active_interview = Column(Boolean, nullable=False)
-    offer_notes = Column(String(1000), nullable=True)
+    offer_notes = Column(Text, nullable=True)
     offer_interest = Column(Integer, nullable=True)
     is_active_offer = Column(Boolean, nullable=False)
-    previous_emails = Column(JSON, nullable=True)
+    previous_emails = Column(JSON, nullable=True, default=lambda: [])
     days_to_update = Column(Integer, nullable=True)
 
     user = relationship("User", back_populates="applications")

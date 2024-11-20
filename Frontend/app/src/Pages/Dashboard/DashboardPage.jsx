@@ -300,7 +300,9 @@ function Dashboard() {
             <li key={index} className="activity-item">
               <div>
                 <strong>{event.subject}</strong>
-                <div>Attendees: {event.attendees[0].emailAddress.name}</div>
+                <div>
+                  Attendees: {event.attendees && event.attendees.length > 0 ? event.attendees[0].emailAddress.name : "No attendees"}
+                </div>
                 <div>
                   Start: {new Date(event.start.dateTime).toLocaleString()}
                 </div>

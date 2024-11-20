@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Request, HTTPException, status, Depends
+from fastapi import APIRouter, Request, HTTPException, status, Depends, Query
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse, JSONResponse
 import requests
 import os
 from dotenv import load_dotenv
-from typing import Annotated
+from typing import Annotated, List
 from app.utils.utils import get_current_user
 from app.utils.parsing_tool import extract_plain_text
 from app.db.database import db_dependency
@@ -294,9 +294,12 @@ async def get_user_messages(user: user_dependency, db: db_dependency):
     else:
         raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve messages: {response.text}")
 
-# Function to get user's messages filtered by a keyword appearing anywhere in the email
 @router.get("/get-user-messages-by-phrase", tags=["Outlook API"])
-async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db_dependency):
+async def get_user_messages_by_phrase(
+    user: user_dependency,
+    db: db_dependency,
+    phrases: List[str] = Query(..., description="List of phrases to search for (e.g., 'applying', 'application')"),
+): 
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
@@ -310,10 +313,13 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
         "Content-Type": "application/json"
     }
 
-    # Set initial URL with $top parameter for up to 100 messages
+    # Combine multiple phrases into a single search query using OR
+    combined_phrases = " OR ".join([f'"{phrase}"' for phrase in phrases])
+
+    # Set the URL with $search query
     url = (
         CURRENT_USER_EMAILS_URL.format(email=email)
-        + f"?$search=\"{phrase}\"&$top=1000"
+        + f"?$search={combined_phrases}&$top=1000"
     )
     
     all_emails = []
@@ -337,43 +343,62 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
         status = status.lower()
         if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
             return "Awaiting Response"
-        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
+        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "schedule an interview"]):
             return "Positive Response"
         elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
             return "Rejected"
         else:
             return "Awaiting Response"  # Default to 'Awaiting Response' if no match is found
 
-    # Process each email
+    all_emails.sort(key=lambda email: email.get('receivedDateTime'))  # Ensure chronological order
+
+    # Iterate through sorted emails to process them
     for email in all_emails:
         email_body = extract_plain_text(email.get('body', {}).get('content', ''))
-        bodyPreview = extract_plain_text(email.get('bodyPreview'))
-        entities = parse_email_data_hardcoded(email_body, email.get('subject'))
-        parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
+        email_subject = email.get('subject', "")
+        
+        if not any(phrase.lower() in email_body.lower() or phrase.lower() in email_subject.lower() for phrase in phrases):
+            continue
 
-        company_name = entities['company']
-        received_time = email.get('receivedDateTime')
+        body_preview = extract_plain_text(email.get('bodyPreview'))
+        entities = parse_email_data_hardcoded(email_body, email_subject)
+        parsed_data = parse_email_data_hardcoded(email_body, email_subject)
+
+        company = entities['company']
+        applied_date_str = email.get('receivedDateTime')
+        applied_date = datetime.fromisoformat(applied_date_str.replace('Z', '+00:00'))
+        formatted_applied_date = applied_date.strftime('%m-%d-%Y')
         raw_status = parsed_data['status']
         categorized_status = categorize_status(raw_status)
 
-        # Check if this company has already been processed
-        if company_name in processed_companies:
-            existing_entry = processed_companies[company_name]
-            
-            # Check current state of status phases
-            status_phases = existing_entry.get('status_phases', [])
-            
-            # Append new status if it's different from the last in `status_phases`
-            if status_phases and categorized_status != status_phases[-1]:
-                status_phases.append(categorized_status)
-            
-            # Update the most recent status and received time if this email is newer
-            if received_time > existing_entry.get('receivedDateTime', received_time):
+        interview_date_str = entities.get("interview_date", None)
+        interview_date = (
+            datetime.fromisoformat(interview_date_str).date()
+            if interview_date_str
+            else None
+        )
+        formatted_interview_date = interview_date.strftime('%m-%d-%Y') if interview_date else None
+
+        if company in processed_companies:
+            existing_entry = processed_companies[company]
+
+            # Append to previous_emails if the status has changed
+            if categorized_status != existing_entry["status"]:
+                existing_entry["previous_emails"].append(existing_entry["body"])
+
+            # Append new status to status_history if it's not a duplicate
+            if categorized_status not in existing_entry['status_history']:
+                existing_entry['status_history'].append(categorized_status)
+
+            # Update details if the email is newer
+            if applied_date > existing_entry['applied_date']:
                 existing_entry.update({
-                    'subject': email.get('subject'),
-                    'from': email.get('from', {}).get('emailAddress', {}).get('address'),
-                    'receivedDateTime': received_time,
-                    'bodyPreview': bodyPreview,
+                    'subject': email_subject,
+                    'sender': email.get('from', {}).get('emailAddress', {}).get('address'),
+                    'applied_date': applied_date,
+                    'formatted_applied_date': formatted_applied_date,
+                    'interview_dates': formatted_interview_date,
+                    'body_preview': body_preview,
                     'body': email_body,
                     'position': entities['position'],
                     'location': entities.get('location', "Unknown"),
@@ -381,30 +406,35 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
                     'status': categorized_status
                 })
         else:
-            # If it's a new company, add the full email details with initial status in `status_phases`
-            processed_companies[company_name] = {
-                'subject': email.get('subject'),
-                'from': email.get('from', {}).get('emailAddress', {}).get('address'),
-                'receivedDateTime': received_time,
-                'bodyPreview': bodyPreview,
+            # Initialize for a new company
+            processed_companies[company] = {
+                'subject': email_subject,
+                'sender': email.get('from', {}).get('emailAddress', {}).get('address'),
+                'applied_date': applied_date,
+                'formatted_applied_date': formatted_applied_date,
+                'interview_dates': formatted_interview_date,
+                'body_preview': body_preview,
                 'body': email_body,
-                'company': company_name,
+                'company': company,
                 'position': entities['position'],
                 'location': entities.get('location', "Unknown"),
                 'salary': entities.get('salary', "Unknown"),
-                'status': categorized_status,  # Assign categorized status
-                'status_phases': [categorized_status]  # Initialize with the first categorized status
+                'status': categorized_status,
+                'status_history': [categorized_status],  # Start with the first status
+                'previous_emails': []  # Initialize as an empty list
             }
 
-    # Finalize the data for filtered output
+    # Finalizing the payload for the API response
     filtered_emails = [
         {
             'company': company,
-            'status_phases': data['status_phases'],
+            'status_history': data['status_history'],
+            'previous_emails': data['previous_emails'],
             'subject': data['subject'],
-            'from': data['from'],
-            'receivedDateTime': data['receivedDateTime'],
-            'bodyPreview': data['bodyPreview'],
+            'sender': data['sender'],
+            'applied_date': data['formatted_applied_date'],
+            'interview_dates': data['interview_dates'],
+            'body_preview': data['body_preview'],
             'body': data['body'],
             'position': data['position'],
             'location': data['location'],
@@ -422,12 +452,17 @@ async def get_user_messages_by_phrase(phrase: str, user: user_dependency, db: db
 
 # Function to get user's messages filtered by a keyword appearing anywhere in the email and received after the most recent refresh time
 @router.get("/get-user-messages-by-phrase-and-date", tags=["Outlook API"])
-async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user: user_dependency, db: db_dependency):
+async def get_user_messages_by_phrase(
+    last_refresh_time: str,
+    user: user_dependency,
+    db: db_dependency,
+    phrases: List[str] = Query(..., description="List of phrases to search for (e.g., 'applying', 'application')"),
+):
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
     access_token = await get_access_token(user_id, db)
-    
+
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
     
@@ -436,98 +471,96 @@ async def get_user_messages_by_phrase(phrase: str, last_refresh_time: str, user:
         "Content-Type": "application/json"
     }
     
+    # Combine multiple phrases into a single search query using OR
+    combined_phrases = " OR ".join([f'"{phrase}"' for phrase in phrases])
+    
+    # Set the URL with $search query
     url = (
         CURRENT_USER_EMAILS_URL.format(email=email)
-        + f"?$search=\"{phrase}\"&$top=100&$select=sender,subject,bodyPreview,receivedDateTime"
+        + f"?$search={combined_phrases}&$top=1000"
     )
     
     # Make the request to Microsoft Graph API
     response = requests.get(url, headers=headers)
 
-    if response.status_code == 200:
-        email_data = response.json()
-        
-        #print("Email data:", email_data)
-        filtered_emails = []
-        
-        # Convert user_id to string for the query
-        user_id_str = str(user_id)
-        
-        # Query the database
-        applications = db.query(Application).filter(Application.user_id == user_id_str).all()
-        
-        # Convert last_refresh_time to datetime object
-        last_refresh_dt = datetime.fromisoformat(last_refresh_time.replace('Z', '+00:00'))
-        
-        # Dictionary to track processed companies already in the application database
-        processed_companies = {app.company: {} for app in applications}
-        #print("Processed companies:", processed_companies)
-        
-        # Define a function to map status updates to categories
-        def categorize_status(status):
-            status = status.lower()
-            if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
-                return "Awaiting Response"
-            elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
-                return "Positive Response"
-            elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
-                return "Rejected"
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail="Error fetching emails from Microsoft Graph API")
+    
+    email_data = response.json()
+    filtered_emails = []
+    user_id_str = str(user_id)
+
+    # Convert last_refresh_time to datetime object
+    last_refresh_dt = datetime.fromisoformat(last_refresh_time.replace('Z', '+00:00'))
+
+    # Query the database for existing applications
+    applications = db.query(Application).filter(Application.user_id == user_id_str).all()
+    processed_companies = {app.company: {} for app in applications}
+
+    def categorize_status(status):
+        status = status.lower()
+        if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
+            return "Awaiting Response"
+        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "interview"]):
+            return "Positive Response"
+        elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
+            return "Rejected"
+        else:
+            return "Awaiting response"  # Default if no match is found
+
+    # Process emails received after the last refresh
+    for email in email_data.get('value', []):
+        received_time_str = email.get('receivedDateTime')
+        received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
+
+        if received_time > last_refresh_dt:
+            email_body = extract_plain_text(email.get('body', {}).get('content', ''))
+            bodyPreview = extract_plain_text(email.get('bodyPreview'))
+            entities = parse_email_data_hardcoded(email_body, email.get('subject'))
+            parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
+
+            company_name = entities.get('company', "Unknown")
+            raw_status = parsed_data.get('status', "Unknown")
+            categorized_status = categorize_status(raw_status)
+
+            interview_date_str = entities.get("interview_date", None)
+            interview_date = (
+                datetime.fromisoformat(interview_date_str).date()
+                if interview_date_str
+                else None
+            )  # Parse a single interview date
+
+            if company_name in processed_companies:
+                existing_entry = processed_companies[company_name]
+                if categorized_status != existing_entry.get("status"):
+                    existing_entry["status"] = categorized_status
+                if received_time > existing_entry.get("receivedDateTime", received_time):
+                    existing_entry["receivedDateTime"] = received_time
+                    existing_entry["interview_dates"] = interview_date  # Update single date
             else:
-                return "Awaiting response"  # Default to 'Awaiting response' if no match is found
-        
-        # Filter for emails only received after the most recent refresh time
-        for email in email_data.get('value', []):
-            received_time_str = email.get('receivedDateTime')
-            received_time = datetime.fromisoformat(received_time_str.replace('Z', '+00:00'))
-            
-            if received_time > last_refresh_dt:
-                email_body = extract_plain_text(email.get('body', {}).get('content', ''))
-                bodyPreview = extract_plain_text(email.get('bodyPreview'))
-                entities = parse_email_data_hardcoded(email_body, email.get('subject'))
-                parsed_data = parse_email_data_hardcoded(email_body, email.get('subject'))
+                processed_companies[company_name] = {
+                    "subject": email.get("subject"),
+                    "from": email.get("from", {}).get("emailAddress", {}).get("address"),
+                    "receivedDateTime": received_time,
+                    "bodyPreview": bodyPreview,
+                    "body": email_body,
+                    "company": company_name,
+                    "position": entities.get("position", "Unknown"),
+                    "location": entities.get("location", "Unknown"),
+                    "salary": entities.get("salary", "Unknown"),
+                    "status": categorized_status,
+                    "interview_dates": interview_date,  # Single date field
+                    "status_history": [categorized_status],
+                    "previous_emails": {},
+                }
+                
 
-                company_name = entities['company']
-                raw_status = parsed_data['status']
-                categorized_status = categorize_status(raw_status)  # Apply categorization
+    filtered_emails = [entry for entry in processed_companies.values() if entry]
 
-                # Check if this company has already been processed
-                if company_name in processed_companies:
-                    existing_entry = processed_companies[company_name]
-                    
-                    # Check current state of status phases
-                    status_phases = existing_entry.get('status_phases', [])
-                    
-                    # Append new status if it's different from the last in `status_phases`
-                    if status_phases and categorized_status != status_phases[-1]:
-                        status_phases.append(categorized_status)
-                    
-                    # Update the most recent status and received time if this email is newer
-                    if received_time > existing_entry.get('receivedDateTime', received_time):
-                        existing_entry['status'] = categorized_status
-                        existing_entry['receivedDateTime'] = received_time
-                else:
-                    # If it's a new company, add the full email details
-                    processed_companies[company_name] = {
-                        'subject': email.get('subject'),
-                        'from': email.get('from', {}).get('emailAddress', {}).get('address'),
-                        'receivedDateTime': received_time,
-                        'bodyPreview': bodyPreview,
-                        'body': email_body,
-                        'company': company_name,
-                        'position': entities['position'],
-                        'location': entities['location'] if 'location' in entities else "Unknown",
-                        'salary': entities['salary'] if 'salary' in entities else "Unknown",
-                        'status': categorized_status,  # Assign categorized status
-                        'status_phases': [categorized_status]  # Initialize with the first categorized status
-                    }
-                    
-        # Only add data to filtered_emails if it's not empty
-        filtered_emails = [entry for entry in processed_companies.values() if entry]
-        
-        if not filtered_emails:
-            return {"message": "No new emails found"}
-        
-        return filtered_emails 
+    if not filtered_emails:
+        return {"message": "No new emails found"}
+
+    return filtered_emails
 
 # Get emails using SpaCy parser
 @router.get("/get-user-messages-spacy", tags=["Outlook API"])
@@ -596,11 +629,11 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
             existing_entry = processed_companies[company_name]
             
             # Check current state of status phases
-            status_phases = existing_entry.get('status_phases', [])
+            status_history = existing_entry.get('status_history', [])
             
-            # Append new status if it's different from the last in `status_phases`
-            if status_phases and categorized_status != status_phases[-1]:
-                status_phases.append(categorized_status)
+            # Append new status if it's different from the last in `status_history`
+            if status_history and categorized_status != status_history[-1]:
+                status_history.append(categorized_status)
             
             # Update the most recent status and received time if this email is newer
             if received_time > existing_entry.get('receivedDateTime', received_time):
@@ -616,7 +649,7 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
                     'status': categorized_status
                 })
         else:
-            # If it's a new company, add the full email details with initial status in `status_phases`
+            # If it's a new company, add the full email details with initial status in `status_history`
             processed_companies[company_name] = {
                 'subject': email.get('subject'),
                 'from': email.get('from', {}).get('emailAddress', {}).get('address'),
@@ -628,14 +661,15 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
                 'location': entities.get('location', "Unknown"),
                 'salary': entities.get('salary', "Unknown"),
                 'status': categorized_status,  # Assign categorized status
-                'status_phases': [categorized_status]  # Initialize with the first categorized status
+                'status_history': [categorized_status],  # Initialize with the first categorized status
+                'previous_emails': {}  # Initialize as an empty dictionary
             }
 
     # Finalize the data for filtered output
     filtered_emails = [
         {
             'company': company,
-            'status_phases': data['status_phases'],
+            'status_history': data['status_history'],
             'subject': data['subject'],
             'from': data['from'],
             'receivedDateTime': data['receivedDateTime'],
