@@ -63,10 +63,9 @@ function Applications() {
   const [error, setError] = useState("");
   const [lastRefreshTime, setlastRefreshTime] = useState("");
 
-  /* Create Application Dialogue Box */
+  /* Modals */
   const [creatingApplication, setCreatingApplication] = useState(false);
-
-  const handleCreate = async (formData, isManualEntry = false) => {
+  const handleCreate = async (applicationData, isManualEntry = false) => {
     try {
       const response = await fetch(
         "http://localhost:8000/application/create_application",
@@ -77,11 +76,11 @@ function Applications() {
             Authorization: `Bearer ${authTokens}`,
           },
           body: JSON.stringify({
-            ...formData,
+            ...applicationData,
             applied_date: isManualEntry
               ? new Date().toISOString().split('T')[0]
-              : formData.applied_date ? new Date(formData.applied_date).toISOString().split('T')[0] : "",
-            last_update: formData.last_update ? new Date(formData.last_update).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              : applicationData.applied_date ? new Date(applicationData.applied_date).toISOString().split('T')[0] : "",
+            last_update: applicationData.last_update ? new Date(applicationData.last_update).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           }),
         }
       );
@@ -89,7 +88,7 @@ function Applications() {
       if (response.ok) {
         const data = await response.json();
         fetchApplications();
-        setFormData({
+        setApplicationData({
           company: "",
           position: "",
           location: "",
@@ -119,7 +118,58 @@ function Applications() {
     }
   };
 
-  const [formData, setFormData] = useState({
+
+  const handleMoveToInterview = async (applicationID, moveToInterviewForm) => {
+    // try{
+
+      //Get the application based on id, and now we are going to change the fields we want and send to update
+      const currentApplication = {
+        ...applicationData, // Sets blank
+        ...applications.find((app) => app.id === applicationID), // Overwrites written values
+      };
+
+      //Update status, interview_notes, and interview_dates
+      currentApplication.status = "Interviewing";
+      currentApplication.interview_notes = moveToInterviewForm.interview_notes;
+      currentApplication.interview_dates = moveToInterviewForm.interview_dates;
+      console.log(currentApplication);
+
+      const response = await fetch(
+        `http://localhost:8000/application/update_application?id=${applicationID}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authTokens}`,
+          },
+          body: JSON.stringify(currentApplication),
+        }
+      );
+
+
+      setMoveToInterviewForm({
+        interview_notes: "",
+        interview_dates: ""
+      })
+      if (response.ok) {
+        setEditingId(null);
+        fetchApplications();
+        fetchEmails();
+      } else {
+        throw new Error("Failed to update application");
+      }
+    // }catch(err){
+    //   console.log("errorrrr thrown")
+    //   setError(err.message);
+    // }
+  }
+  const [moveToInterviewForm, setMoveToInterviewForm] = useState({
+    interview_notes: "",
+    interview_dates: ""
+  })
+
+
+  const [applicationData, setApplicationData] = useState({
     company: "",
     position: "",
     status: "",
@@ -141,60 +191,29 @@ function Applications() {
     days_to_update: 0,
   });
 
+
+
+  //Move to Interview
+  const [movingToInterview, setMovingToInterview] = useState(false);
+
+  //View Button (positive Response)
+  const [movingToOffer, setMovingToOffer] = useState(false);
+
+
+
   /* Applications List */
   const [applications, setApplications] = useState([]);
   const [emails, setEmail] = useState([]);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState(null);  //This is how the modal gets the id of application we are editing
   useEffect(() => {
     fetchApplications();
     fetchEmails();
     fetchTheme();
   }, []);
 
-  //Handlers
-  const fetchApplications = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:8000/application/get_applications",
-        {
-          headers: {
-            Authorization: `Bearer ${authTokens}`,
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        // // console.log("Applications:", data);
-        setApplications(data);
-      } else {
-        throw new Error("Failed to fetch applications");
-      }
-    } catch (err) {
-      setError("Error fetching applications");
-    }
-  };
 
-  const fetchEmails = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:8000/email/emails`,
-        {
-          headers: {
-            Authorization: `Bearer ${authTokens}`,
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        // console.log("EMAILS:", data);
-        setEmail(data);
-      } else {
-        throw new Error("Failed to fetch emails");
-      }
-    } catch (err) {
-      setError("Error fetching emails");
-    }
-  };
+
+  //Handlers
 
   const handleInputChange = (e, applicationId) => {
     const { name, value } = e.target;
@@ -204,7 +223,6 @@ function Applications() {
       )
     );
   };
-
   const handleSubmit = async (applicationId) => {
     try {
       const updatedApplication = applications.find(
@@ -233,7 +251,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
   const handleDelete = async (id) => {
     try {
       const response = await fetch(
@@ -256,7 +273,48 @@ function Applications() {
     }
   };
 
-  //Themes
+  const fetchApplications = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8000/application/get_applications",
+        {
+          headers: {
+            Authorization: `Bearer ${authTokens}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // // console.log("Applications:", data);
+        setApplications(data);
+      } else {
+        throw new Error("Failed to fetch applications");
+      }
+    } catch (err) {
+      setError("Error fetching applications");
+    }
+  };
+  const fetchEmails = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/email/emails`,
+        {
+          headers: {
+            Authorization: `Bearer ${authTokens}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // console.log("EMAILS:", data);
+        setEmail(data);
+      } else {
+        throw new Error("Failed to fetch emails");
+      }
+    } catch (err) {
+      setError("Error fetching emails");
+    }
+  };
   const [theme, setTheme] = useState("light");
   const fetchTheme = async () => {
     try {
@@ -278,7 +336,6 @@ function Applications() {
       setError("Error fetching theme");
     }
   };
-
   const updatelastRefreshTime = () => {
     const now = new Date();
     const formattedTime = `${now.getUTCFullYear()}-${String(
@@ -293,7 +350,6 @@ function Applications() {
     // Update the last refresh time in the database
     updateLastRefreshTime();
   };
-
   async function updateLastRefreshTime() {
     try {
       const response = await fetch(
@@ -317,7 +373,6 @@ function Applications() {
       setError(err.message);
     }
   }
-
   const getNewEmails = async () => {
     try {
       if (!lastRefreshTime) {
@@ -382,7 +437,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
   const createEmail = async (emailFormData) => {
     try {
       const response = await fetch("http://localhost:8000/email/create-email", {
@@ -406,7 +460,6 @@ function Applications() {
       setError(err.message);
     }
   };
-
   const getAllEmails = async () => {
     try {
       const response = await fetch(
@@ -493,7 +546,6 @@ function Applications() {
       // console.log(err);
     }
   };
-
   useEffect(() => {
     // Apply the theme by toggling class on the root element
     const root = document.documentElement;
@@ -506,17 +558,14 @@ function Applications() {
       <h2 style={{ textAlign: "left", fontWeight: "bold" }}>My Applications</h2>
 
       <ChakraProvider>
-        <Modal
-          isOpen={creatingApplication}
-          onClose={() => setCreatingApplication(false)}
-          size="xl"
-        >
+        <Modal isOpen={creatingApplication} onClose={() => setCreatingApplication(false)} size="xl">
+
           <ModalContent>
             <ModalHeader>New Application</ModalHeader>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleCreate(formData, true);
+                handleCreate(applicationData, true);
                 setCreatingApplication(false);
               }}
             >
@@ -528,9 +577,9 @@ function Applications() {
                       <Input
                         type="text"
                         name="company"
-                        value={formData.company}
+                        value={applicationData.company}
                         onChange={(e) =>
-                          setFormData((prev) => ({
+                          setApplicationData((prev) => ({
                             ...prev,
                             company: e.target.value,
                           }))
@@ -546,9 +595,9 @@ function Applications() {
                       <Input
                         type="text"
                         name="position"
-                        value={formData.position}
+                        value={applicationData.position}
                         onChange={(e) =>
-                          setFormData((prev) => ({
+                          setApplicationData((prev) => ({
                             ...prev,
                             position: e.target.value,
                           }))
@@ -564,9 +613,9 @@ function Applications() {
                       <Input
                         type="text"
                         name="location"
-                        value={formData.location}
+                        value={applicationData.location}
                         onChange={(e) =>
-                          setFormData((prev) => ({
+                          setApplicationData((prev) => ({
                             ...prev,
                             location: e.target.value,
                           }))
@@ -582,9 +631,9 @@ function Applications() {
                       <Input
                         type="text"
                         name="salary"
-                        value={formData.salary}
+                        value={applicationData.salary}
                         onChange={(e) =>
-                          setFormData((prev) => ({
+                          setApplicationData((prev) => ({
                             ...prev,
                             salary: e.target.value,
                           }))
@@ -599,9 +648,9 @@ function Applications() {
                       <FormLabel>Stage</FormLabel>
                       <RadioGroup
                         onChange={(value) =>
-                          setFormData((prev) => ({ ...prev, status: value }))
+                          setApplicationData((prev) => ({ ...prev, status: value }))
                         }
-                        value={formData.status}
+                        value={applicationData.status}
                         defaultValue="Awaiting Response"
                       >
                         <Radio value="Awaiting Response">
@@ -624,9 +673,9 @@ function Applications() {
                       <FormLabel>Job Description</FormLabel>
                       <Textarea
                         name="job_description"
-                        value={formData.job_description}
+                        value={applicationData.job_description}
                         onChange={(e) =>
-                          setFormData((prev) => ({
+                          setApplicationData((prev) => ({
                             ...prev,
                             job_description: e.target.value,
                           }))
@@ -641,9 +690,9 @@ function Applications() {
                       <FormLabel>Notes</FormLabel>
                       <Textarea
                         name="notes"
-                        value={formData.notes}
+                        value={applicationData.notes}
                         onChange={(e) =>
-                          setFormData((prev) => ({
+                          setApplicationData((prev) => ({
                             ...prev,
                             notes: e.target.value,
                           }))
@@ -692,7 +741,6 @@ function Applications() {
               <Tab _selected={{ color: "white", bg: "red.400" }}>Rejected</Tab>
               <Tab _selected={{ color: "white", bg: "purple.300" }}>Offers</Tab>
             </TabList>
-
             {/* Buttons */}
             <Box ml="auto">
               <Tooltip label="Check for new emails">
@@ -702,7 +750,7 @@ function Applications() {
                   onClick={getNewEmails}
                 />
               </Tooltip>
-              {error && <p className="error">{error}</p>}
+              {/* {error && <p className="error">{error}</p>} */}
 
               <Tooltip label="Get all emails">
                 <IconButton
@@ -711,7 +759,7 @@ function Applications() {
                   onClick={getAllEmails}
                 />
               </Tooltip>
-              {error && <p className="error">{error}</p>}
+              {/* {error && <p className="error">{error}</p>} */}
 
               <Tooltip label="Create new application">
                 <IconButton
@@ -725,9 +773,9 @@ function Applications() {
 
           {/* INDIVIDUAL TABS */}
           <TabPanels mt={-4}>
+
             {/* ALL */}
             <TabPanel>
-              {/* Headline */}
               <Flex justify="space-between" align="center">
                 <Flex align="center">
                   <Input placeholder="Search" width="300px" />
@@ -747,7 +795,6 @@ function Applications() {
                 </h1>
               </Flex>
               <br></br>
-
               <Accordion allowToggle>
                 {applications.map((application) => (
                   <AccordionItem key={application.id}>
@@ -816,7 +863,7 @@ function Applications() {
                           </div>
                         ))}
                       <br />
-                      <Button colorScheme="gray">Edit</Button>{" "}
+                      {/* <Button colorScheme="gray">Edit</Button>{" "} */}
                       {/* Make circular */}
                       <Button
                         colorScheme="red"
@@ -831,9 +878,8 @@ function Applications() {
               </Accordion>
             </TabPanel>
 
-            {/* AWAITING RESPONSE */}
+            {/* TODO: AWAITING RESPONSE */}
             <TabPanel>
-              {/* Headline */}
               <Flex justify="space-between" align="center">
                 <Flex align="center">
                   <Input placeholder="Search" width="300px" />
@@ -947,8 +993,7 @@ function Applications() {
                           </p>
                         )}
                         <br />
-                        <Button colorScheme="gray">Edit</Button>{" "}
-                        {/* Make circular */}
+                        <Button colorScheme="gray" onClick={() => {setMovingToInterview(true); setEditingId(application.id)}}>Move To Interview Stage</Button>{" "}
                         <Button
                           colorScheme="red"
                           ml={2}
@@ -988,6 +1033,20 @@ function Applications() {
                   }
                 </h1>
               </Flex>
+              
+              <h1>Currently No Responses</h1>
+              {/* {
+                applications.filter(
+                  (application) =>
+                    application.status === "Awaiting Response"
+                ).length === 0
+                  ? <p>No applications awaiting response</p> // What to render if length === 0
+                  : <p>{applications.filter(
+                      (application) =>
+                        application.status === "Awaiting Response"
+                    ).length} applications awaiting response</p> // What to render otherwise
+    
+              }
               <Card
                 direction={{ base: "column", sm: "row" }}
                 overflow="hidden"
@@ -1013,47 +1072,50 @@ function Applications() {
                     </Button>
                   </CardFooter>
                 </Stack>
-              </Card>
+              </Card> */}
             </TabPanel>
 
             {/* INTERVIEWING */}
             <TabPanel>
-              <Card maxW="sm">
-                <CardBody>
-                  <Stack mt="6" spacing="3">
-                    <Heading size="md">Interview with Amazon</Heading>
-                    <Heading size="sm" color="blue.700">
-                      (Round 2)
-                    </Heading>
-                    <Text>
-                      Notes about the interview
-                      <br></br>
-                      Dress business casual
-                    </Text>
-
-                    <Text color="blue.600" fontSize="2xl">
-                      Important Dates
-                    </Text>
-                    <p>Interview Scheduled for 10/4/24</p>
-                  </Stack>
-                </CardBody>
-                <Divider />
-                <CardFooter>
-                  <ButtonGroup spacing="2" justifyContent="center" width="100%">
-                    <Button variant="solid" colorScheme="blue">
-                      View
-                    </Button>
-                    <Button variant="ghost" colorScheme="blue">
-                      Next Stage
-                      {/* Pops up allowing you to change any information */}
-                    </Button>
-                    <Button variant="ghost" colorScheme="blue">
-                      Remove
-                    </Button>
-                  </ButtonGroup>
-                </CardFooter>
-              </Card>
-
+            
+              <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={6}>
+                {applications
+                  .filter((application) => application.status === "Interviewing")
+                  .map((application) => (
+                    <Card key={application.id} maxW="sm">
+                      <CardBody>
+                        <Stack mt="6" spacing="3">
+                          <Heading size="md">
+                            Interview with {application.company}
+                          </Heading>
+                          <Text>
+                            {application.interview_notes}
+                          </Text>
+                          <Text color="blue.600" fontSize="2xl">
+                            Important Dates
+                          </Text>
+                          <p>{application.interview_dates}</p>
+                        </Stack>
+                      </CardBody>
+                      <Divider />
+                      <CardFooter>
+                        <ButtonGroup spacing="2" justifyContent="center" width="100%">
+                          {/* Do same modal as move to interview stage */}
+                          <Button variant="solid" colorScheme="blue">
+                            Edit 
+                          </Button>
+                          <Button variant="ghost" colorScheme="blue" onClick={() => setMovingToOffer(true)}>
+                            Move to Offer Stage
+                          </Button>
+                          <Button variant="ghost" colorScheme="blue">
+                            Remove
+                          </Button>
+                        </ButtonGroup>
+                      </CardFooter>
+                    </Card>
+                  ))}
+              </Box>
+           
               <br></br>
               <Divider />
               <Accordion allowToggle>
@@ -1180,7 +1242,7 @@ function Applications() {
                             </div>
                           ))}
                         <br />
-                        <Button colorScheme="gray">Edit</Button>{" "}
+                        {/* <Button colorScheme="gray">Edit</Button>{" "} */}
                         {/* Make circular */}
                         <Button
                           colorScheme="red"
@@ -1197,41 +1259,48 @@ function Applications() {
 
             {/* OFFERS */}
             <TabPanel>
-              {/* Accept make it purple, denied make it red and put into past offers */}
-              <Card maxW="sm">
-                <CardBody>
-                  <Stack mt="6" spacing="3">
-                    <Heading size="md">Offer from Amazon</Heading>
-                    <Text color="black.600" fontSize="xl">
-                      San Francisco, CA
-                    </Text>
+              
+              <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={6}>
+                  {applications
+                    .filter((application) => application.status === "Interviewing")
+                    .map((application) => (
+                      <Card key={application.id} maxW="sm">
+                        <CardBody>
+                          <Stack mt="6" spacing="3">
+                            <Heading size="md">Offer from Amazon</Heading>
+                            <Text color="black.600" fontSize="xl">
+                              San Francisco, CA
+                            </Text>
 
-                    <Text color="blue.600" fontSize="2xl">
-                      Interest:
-                    </Text>
+                            <Text color="blue.600" fontSize="2xl">
+                              Interest:
+                            </Text>
 
-                    <Text>
-                      Notes about the offer
-                      <br></br>
-                    </Text>
-                  </Stack>
-                </CardBody>
-                <Divider />
-                <CardFooter>
-                  <ButtonGroup spacing="2" justifyContent="center" width="100%">
-                    <Button variant="solid" colorScheme="blue">
-                      Edit
-                    </Button>
-                    <Button variant="ghost" colorScheme="blue">
-                      Accept
-                      {/* Pops up allowing you to change any information */}
-                    </Button>
-                    <Button variant="ghost" colorScheme="blue">
-                      Deny
-                    </Button>
-                  </ButtonGroup>
-                </CardFooter>
-              </Card>
+                            <Text>
+                              Notes about the offer
+                              <br></br>
+                            </Text>
+                          </Stack>
+                        </CardBody>
+                        <Divider />
+                        <CardFooter>
+                          <ButtonGroup spacing="2" justifyContent="center" width="100%">
+                            <Button variant="solid" colorScheme="blue">
+                              Edit
+                            </Button>
+                            <Button variant="ghost" colorScheme="blue">
+                              Accept
+                              {/* Pops up allowing you to change any information */}
+                            </Button>
+                            <Button variant="ghost" colorScheme="blue">
+                              Deny
+                            </Button>
+                          </ButtonGroup>
+                        </CardFooter>
+                      </Card>
+                  ))}
+              </Box>
+
 
               <br></br>
               <Divider />
@@ -1259,6 +1328,94 @@ function Applications() {
             </TabPanel>
           </TabPanels>
         </Tabs>
+
+        {/* Move To Interview Modal */}
+        <Modal isOpen={movingToInterview} onClose={() => {setMovingToInterview(false); setEditingId(null);}} size="xl">
+          <ModalContent>
+            <ModalHeader>Add Interview Notes</ModalHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleMoveToInterview(editingId, moveToInterviewForm); 
+                setMovingToInterview(false);
+              }}
+            >
+              <ModalBody>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  
+                  <GridItem>
+                    <FormControl id="interview_notes" isRequired>
+                      <FormLabel>Add Interview Notes</FormLabel>
+                      <Input
+                        type="text"
+                        name="interview_notes"
+                        value={moveToInterviewForm.interview_notes}
+                        onChange={(e) =>
+                          setMoveToInterviewForm((prev) => ({
+                            ...prev,
+                            interview_notes: e.target.value,
+                          }))
+                        }
+                        placeholder="i.e. 45 minute Technical Interview. Dress code: Business Casual"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl id="interview_dates" isRequired>
+                      <FormLabel>Interview Dates</FormLabel>
+                      <Input
+                        type="text"
+                        name="interview_dates"
+                        value={moveToInterviewForm.interview_dates}
+                        onChange={(e) =>
+                          setMoveToInterviewForm((prev) => ({
+                            ...prev,
+                            interview_dates: e.target.value,
+                          }))
+                        }
+                        placeholder="i.e. Scheduled for 4/15/25 at 4:00p EST"
+                      />
+                    </FormControl>
+                  </GridItem>
+                </Grid>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button colorScheme="red" mr={3} onClick={() => setMovingToInterview(false)}>Cancel</Button>
+                <Button colorScheme="gray" type="submit" rightIcon={<ArrowForwardIcon />}>Move</Button>
+              </ModalFooter>
+            </form>
+          </ModalContent>
+        </Modal>
+
+
+        {/* Move To Offer Modal */}
+        <Modal isOpen={movingToOffer} onClose={() => setMovingToOffer(false)} size="xl">
+          <ModalContent>
+            <ModalHeader>Add Offer Details</ModalHeader>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleCreate(applicationData, true);
+                setCreatingApplication(false);
+              }}
+            >
+              <ModalBody>
+                {/* Change status to Offer
+                  Change offer_interest (1-10)
+                  Change offer_notes
+                */}
+              </ModalBody>
+
+              <ModalFooter>
+                <Button colorScheme="red" mr={3} onClick={() => setMovingToOffer(false)}>Cancel</Button>
+                <Button colorScheme="gray" type="submit" rightIcon={<ArrowForwardIcon />}>Move</Button>
+              </ModalFooter>
+            </form>
+          </ModalContent>
+        </Modal>
+
       </ChakraProvider>
       {error && <p className="error">{error}</p>}
     </div>
