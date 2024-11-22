@@ -119,6 +119,9 @@ function Applications() {
   };
 
 
+  //Move to Interview/Offer
+  const [movingToInterview, setMovingToInterview] = useState(false);
+  const [movingToOffer, setMovingToOffer] = useState(false);
   const handleMoveToInterview = async (applicationID, moveToInterviewForm) => {
     // try{
 
@@ -132,7 +135,6 @@ function Applications() {
       currentApplication.status = "Interviewing";
       currentApplication.interview_notes = moveToInterviewForm.interview_notes;
       currentApplication.interview_dates = moveToInterviewForm.interview_dates;
-      console.log(currentApplication);
 
       const response = await fetch(
         `http://localhost:8000/application/update_application?id=${applicationID}`,
@@ -163,10 +165,81 @@ function Applications() {
     //   setError(err.message);
     // }
   }
+  const handleMoveToOffer = async(applicationID, moveToOfferForm) => {
+    const currentApplication = {
+      ...applicationData, // Sets blank
+      ...applications.find((app) => app.id === applicationID), // Overwrites written values
+    };
+
+    //Update status, interview_notes, and interview_dates
+    currentApplication.status = "Offer";
+    currentApplication.offer_notes = moveToOfferForm.offer_notes;
+    currentApplication.offer_interest = parseInt(moveToOfferForm.offer_interest);
+
+
+    const response = await fetch(
+      `http://localhost:8000/application/update_application?id=${applicationID}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authTokens}`,
+        },
+        body: JSON.stringify(currentApplication),
+      }
+    );
+
+
+    setMoveToOfferForm({
+      offer_notes: "",
+      offer_interest: ""
+    })
+    if (response.ok) {
+      setEditingId(null);
+      fetchApplications();
+      fetchEmails();
+    } else {
+      throw new Error("Failed to update application");
+    }
+  }
+
+
   const [moveToInterviewForm, setMoveToInterviewForm] = useState({
     interview_notes: "",
     interview_dates: ""
   })
+  const [moveToOfferForm, setMoveToOfferForm] = useState({
+    offer_notes: "", 
+    offer_interest: ""
+  })
+  const updateApplicationStatus = async (applicationID, newStatus) => {
+    const currentApplication = {
+      ...applicationData, // Sets blank
+      ...applications.find((app) => app.id === applicationID), // Overwrites written values
+    };
+
+    currentApplication.status = newStatus;
+
+    const response = await fetch(
+      `http://localhost:8000/application/update_application?id=${applicationID}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authTokens}`,
+        },
+        body: JSON.stringify(currentApplication),
+      }
+    );
+
+    if (response.ok) {
+      setEditingId(null);
+      fetchApplications();
+      fetchEmails();
+    } else {
+      throw new Error("Failed to update application");
+    }
+  }
 
 
   const [applicationData, setApplicationData] = useState({
@@ -193,11 +266,7 @@ function Applications() {
 
 
 
-  //Move to Interview
-  const [movingToInterview, setMovingToInterview] = useState(false);
 
-  //View Button (positive Response)
-  const [movingToOffer, setMovingToOffer] = useState(false);
 
 
 
@@ -214,7 +283,7 @@ function Applications() {
 
 
   //Handlers
-
+  
   const handleInputChange = (e, applicationId) => {
     const { name, value } = e.target;
     setApplications((prevApplications) =>
@@ -1092,7 +1161,7 @@ function Applications() {
                             {application.interview_notes}
                           </Text>
                           <Text color="blue.600" fontSize="2xl">
-                            Important Dates
+                            Interview Date
                           </Text>
                           <p>{application.interview_dates}</p>
                         </Stack>
@@ -1104,11 +1173,11 @@ function Applications() {
                           <Button variant="solid" colorScheme="blue">
                             Edit 
                           </Button>
-                          <Button variant="ghost" colorScheme="blue" onClick={() => setMovingToOffer(true)}>
+                          <Button variant="ghost" colorScheme="blue" onClick={() => {setMovingToOffer(true); setEditingId(application.id)}}>
                             Move to Offer Stage
                           </Button>
-                          <Button variant="ghost" colorScheme="blue">
-                            Remove
+                          <Button variant="ghost" colorScheme="red" onClick={() => updateApplicationStatus(application.id, "Rejected")}>
+                            Rejected
                           </Button>
                         </ButtonGroup>
                       </CardFooter>
@@ -1116,7 +1185,7 @@ function Applications() {
                   ))}
               </Box>
            
-              <br></br>
+              {/* <br></br>
               <Divider />
               <Accordion allowToggle>
                 <AccordionItem>
@@ -1138,7 +1207,7 @@ function Applications() {
                   </h2>
                   <AccordionPanel pb={4}></AccordionPanel>
                 </AccordionItem>
-              </Accordion>
+              </Accordion> */}
             </TabPanel>
 
             {/* REJECTED */}
@@ -1262,22 +1331,29 @@ function Applications() {
               
               <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={6}>
                   {applications
-                    .filter((application) => application.status === "Interviewing")
+                    .filter((application) => application.status === "Offer")
                     .map((application) => (
                       <Card key={application.id} maxW="sm">
                         <CardBody>
                           <Stack mt="6" spacing="3">
-                            <Heading size="md">Offer from Amazon</Heading>
+                            <Heading size="md">Offer from {application.company}</Heading>
                             <Text color="black.600" fontSize="xl">
                               San Francisco, CA
                             </Text>
 
                             <Text color="blue.600" fontSize="2xl">
-                              Interest:
+                              Interest 
+                            </Text>
+                            <Text>
+                              {application.offer_interest}/10
+                              <br></br>
                             </Text>
 
+                            <Text color="blue.600" fontSize="2xl">
+                              Notes
+                            </Text>
                             <Text>
-                              Notes about the offer
+                              {application.offer_notes}
                               <br></br>
                             </Text>
                           </Stack>
@@ -1288,11 +1364,8 @@ function Applications() {
                             <Button variant="solid" colorScheme="blue">
                               Edit
                             </Button>
-                            <Button variant="ghost" colorScheme="blue">
-                              Accept
-                              {/* Pops up allowing you to change any information */}
-                            </Button>
-                            <Button variant="ghost" colorScheme="blue">
+                            {/* <Button variant="ghost" colorScheme="blue">Accept</Button> */}
+                            <Button variant="ghost" colorScheme="blue" onClick={() => updateApplicationStatus(application.id, "Denied Offer")}>
                               Deny
                             </Button>
                           </ButtonGroup>
@@ -1316,13 +1389,58 @@ function Applications() {
                             color: "gray",
                           }}
                         >
-                          Past Offers
+                          Denied Offers
                         </h1>
                       </Box>
                       <AccordionIcon />
                     </AccordionButton>
                   </h2>
-                  <AccordionPanel pb={4}></AccordionPanel>
+                  <AccordionPanel pb={4}>
+                    <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={6}>
+                      {applications
+                        .filter((application) => application.status === "Denied Offer")
+                        .map((application) => (
+                          <Card key={application.id} maxW="sm">
+                            <CardBody>
+                              <Stack mt="6" spacing="3">
+                                <Heading size="md">Offer from {application.company}</Heading>
+                                <Text color="black.600" fontSize="xl">
+                                  San Francisco, CA
+                                </Text>
+
+                                <Text color="blue.600" fontSize="2xl">
+                                  Interest 
+                                </Text>
+                                <Text>
+                                  {application.offer_interest}/10
+                                  <br></br>
+                                </Text>
+
+                                <Text color="blue.600" fontSize="2xl">
+                                  Notes
+                                </Text>
+                                <Text>
+                                  {application.offer_notes}
+                                  <br></br>
+                                </Text>
+                              </Stack>
+                            </CardBody>
+                            <Divider />
+                            <CardFooter>
+                              <ButtonGroup spacing="2" justifyContent="center" width="100%">
+                                <Button variant="solid" colorScheme="blue">
+                                  Edit
+                                </Button>
+                                {/* <Button variant="ghost" colorScheme="blue">Accept</Button>
+                                <Button variant="ghost" colorScheme="blue" onClick={() => updateApplicationStatus(application.id, "Denied Offer")}>
+                                  Deny
+                                </Button> */}
+                              </ButtonGroup>
+                            </CardFooter>
+                          </Card>
+                      ))}
+                    </Box>
+                  </AccordionPanel>
                 </AccordionItem>
               </Accordion>
             </TabPanel>
@@ -1332,7 +1450,7 @@ function Applications() {
         {/* Move To Interview Modal */}
         <Modal isOpen={movingToInterview} onClose={() => {setMovingToInterview(false); setEditingId(null);}} size="xl">
           <ModalContent>
-            <ModalHeader>Add Interview Notes</ModalHeader>
+            <ModalHeader>Add Interview Details</ModalHeader>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1345,7 +1463,7 @@ function Applications() {
                   
                   <GridItem>
                     <FormControl id="interview_notes" isRequired>
-                      <FormLabel>Add Interview Notes</FormLabel>
+                      <FormLabel>Notes</FormLabel>
                       <Input
                         type="text"
                         name="interview_notes"
@@ -1363,7 +1481,7 @@ function Applications() {
 
                   <GridItem>
                     <FormControl id="interview_dates" isRequired>
-                      <FormLabel>Interview Dates</FormLabel>
+                      <FormLabel>Interview Date</FormLabel>
                       <Input
                         type="text"
                         name="interview_dates"
@@ -1374,7 +1492,7 @@ function Applications() {
                             interview_dates: e.target.value,
                           }))
                         }
-                        placeholder="i.e. Scheduled for 4/15/25 at 4:00p EST"
+                        placeholder="YYYY-MM-DD"
                       />
                     </FormControl>
                   </GridItem>
@@ -1397,15 +1515,49 @@ function Applications() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleCreate(applicationData, true);
-                setCreatingApplication(false);
+                handleMoveToOffer(editingId, moveToOfferForm); 
+                setMovingToOffer(false);
               }}
             >
               <ModalBody>
-                {/* Change status to Offer
-                  Change offer_interest (1-10)
-                  Change offer_notes
-                */}
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  
+                  <GridItem>
+                    <FormControl id="offer_notes" isRequired>
+                      <FormLabel>Notes</FormLabel>
+                      <Input
+                        type="text"
+                        name="offer_notes"
+                        value={moveToOfferForm.offer_notes}
+                        onChange={(e) =>
+                          setMoveToOfferForm((prev) => ({
+                            ...prev,
+                            offer_notes: e.target.value,
+                          }))
+                        }
+                        placeholder="i.e. Any notes about the offer!"
+                      />
+                    </FormControl>
+                  </GridItem>
+
+                  <GridItem>
+                    <FormControl id="offer_interest" isRequired>
+                      <FormLabel>Offer Interest</FormLabel>
+                      <Input
+                        type="text"
+                        name="offer_interest"
+                        value={moveToOfferForm.offer_interest}
+                        onChange={(e) =>
+                          setMoveToOfferForm((prev) => ({
+                            ...prev,
+                            offer_interest: e.target.value,
+                          }))
+                        }
+                        placeholder="Value 1-10"
+                      />
+                    </FormControl>
+                  </GridItem>
+                </Grid>
               </ModalBody>
 
               <ModalFooter>

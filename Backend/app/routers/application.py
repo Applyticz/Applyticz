@@ -25,7 +25,7 @@ async def create_application(application: ApplicationRequest, user: user_depende
         salary=application.salary,
         job_description=application.job_description,
         notes=application.notes,
-        status_history={},  # Initialize with an empty dict or appropriate value
+        status_history=[],  # Initialize with an empty dict or appropriate value
         interview_notes=None,  # Set to None or appropriate value
         interview_dates=None,  # Set to None or appropriate value
         interview_round=None,  # Set to None or appropriate value
@@ -33,7 +33,7 @@ async def create_application(application: ApplicationRequest, user: user_depende
         offer_notes=None,  # Set to None or appropriate value
         offer_interest=None,  # Set to None or appropriate value
         is_active_offer=False,  # Set default value
-        previous_emails={},  # Set to None or appropriate value
+        previous_emails=[],  # Set to None or appropriate value
         days_to_update=None  # Set to None or appropriate value
     )
     
