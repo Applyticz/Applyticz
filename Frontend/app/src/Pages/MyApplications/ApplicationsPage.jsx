@@ -887,16 +887,16 @@ function Applications() {
                           ).toLocaleDateString()}
                         </Box>
                         <Box
-                          as="span"
-                          flex="1"
-                          textAlign="right"
-                          borderRadius="full"
-                          border="2px solid"
-                          borderColor="blue.500"
-                          px={3}
-                          py={1}
-                          display="inline-block"
-                          maxW="160px"
+                          // as="span"
+                          // flex="1"
+                          // textAlign="right"
+                          // borderRadius="full"
+                          // border="2px solid"
+                          // borderColor="blue.500"
+                          // px={3}
+                          // py={1}
+                          // display="inline-block"
+                          // maxW="160px"
                         >
                           {application.status}
                         </Box>
@@ -1003,16 +1003,16 @@ function Applications() {
                             ).toLocaleDateString()}
                           </Box>
                           <Box
-                            as="span"
-                            flex="1"
-                            textAlign="right"
-                            borderRadius="full"
-                            border="2px solid"
-                            borderColor="blue.500"
-                            px={3}
-                            py={1}
-                            display="inline-block"
-                            maxW="160px"
+                            // as="span"
+                            // flex="1"
+                            // textAlign="right"
+                            // borderRadius="full"
+                            // border="2px solid"
+                            // borderColor="blue.500"
+                            // px={3}
+                            // py={1}
+                            // display="inline-block"
+                            // maxW="160px"
                           >
                             {application.status}
                           </Box>
@@ -1101,21 +1101,46 @@ function Applications() {
                   }
                 </h1>
               </Flex>
+
+              {applications
+                  .filter((application) => application.status === "Interviewing")
+                  .map((application) => (
+                    <Card
+                      direction={{ base: "column", sm: "row" }}
+                      overflow="hidden"
+                      variant="outline"
+                    >
+                      <Image
+                        objectFit="cover"
+                        maxW={{ base: "100%", sm: "200px" }}
+                        src={mailPic}
+                        alt="Mail"
+                      />
+
+                      <Stack>
+                        <CardBody>
+                          <Heading size="md">{application.company}</Heading>
+
+                          <Text py="2">Email Body</Text>
+                        </CardBody>
+
+                        <CardFooter>
+                          <Button colorScheme="gray" ml={2} onClick={() => {setMovingToInterview(true); setEditingId(application.id)}}>
+                            Move To Interview Stage
+                          </Button>
+                          <Button colorScheme="red" ml={2} onClick={() => updateApplicationStatus(application.id, "Rejected")}>
+                            Rejected
+                          </Button>
+                        </CardFooter>
+                      </Stack>
+                    </Card>
+                  ))}
               
-              <h1>Currently No Responses</h1>
-              {/* {
-                applications.filter(
-                  (application) =>
-                    application.status === "Awaiting Response"
-                ).length === 0
-                  ? <p>No applications awaiting response</p> // What to render if length === 0
-                  : <p>{applications.filter(
-                      (application) =>
-                        application.status === "Awaiting Response"
-                    ).length} applications awaiting response</p> // What to render otherwise
-    
-              }
-              <Card
+
+
+              {/* IF DONT GET WORKING IN TIME JUST USE THE BELOW CODE AS PLACEHOLDER FOR DEMO */}
+              
+              {/* <Card
                 direction={{ base: "column", sm: "row" }}
                 overflow="hidden"
                 variant="outline"
@@ -1135,8 +1160,11 @@ function Applications() {
                   </CardBody>
 
                   <CardFooter>
-                    <Button variant="solid" colorScheme="blue">
-                      View
+                    <Button colorScheme="gray" ml={2} onClick={() => {setMovingToInterview(true); setEditingId(application.id)}}>
+                      Move To Interview Stage
+                    </Button>
+                    <Button colorScheme="red" ml={2} onClick={() => updateApplicationStatus(application.id, "Rejected")}>
+                      Rejected
                     </Button>
                   </CardFooter>
                 </Stack>
@@ -1266,16 +1294,16 @@ function Applications() {
                             Rejected: {application.last_update}
                           </Box>
                           <Box
-                            as="span"
-                            flex="1"
-                            textAlign="right"
-                            borderRadius="full"
-                            border="2px solid"
-                            borderColor="blue.500"
-                            px={3}
-                            py={1}
-                            display="inline-block"
-                            maxW="160px"
+                            // as="span"
+                            // flex="1"
+                            // textAlign="right"
+                            // borderRadius="full"
+                            // border="2px solid"
+                            // borderColor="blue.500"
+                            // px={3}
+                            // py={1}
+                            // display="inline-block"
+                            // maxW="160px"
                           >
                             {application.status}
                           </Box>
