@@ -410,7 +410,7 @@ function Applications() {
   const getAllEmails = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrases=applying&phrases=recruitment&phrases=position&phrases=application&phrases=recruiting`,
+        `http://localhost:8000/outlook_api/get-user-messages-by-phrase?phrases=applying&phrases=recruitment&phrases=position&phrases=application&phrases=recruiting&phrases=Talent%20Acquisition`,
         {
           method: "GET",
           headers: {
@@ -483,7 +483,6 @@ function Applications() {
             });
           }
 
-        updatelastRefreshTime();
       } else {
         const errorData = await response.json(); // Get error details from response
         throw new Error(errorData.message || "Failed to get all emails");
