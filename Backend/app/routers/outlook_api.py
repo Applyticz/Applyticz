@@ -345,7 +345,7 @@ async def get_user_messages_by_phrase(
             return "Awaiting Response"
         elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "schedule an interview"]):
             return "Positive Response"
-        elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived"]):
+        elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived", "withdrawn", "not moving forward", "no longer under consideration"]):
             return "Rejected"
         else:
             return "Awaiting Response"  # Default to 'Awaiting Response' if no match is found
@@ -468,7 +468,7 @@ async def get_user_messages_by_phrase(
 # Function to get user's messages filtered by a keyword appearing anywhere in the email and received after the most recent refresh time
 @router.get("/get-user-messages-by-phrase-and-date", tags=["Outlook API"])
 async def update_user_messages_by_phrase_and_date(
-    last_refresh_time: str,
+    last_refresh_time: str, #Example of last_refresh_time: "2024-11-01T00:00:00Z"
     user: user_dependency,
     db: db_dependency,
     phrases: List[str] = Query(..., description="List of phrases to search for (e.g., 'applying', 'application')"),

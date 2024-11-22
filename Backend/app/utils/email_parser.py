@@ -6,7 +6,7 @@ possible_companies = [
     "Qualcomm", "Cisco", "HP", "Dell", "Samsung", "Sony", "Panasonic", "LG", "Toshiba", "Nokia",
     "Motorola", "Xerox", "Adobe", "VMware", "PayPal", "Square", "Stripe", "Reddit", "Pinterest",
     "Snapchat", "TikTok", "Zoom", "Epic Games", "Unity", "Riot Games", "Activision", "Blizzard",
-    "Sony", "Nintendo", "Sega", "Capcom", "Bandai Namco", "Konami", "Square Enix", "Ubisoft", "Lucid", "Playstation", "SingleStore", "Disney", "Global Relay", "Sprout Social", "Wave"
+    "Sony", "Nintendo", "Sega", "Capcom", "Bandai Namco", "Konami", "Square Enix", "Ubisoft", "Lucid", "Playstation", "SingleStore", "Disney", "Global Relay", "Sprout Social", "Wave", "Parsons", "Jamf", "Kikoff"
 ]
 
 status_updates = [
