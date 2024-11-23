@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Request, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Query
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 import requests
 import os
 from dotenv import load_dotenv
@@ -8,10 +8,9 @@ from typing import Annotated, List
 from app.utils.utils import get_current_user
 from app.utils.parsing_tool import extract_plain_text
 from app.db.database import db_dependency
-from app.models.database_models import User, OutlookAuth, Application, Email
+from app.models.database_models import User, OutlookAuth 
 from app.models.pydantic_models import UpdateEmailRequest
 from app.utils.email_parser import parse_email_data_hardcoded
-from app.routers.application import create_application, update_application
 from datetime import datetime, timedelta, timezone
 from app.utils.spacy.spacy_parser import parse_email_data_spacy
 
@@ -343,7 +342,7 @@ async def get_user_messages_by_phrase(
         status = status.lower()
         if any(word in status for word in ["received", "pending", "in progress", "on hold", "reviewed", "candidate"]):
             return "Awaiting Response"
-        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "schedule an interview"]):
+        elif any(word in status for word in ["shortlisted", "accepted", "offer", "hired", "onboarding", "completed", "schedule an interview", "will be moving forward", "reviewing your application", "impressed with your application", "interested in moving forward"]):
             return "Positive Response"
         elif any(word in status for word in ["declined", "rejected", "not been selected", "not selected", "application unsuccessful", "closed", "archived", "withdrawn", "not moving forward", "no longer under consideration"]):
             return "Rejected"
@@ -359,7 +358,7 @@ async def get_user_messages_by_phrase(
         
         if not any(phrase.lower() in email_body.lower() or phrase.lower() in email_subject.lower() for phrase in phrases):
             continue
-
+        
         body_preview = extract_plain_text(email.get('bodyPreview'))
         entities = parse_email_data_hardcoded(email_body, email_subject)
         parsed_data = parse_email_data_hardcoded(email_body, email_subject)
@@ -382,14 +381,17 @@ async def get_user_messages_by_phrase(
         if company in processed_companies:
             existing_entry = processed_companies[company]
 
-            # Append to previous_emails if the status has changed
-            if categorized_status != existing_entry["status"]:
-                existing_entry["previous_emails"].append(existing_entry["body"])
+            # Always append the current email and status to previous_emails
+            existing_entry["previous_emails"].append({
+                "body": email_body,  # Add the new email's body
+                "status": categorized_status  # Add the new email's status
+            })
 
             # Update status history
-            existing_entry['status_history'].append(categorized_status)
+            if categorized_status != existing_entry['status_history'][-1]:
+                existing_entry['status_history'].append(categorized_status)
 
-            # if the email is more recent, update the entry
+            # If the email is more recent, update the entry
             if formatted_applied_date > existing_entry['applied_date']:
                 existing_entry.update({
                     'subject': email_subject,
@@ -402,19 +404,18 @@ async def get_user_messages_by_phrase(
                     'location': entities.get('location', "Unknown"),
                     'salary': entities.get('salary', "Unknown"),
                     'status': categorized_status,
-                    'previous_emails': existing_entry['previous_emails'],  # Keep previous emails
+                    'status_history': existing_entry['status_history'],
                     'num_of_emails': existing_entry['num_of_emails'] + 1
                 })
-                
+
                 # Check if it's the first email after the initial application email
                 if existing_entry['num_of_emails'] == 2:
                     existing_entry['days_to_update'] = (applied_date - existing_entry['first_email_date']).days + 1
-                    
+
                     existing_entry.update({
                         'days_to_update': existing_entry['days_to_update']
                     })
                     
-                
         else:
             # Initialize for a new company
             processed_companies[company] = {
@@ -431,7 +432,11 @@ async def get_user_messages_by_phrase(
                 'salary': entities.get('salary', "Unknown"),
                 'status': categorized_status,
                 'status_history': [categorized_status],  # Start with the first status
-                'previous_emails': [],  # Initialize as an empty list
+                #initilize previous_emails with the first email and status as a dictionary
+                'previous_emails': [{
+                    "body": email_body,
+                    "status": categorized_status
+                }],
                 'first_email_date': applied_date,  # Track the first email date
                 'days_to_update': 0,  # Initialize days_to_update
                 'num_of_emails': 1
@@ -458,6 +463,7 @@ async def get_user_messages_by_phrase(
         }
         for company, data in processed_companies.items()
     ]
+
 
     if not filtered_emails:
         return {"message": "No new applications or status updates found"}
@@ -565,12 +571,14 @@ async def update_user_messages_by_phrase_and_date(
         if company in processed_companies:
             existing_entry = processed_companies[company]
 
-            # Append to previous_emails if the status has changed
-            if categorized_status != existing_entry.get("status"):
-                existing_entry["previous_emails"].append(existing_entry["body"])
+            # Always append the current email and status to previous_emails
+            existing_entry["previous_emails"].append({
+                "body": existing_entry["body"],
+                "status": existing_entry["status"]
+            })
 
-            # Update status history if not a duplicate
-            if categorized_status not in existing_entry['status_history']:
+            # Update status history
+            if categorized_status != existing_entry['status_history'][-1]:
                 existing_entry['status_history'].append(categorized_status)
 
             # Update details if the email is more recent
@@ -586,7 +594,7 @@ async def update_user_messages_by_phrase_and_date(
                     'location': entities.get('location', "Unknown"),
                     'salary': entities.get('salary', "Unknown"),
                     'status': categorized_status,
-                    'previous_emails': existing_entry['previous_emails'],  # Keep previous emails
+                    'num_of_emails': existing_entry['num_of_emails'] + 1
                 })
                 
                 # Calculate days_to_update if this is the first update
