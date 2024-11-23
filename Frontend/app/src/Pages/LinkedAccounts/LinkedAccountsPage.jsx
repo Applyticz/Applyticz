@@ -103,16 +103,14 @@ function LinkedAccounts() {
       <ChakraProvider>
         {/* Gmail Section */}
         <h1>Gmail</h1>
-        <p>List Current Linked Accounts HERE</p>
         <Button colorScheme="gray" onClick={() => setAddingNewGmail(true)}>
           Link New Account
         </Button>
 
         {/* Outlook Section */}
         <h1>Outlook</h1>
-        <p>List Current Linked Accounts HERE</p>
-        <p>Outlook Accounts: {outlookAccounts}</p>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        <p>{outlookAccounts}</p>
+        {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
         <Button colorScheme="gray" onClick={addOutlook}>
           Link New Account
         </Button>
