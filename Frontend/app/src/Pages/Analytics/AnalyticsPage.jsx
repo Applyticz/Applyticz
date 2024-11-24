@@ -202,171 +202,170 @@ function Analytics() {
 
 
   const [timeFrame, setTimeFrame] = useState('week');
-  
-  const totalApplications = applications.length;
 
-  // Use the current date
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+const totalApplications = applications.length;
 
-  // Function to get the Monday of the week for a given date
-  const getMonday = (d) => {
-    const date = new Date(d);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(date.setDate(diff));
-    monday.setHours(0, 0, 0, 0); 
-    return monday;
-  };
+// Use the current date in UTC
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);
 
-  // Function to format date keys consistently
-  const formatDateKey = (date) => {
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    const day = ('0' + date.getDate()).slice(-2);
-    return `${year}-${month}-${day}`;
-  };
+// Function to get the Monday of the week for a given date in UTC
+const getMonday = (d) => {
+  const date = new Date(d);
+  const day = date.getUTCDay();
+  const diff = date.getUTCDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(date.setUTCDate(diff));
+  monday.setUTCHours(0, 0, 0, 0);
+  return monday;
+};
 
-  // Function to aggregate application dates based on the selected time frame
-  const getApplicationsOverTime = () => {
-    const applicationDates = applications.map(app => app.applied_date);
+// Function to format date keys consistently using UTC
+const formatDateKey = (date) => {
+  const year = date.getUTCFullYear();
+  const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+  const day = ('0' + date.getUTCDate()).slice(-2);
+  return `${year}-${month}-${day}`;
+};
 
-    // Parse the date strings to Date objects
-    const dates = applicationDates.map((dateStr) => {
-      // Extract just the date part from the string
-      const [datePart] = dateStr.split(' '); // Split the string at the first space to separate date and time
-      const [month, day, year] = datePart.split('-').map(Number);
-      return new Date(year, month - 1, day); // Create a Date object using only the date part
-    });
+// Function to aggregate application dates based on the selected time frame
+const getApplicationsOverTime = () => {
+  // Since applied_date is now a Date object, we can use it directly
+  const dates = applications.map((app) => new Date(app.applied_date));
 
-    const aggregatedData = {};
-    const labels = [];
-    const dateKeys = [];
+  const aggregatedData = {};
+  const labels = [];
+  const dateKeys = [];
+
+  if (timeFrame === 'day') {
+    // Generate labels for the last 14 days ending today
+    for (let i = 14; i >= 0; i--) {
+      const date = new Date(today);
+      date.setUTCDate(today.getUTCDate() - i);
+      date.setUTCHours(0, 0, 0, 0);
+      const key = formatDateKey(date);
+      labels.push(
+        date.toLocaleDateString('default', {
+          weekday: 'long',
+          month: '2-digit',
+          day: '2-digit',
+          timeZone: 'UTC', // Ensure UTC time zone is used
+        })
+      );
+      dateKeys.push(key);
+      aggregatedData[key] = 0;
+    }
+  } else if (timeFrame === 'week') {
+    // Generate labels for the last 8 weeks ending with the current week
+    const currentMonday = getMonday(today);
+    for (let i = 7; i >= 0; i--) {
+      const weekStart = new Date(currentMonday);
+      weekStart.setUTCDate(currentMonday.getUTCDate() - i * 7);
+      weekStart.setUTCHours(0, 0, 0, 0);
+      const key = formatDateKey(weekStart);
+      labels.push(
+        weekStart.toLocaleDateString('default', {
+          month: '2-digit',
+          day: '2-digit',
+          timeZone: 'UTC',
+        })
+      );
+      dateKeys.push(key);
+      aggregatedData[key] = 0;
+    }
+  } else if (timeFrame === 'month') {
+    // Generate labels for the last 12 months ending with the current month
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - i, 1));
+      date.setUTCHours(0, 0, 0, 0);
+      const key = date.toLocaleString('default', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
+      labels.push(key);
+      dateKeys.push(key);
+      aggregatedData[key] = 0;
+    }
+  } else if (timeFrame === 'year') {
+    // Generate labels for the last 8 years ending with the current year
+    for (let i = 7; i >= 0; i--) {
+      const year = today.getUTCFullYear() - i;
+      const key = year.toString();
+      labels.push(key);
+      dateKeys.push(key);
+      aggregatedData[key] = 0;
+    }
+  }
+
+  // Aggregate application dates into the labels
+  dates.forEach((date) => {
+    date.setUTCHours(0, 0, 0, 0);
+    let key;
 
     if (timeFrame === 'day') {
-      // Generate labels for the last 14 days ending today
-      for (let i = 14; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        date.setHours(0, 0, 0, 0);
-        const key = formatDateKey(date);
-        labels.push(
-          date.toLocaleDateString('default', {
-            weekday: 'long',
-            month: '2-digit',
-            day: '2-digit',
-          })
-        );
-        dateKeys.push(key);
-        aggregatedData[key] = 0;
-      }
+      key = formatDateKey(date);
     } else if (timeFrame === 'week') {
-      // Generate labels for the last 8 weeks ending with the current week
-      const currentMonday = getMonday(today);
-      for (let i = 7; i >= 0; i--) {
-        const weekStart = new Date(currentMonday);
-        weekStart.setDate(currentMonday.getDate() - i * 7);
-        weekStart.setHours(0, 0, 0, 0);
-        const key = formatDateKey(weekStart);
-        labels.push(
-          weekStart.toLocaleDateString('default', {
-            month: '2-digit',
-            day: '2-digit',
-          })
-        );
-        dateKeys.push(key);
-        aggregatedData[key] = 0;
-      }
+      const monday = getMonday(date);
+      key = formatDateKey(monday);
     } else if (timeFrame === 'month') {
-      // Generate labels for the last 12 months ending with the current month
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        date.setHours(0, 0, 0, 0);
-        const key = date.toLocaleString('default', {
-          month: 'long',
-          year: 'numeric',
-        });
-        labels.push(key);
-        dateKeys.push(key);
-        aggregatedData[key] = 0;
-      }
+      key = date.toLocaleString('default', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
     } else if (timeFrame === 'year') {
-      // Generate labels for the last 8 years ending with the current year
-      for (let i = 7; i >= 0; i--) {
-        const year = today.getFullYear() - i;
-        const key = year.toString();
-        labels.push(key);
-        dateKeys.push(key);
-        aggregatedData[key] = 0;
-      }
+      key = date.getUTCFullYear().toString();
     }
 
-    // Aggregate application dates into the labels
-    dates.forEach((date) => {
-      date.setHours(0, 0, 0, 0);
-      let key;
+    if (aggregatedData.hasOwnProperty(key)) {
+      aggregatedData[key]++;
+    }
+  });
 
-      if (timeFrame === 'day') {
-        key = formatDateKey(date);
-      } else if (timeFrame === 'week') {
-        const monday = getMonday(date);
-        key = formatDateKey(monday);
-      } else if (timeFrame === 'month') {
-        key = date.toLocaleString('default', {
-          month: 'long',
-          year: 'numeric',
-        });
-      } else if (timeFrame === 'year') {
-        key = date.getFullYear().toString();
-      }
+  // Get the counts in the order of labels
+  const data = dateKeys.map((key) => aggregatedData[key]);
 
-      if (aggregatedData.hasOwnProperty(key)) {
-        aggregatedData[key]++;
-      }
-    });
-
-    // Get the counts in the order of labels
-    const data = dateKeys.map((key) => aggregatedData[key]);
-
-    return {
-      labels,
-      data,
-    };
+  return {
+    labels,
+    data,
   };
+};
 
-  const applicationsOverTime = getApplicationsOverTime();
+const applicationsOverTime = getApplicationsOverTime();
 
-  const applicationsOverTimeData = {
-    labels: applicationsOverTime.labels,
-    datasets: [
-      {
-        label: 'Applications Over Time',
-        data: applicationsOverTime.data,
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        fill: false,
-        tension: 0.1,
-      },
-    ],
-  };
+const applicationsOverTimeData = {
+  labels: applicationsOverTime.labels,
+  datasets: [
+    {
+      label: 'Applications Over Time',
+      data: applicationsOverTime.data,
+      backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      fill: false,
+      tension: 0.1,
+    },
+  ],
+};
 
-  const applicationsOverTimeOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Number of Applications',
-        },
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Time Frame',
-        },
+const applicationsOverTimeOptions = {
+  scales: {
+    y: {
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: 'Number of Applications',
       },
     },
-  };
+    x: {
+      title: {
+        display: true,
+        text: 'Time Frame',
+      },
+    },
+  },
+};
+
+  
 
   const handleTimeFrameChange = (event) => {
     setTimeFrame(event.target.value);
@@ -507,7 +506,6 @@ const processDataForChart = (groupingAttribute, activePhases = phases) => {
     };
   });
 
-  // Sort the data based on percentage of the most advanced phase and break ties with next phases
   dataWithRatios.sort((a, b) => {
     for (let i = activePhases.length - 1; i >= 0; i--) {
       const diff = b.percentages[i] - a.percentages[i];
@@ -529,7 +527,7 @@ const processDataForChart = (groupingAttribute, activePhases = phases) => {
 // Configure the data for each chart
 
 const progressionByLocationData = processDataForChart('location');
-const progressionByJobTitleData = processDataForChart('position'); // Assuming 'position' is the column name for job titles
+const progressionByJobTitleData = processDataForChart('position');
 const progressionByCompanyData = processDataForChart('company');
 
 // Options remain the same for all charts
@@ -550,7 +548,7 @@ const progressionOptions = {
     x: {
       title: {
         display: true,
-        text: 'Attribute',  // Group attribute (Location, Job Title, Company)
+        text: 'Attribute',
       },
       stacked: true,
     },
@@ -567,6 +565,48 @@ const progressionOptions = {
     },
     legend: {
       position: 'top',
+    },
+  },
+};
+
+const progressionOptionsLocation = {
+  ...progressionOptions,
+  scales: {
+    ...progressionOptions.scales,
+    x: {
+      ...progressionOptions.scales.x,
+      title: {
+        ...progressionOptions.scales.x.title,
+        text: 'Locations',
+      },
+    },
+  },
+};
+
+const progressionOptionsCompany = {
+  ...progressionOptions,
+  scales: {
+    ...progressionOptions.scales,
+    x: {
+      ...progressionOptions.scales.x,
+      title: {
+        ...progressionOptions.scales.x.title,
+        text: 'Companies',
+      },
+    },
+  },
+};
+
+const progressionOptionsJobTitle = {
+  ...progressionOptions,
+  scales: {
+    ...progressionOptions.scales,
+    x: {
+      ...progressionOptions.scales.x,
+      title: {
+        ...progressionOptions.scales.x.title,
+        text: 'Job Titles',
+      },
     },
   },
 };
@@ -721,21 +761,21 @@ const progressionOptions = {
       <section className="analytics-section">
         <h2>Application Progression vs Location</h2>
         <div className="chart-container">
-          <Bar data={progressionByLocationData} options={progressionOptions} />
+          <Bar data={progressionByLocationData} options={progressionOptionsLocation} />
         </div>
       </section>
 
       <section className="analytics-section">
         <h2>Application Progression vs Company</h2>
         <div className="chart-container">
-          <Bar data={progressionByCompanyData} options={progressionOptions} />
+          <Bar data={progressionByCompanyData} options={progressionOptionsCompany} />
         </div>
       </section>
 
       <section className="analytics-section">
         <h2>Application Progression vs Job Title</h2>
         <div className="chart-container">
-          <Bar data={progressionByJobTitleData} options={progressionOptions} />
+          <Bar data={progressionByJobTitleData} options={progressionOptionsJobTitle} />
         </div>
       </section>
     </div>
