@@ -75,7 +75,7 @@ class ApplicationRequest(BaseModel):
     offer_notes: Optional[str] = None
     offer_interest: Optional[int] = None
     is_active_offer: bool
-    previous_emails: List[str] = []  # Updated to a list of strings
+    previous_emails: List[dict] = []  # Updated to a list of strings
     days_to_update: Optional[int] = None
 
 class ApplicationUpdateRequest(BaseModel):
@@ -96,7 +96,7 @@ class ApplicationUpdateRequest(BaseModel):
     offer_notes: Optional[str] = None
     offer_interest: Optional[int] = None
     is_active_offer: Optional[bool] = None
-    previous_emails: List[str] = []  # Updated to a list of strings
+    previous_emails: List[dict] = []  # Updated to a list of dictionaries
     days_to_update: Optional[int] = None
 
 
