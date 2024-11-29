@@ -29,3 +29,5 @@ google-api-python-client==2.70.0
 google-auth==2.20.0
 google-auth-oauthlib==0.4.6
 google-auth-httplib2==0.1.0
+pandas==1.5.3
+scikit-learn==1.2.2

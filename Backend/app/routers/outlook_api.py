@@ -698,6 +698,7 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
         else:
             return "Awaiting Response"  # Default to 'Awaiting Response' if no match is found
 
+    all_emails.sort(key=lambda email: email.get('receivedDateTime'))  # Ensure chronological order
     # Process each email
     for email in all_emails:
         email_body = extract_plain_text(email.get('body', {}).get('content', ''))
@@ -764,7 +765,7 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
             'position': data['position'],
             'location': data['location'],
             'salary': data['salary'],
-            'status': data['status']
+            'status': data['status']           
         }
         for company, data in processed_companies.items()
     ]
