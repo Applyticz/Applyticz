@@ -371,72 +371,12 @@ const applicationsOverTimeOptions = {
     setTimeFrame(event.target.value);
   };
 
-  // Prepare data for the cumulative histogram
-  const getCumulativeData = () => {
-    const maxDays = 20;
-    const daysArray = Array.from({ length: maxDays + 1 }, (_, i) => i);
-
-    // Count applications responded at or before each day
-    const cumulativeCounts = daysArray.map((day) => {
-      return mockData.timeToRespond.filter((responseTime) => responseTime <= day).length;
-    });
-
-    return {
-      labels: daysArray,
-      data: cumulativeCounts,
-    };
-  };
-
-  const cumulativeData = getCumulativeData();
-
-  const cumulativeHistogramData = {
-    labels: cumulativeData.labels,
-    datasets: [
-      {
-        label: 'Cumulative Responses',
-        data: cumulativeData.data,
-        backgroundColor: 'rgba(153, 102, 255, 0.6)',
-        borderColor: 'rgba(153, 102, 255, 1)',
-        fill: true,
-        stepped: true,
-      },
-    ],
-  };
-
-  const cumulativeHistogramOptions = {
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Days to Respond',
-        },
-        ticks: {
-          precision: 0,
-        },
-      },
-      y: {
-        beginAtZero: true,
-        min: 0,
-        max: totalApplications,
-        title: {
-          display: true,
-          text: 'Number of Applications',
-        },
-        ticks: {
-          precision: 0,
-          stepSize: Math.ceil(totalApplications / 10),
-        },
-      },
-    },
-  };
-
-  // Generate unique colors
-  const generateColors = (count) => {
-    const colors = [];
-    for (let i = 0; i < count; i++) {
-      colors.push(`#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`);
-    }
-    return colors;
+  const phaseColors = {
+    "Awaiting Response": "red",
+    "Positive Response": "orange",
+    "Interviewing": "green",
+    "Rejected": "black",
+    "Offer": "blue",
   };
 
   // Prepare application status data
@@ -450,7 +390,9 @@ const applicationsOverTimeOptions = {
     datasets: [
       {
         data: Object.values(statusCounts),
-        backgroundColor: generateColors(Object.keys(statusCounts).length),
+        backgroundColor: Object.keys(statusCounts).map(
+          (status) => phaseColors[status] || "white"
+        ),
       },
     ],
   };
@@ -524,13 +466,10 @@ const processDataForChart = (groupingAttribute, activePhases = phases) => {
   };
 };
 
-// Configure the data for each chart
-
 const progressionByLocationData = processDataForChart('location');
 const progressionByJobTitleData = processDataForChart('position');
 const progressionByCompanyData = processDataForChart('company');
 
-// Options remain the same for all charts
 const progressionOptions = {
   scales: {
     y: {
@@ -748,13 +687,6 @@ const progressionOptionsJobTitle = {
         <h2>Application Status</h2>
         <div className="chart-container">
           <Pie data={applicationStatusData} options={applicationStatusOptions} />
-        </div>
-      </section>
-
-      <section className="analytics-section">
-        <h2>Cumulative Time to Respond</h2>
-        <div className="chart-container">
-          <Line data={cumulativeHistogramData} options={cumulativeHistogramOptions} />
         </div>
       </section>
 
