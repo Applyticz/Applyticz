@@ -136,6 +136,15 @@ function Applications() {
       currentApplication.interview_notes = moveToInterviewForm.interview_notes;
       currentApplication.interview_dates = moveToInterviewForm.interview_dates;
 
+      if (!Array.isArray(currentApplication.status_history)) {
+        currentApplication.status_history = [];
+    }
+  
+    currentApplication.status_history = [
+        ...currentApplication.status_history,
+        currentApplication.status, 
+    ];
+
       const response = await fetch(
         `http://localhost:8000/application/update_application?id=${applicationID}`,
         {
@@ -175,6 +184,14 @@ function Applications() {
     currentApplication.status = "Offer";
     currentApplication.offer_notes = moveToOfferForm.offer_notes;
     currentApplication.offer_interest = parseInt(moveToOfferForm.offer_interest);
+    if (!Array.isArray(currentApplication.status_history)) {
+      currentApplication.status_history = [];
+  }
+
+  currentApplication.status_history = [
+      ...currentApplication.status_history,
+      currentApplication.status, 
+  ];
 
 
     const response = await fetch(
@@ -219,6 +236,15 @@ function Applications() {
     };
 
     currentApplication.status = newStatus;
+
+    if (!Array.isArray(currentApplication.status_history)) {
+      currentApplication.status_history = [];
+  }
+
+  currentApplication.status_history = [
+      ...currentApplication.status_history,
+      currentApplication.status, 
+  ];
 
     const response = await fetch(
       `http://localhost:8000/application/update_application?id=${applicationID}`,

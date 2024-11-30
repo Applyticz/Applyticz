@@ -234,9 +234,9 @@ const applicationsOverTimeOptions = {
   const phaseColors = {
     "Awaiting Response": "red",
     "Positive Response": "orange",
-    "Interviewing": "green",
+    "Interviewing": "blue",
     "Rejected": "black",
-    "Offer": "blue",
+    "Offer": "green",
   };
 
   // Prepare application status data
