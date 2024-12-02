@@ -45,8 +45,15 @@ function Analytics() {
 
       if (response.ok) {
         const data = await response.json();
-        setApplications(data); // Store the applications data
-        // console.log("Fetched applications:", data);
+
+        // Normalize application statuses directly here using normalizeStatus
+        const normalizedData = data.map((app) => ({
+          ...app,
+          status: normalizeStatus(app.status), // Normalize the status via the normalizeStatus function
+        }));
+
+        setApplications(normalizedData); // Set the normalized applications into state
+
       } else {
         throw new Error("Failed to fetch applications");
       }
@@ -265,6 +272,16 @@ const applicationsOverTimeOptions = {
     },
   };
 
+  const normalizeStatus = (status) => {
+    if (!status) return '';
+    const statusLower = status.toLowerCase();
+    if (statusLower === 'interview' || statusLower === 'interviewing') {
+      return 'Interviewing';
+    }
+    // Add more normalization cases if needed
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   // Function to assign colors to phases
   function getPhaseColor(phase) {
     const colors = {
@@ -276,7 +293,7 @@ const applicationsOverTimeOptions = {
   }
 
 const phases = ['No Response', 'Interview', 'Offer'];
-const phaseChecker = ['Awaiting Response', 'Interview', 'Offer'];
+const phaseChecker = ['Awaiting Response', 'Interviewing', 'Offer'];
 
 // Utility function to process data for charts
 const processDataForChart = (groupingAttribute, activePhases = phases) => {

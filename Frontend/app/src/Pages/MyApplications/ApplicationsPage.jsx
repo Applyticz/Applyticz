@@ -67,6 +67,23 @@ function Applications() {
   const [creatingApplication, setCreatingApplication] = useState(false);
   const handleCreate = async (applicationData, isManualEntry = false) => {
     try {
+    const updatedApplicationData = {
+      ...applicationData,
+      status_history: [
+        ...(applicationData.status_history || []),
+        applicationData.status || "Awaiting Response",
+      ],
+      applied_date: isManualEntry
+        ? new Date().toISOString().split("T")[0]
+        : applicationData.applied
+        ? new Date(applicationData.applied_date).toISOString().split("T")[0]
+        : "",
+      last_update: applicationData.last_update
+        ? new Date(applicationData.last_update).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0],
+    };
+    console.log("Updated applicationData before submission:", updatedApplicationData);
+
       const response = await fetch(
         "http://localhost:8000/application/create_application",
         {
@@ -75,17 +92,12 @@ function Applications() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authTokens}`,
           },
-          body: JSON.stringify({
-            ...applicationData,
-            applied_date: isManualEntry
-              ? new Date().toISOString().split('T')[0]
-              : applicationData.applied_date ? new Date(applicationData.applied_date).toISOString().split('T')[0] : "",
-            last_update: applicationData.last_update ? new Date(applicationData.last_update).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          }),
-        }
+          body: JSON.stringify(updatedApplicationData), // Use the updated data
+          }
       );
 
       if (response.ok) {
+        console.log("Submitting applicationData:", updatedApplicationData);
         const data = await response.json();
         fetchApplications();
         setApplicationData({
