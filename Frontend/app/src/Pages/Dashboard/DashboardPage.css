@@ -14,6 +14,7 @@
   --back-color2: #f8f9fa;
   --text-color: #000000;
   --heading-color: #2f333b;
+  --noti-color: #f0f8ff;
 }
 
 :root.dark {
@@ -22,6 +23,7 @@
   --text-color: #ffffff;
   --heading-color: #e0e0e0;
   --summary-color: #494949;
+  --noti-color: #1a2634;
 }
 
 /* Summary and Activity Sections */
@@ -154,7 +156,7 @@
 .notification {
   display: flex;
   align-items: center;
-  background-color: #f0f8ff;
+  background-color: var(--noti-color);
   padding: 10px;
   border-radius: 5px;
   cursor: pointer;

@@ -27,146 +27,6 @@ ChartJS.register(
   Legend
 );
 
-const mockData = {
-  totalApplications: 50,
-  applicationDates: [
-    '2017-08-21',
-    '2018-05-30',
-    '2019-01-14',
-    '2020-03-07',
-    '2021-11-11',
-    '2022-08-14',
-    '2023-06-18',
-    '2023-12-05',
-    '2024-02-11',
-    '2024-03-21',
-    '2024-04-30',
-    '2024-05-23',
-    '2024-06-10',
-    '2024-07-15',
-    '2024-08-19',
-    '2024-08-26',
-    '2024-09-02',
-    '2024-09-09',
-    '2024-09-16',
-    '2024-09-23',
-    '2024-09-30',
-    '2024-10-05',
-    '2024-10-06',
-    '2024-10-07',
-    '2024-10-08',
-    '2024-10-09',
-    '2024-10-10',
-    '2024-10-11',
-    '2024-10-12',
-    '2024-10-13',
-    '2024-10-14',
-    '2024-10-15',
-    '2024-10-16',
-    '2024-10-17',
-    '2024-10-18',
-    '2024-10-19',
-  ],
-  applicationStatus: {
-    'In progress': 10,
-    'Awaiting Response': 20,
-    'Interview(s) Scheduled': 15,
-    'Awaiting Post-Interview Response': 10,
-    Offer: 5,
-    'Offer Accepted': 3,
-    'Offer Declined': 2,
-    Declined: 25,
-    'No Response': 10,
-  },
-  timeToRespond: [
-    3, 7, 14, 2, 10, 1, 5, 8, 12, 4,
-    6, 9, 11, 13, 15, 20, 18, 17, 16, 19,
-    14, 7, 3, 5, 2, 1, 4, 6, 13, 12,
-    9, 8, 11, 10, 5, 7,
-  ],
-  applicationProgressionByLocation: {
-    'San Francisco': {
-      'No Response': 20,
-      'Interview': 50,
-      'Offer': 30,
-    },
-    'New York': {
-      'No Response': 25,
-      'Interview': 45,
-      'Offer': 30,
-    },
-    'Seattle': {
-      'No Response': 15,
-      'Interview': 55,
-      'Offer': 30,
-    },
-    'Austin': {
-      'No Response': 10,
-      'Interview': 60,
-      'Offer': 30,
-    },
-    'Remote': {
-      'No Response': 5,
-      'Interview': 65,
-      'Offer': 30,
-    },
-  },
-  applicationProgressionByCompany: {
-    'Google': {
-      'No Response': 50,
-      'Interview': 50,
-      'Offer': 30,
-    },
-    'Amazon': {
-      'No Response': 25,
-      'Interview': 45,
-      'Offer': 30,
-    },
-    'Facebook': {
-      'No Response': 15,
-      'Interview': 55,
-      'Offer': 30,
-    },
-    'Microsoft': {
-      'No Response': 10,
-      'Interview': 60,
-      'Offer': 30,
-    },
-    'Apple': {
-      'No Response': 5,
-      'Interview': 65,
-      'Offer': 30,
-    },
-  },
-  applicationProgressionByJobTitle: {
-    'Software Engineer': {
-      'No Response': 50,
-      'Interview': 50,
-      'Offer': 30,
-    },
-    'Software Developer': {
-      'No Response': 25,
-      'Interview': 45,
-      'Offer': 30,
-    },
-    'Data Scientist': {
-      'No Response': 15,
-      'Interview': 55,
-      'Offer': 30,
-    },
-    'Database Administrator': {
-      'No Response': 10,
-      'Interview': 60,
-      'Offer': 30,
-    },
-    'Hardware Engineer': {
-      'No Response': 5,
-      'Interview': 65,
-      'Offer': 30,
-    },
-  },
-};
-
 function Analytics() {
 
   const { authTokens } = useAuth();
@@ -371,72 +231,12 @@ const applicationsOverTimeOptions = {
     setTimeFrame(event.target.value);
   };
 
-  // Prepare data for the cumulative histogram
-  const getCumulativeData = () => {
-    const maxDays = 20;
-    const daysArray = Array.from({ length: maxDays + 1 }, (_, i) => i);
-
-    // Count applications responded at or before each day
-    const cumulativeCounts = daysArray.map((day) => {
-      return mockData.timeToRespond.filter((responseTime) => responseTime <= day).length;
-    });
-
-    return {
-      labels: daysArray,
-      data: cumulativeCounts,
-    };
-  };
-
-  const cumulativeData = getCumulativeData();
-
-  const cumulativeHistogramData = {
-    labels: cumulativeData.labels,
-    datasets: [
-      {
-        label: 'Cumulative Responses',
-        data: cumulativeData.data,
-        backgroundColor: 'rgba(153, 102, 255, 0.6)',
-        borderColor: 'rgba(153, 102, 255, 1)',
-        fill: true,
-        stepped: true,
-      },
-    ],
-  };
-
-  const cumulativeHistogramOptions = {
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Days to Respond',
-        },
-        ticks: {
-          precision: 0,
-        },
-      },
-      y: {
-        beginAtZero: true,
-        min: 0,
-        max: totalApplications,
-        title: {
-          display: true,
-          text: 'Number of Applications',
-        },
-        ticks: {
-          precision: 0,
-          stepSize: Math.ceil(totalApplications / 10),
-        },
-      },
-    },
-  };
-
-  // Generate unique colors
-  const generateColors = (count) => {
-    const colors = [];
-    for (let i = 0; i < count; i++) {
-      colors.push(`#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`);
-    }
-    return colors;
+  const phaseColors = {
+    "Awaiting Response": "red",
+    "Positive Response": "orange",
+    "Interviewing": "blue",
+    "Rejected": "black",
+    "Offer": "green",
   };
 
   // Prepare application status data
@@ -450,7 +250,9 @@ const applicationsOverTimeOptions = {
     datasets: [
       {
         data: Object.values(statusCounts),
-        backgroundColor: generateColors(Object.keys(statusCounts).length),
+        backgroundColor: Object.keys(statusCounts).map(
+          (status) => phaseColors[status] || "white"
+        ),
       },
     ],
   };
@@ -524,13 +326,10 @@ const processDataForChart = (groupingAttribute, activePhases = phases) => {
   };
 };
 
-// Configure the data for each chart
-
 const progressionByLocationData = processDataForChart('location');
 const progressionByJobTitleData = processDataForChart('position');
 const progressionByCompanyData = processDataForChart('company');
 
-// Options remain the same for all charts
 const progressionOptions = {
   scales: {
     y: {
@@ -748,13 +547,6 @@ const progressionOptionsJobTitle = {
         <h2>Application Status</h2>
         <div className="chart-container">
           <Pie data={applicationStatusData} options={applicationStatusOptions} />
-        </div>
-      </section>
-
-      <section className="analytics-section">
-        <h2>Cumulative Time to Respond</h2>
-        <div className="chart-container">
-          <Line data={cumulativeHistogramData} options={cumulativeHistogramOptions} />
         </div>
       </section>
 

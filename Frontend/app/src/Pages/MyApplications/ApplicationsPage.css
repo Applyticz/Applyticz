@@ -36,6 +36,9 @@ html{
 h2 {
   text-align: center;
 }
+h1 {
+  color: var(--text-color);
+}
 
 .applications-list {
   display: flex;
