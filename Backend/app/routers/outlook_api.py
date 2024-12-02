@@ -13,6 +13,7 @@ from app.models.pydantic_models import UpdateEmailRequest
 from app.utils.email_parser import parse_email_data_hardcoded
 from datetime import datetime, timedelta, timezone
 from app.utils.spacy.spacy_parser import parse_email_data_spacy
+import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -299,6 +300,7 @@ async def get_user_messages_by_phrase(
     db: db_dependency,
     phrases: List[str] = Query(..., description="List of phrases to search for (e.g., 'applying', 'application')"),
 ): 
+    start = time.time()
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
@@ -467,6 +469,9 @@ async def get_user_messages_by_phrase(
 
     if not filtered_emails:
         return {"message": "No new applications or status updates found"}
+    
+    end = time.time()
+    print(f"Execution time: {end - start} seconds")
 
     return filtered_emails
 
@@ -650,11 +655,16 @@ async def update_user_messages_by_phrase_and_date(
 
 # Get emails using SpaCy parser
 @router.get("/get-user-messages-spacy", tags=["Outlook API"])
-async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phrase: str):
+async def get_user_messages_spacy(user: user_dependency,
+    db: db_dependency,
+    phrases: List[str] = Query(..., description="List of phrases to search for (e.g., 'applying', 'application')"),
+): 
     # Define headers with the access token
     user_id = user.get("id")
     email = user.get("email")
     access_token = await get_access_token(user_id, db)
+    
+    start = time.time()
 
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token not found. Please log in again.")
@@ -667,7 +677,7 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
     # Set initial URL with $top parameter for up to 100 messages
     url = (
         CURRENT_USER_EMAILS_URL.format(email=email)
-        + f"?$search=\"{phrase}\"&$top=1000"
+        + f"?$search=\"{phrases}\"&$top=1000"
     )
     
     all_emails = []
@@ -772,6 +782,10 @@ async def get_user_messages_spacy(user: user_dependency, db: db_dependency, phra
 
     if not filtered_emails:
         return {"message": "No new applications or status updates found"}
+    
+    end = time.time()
+    
+    print(f"Execution time: {end - start} seconds")
 
     return filtered_emails
         

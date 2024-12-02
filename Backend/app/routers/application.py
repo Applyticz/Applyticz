@@ -3,7 +3,7 @@ from app.utils.utils import get_current_user
 from typing import Annotated
 from app.models.pydantic_models import ApplicationRequest, ApplicationUpdateRequest
 from app.db.database import get_db, db_dependency
-from app.models.database_models import Application, User
+from app.models.database_models import Application, User, Email
 from fastapi import Query
 from app.utils.utils import get_current_time
 
@@ -176,7 +176,9 @@ async def update_application(application: ApplicationUpdateRequest, user: user_d
     return "Application updated successfully"
 
 @router.delete('/delete_application', tags=['application'], status_code=status.HTTP_200_OK)
-async def delete_application(user: user_dependency, db: db_dependency, id: str = Query(..., description="ID of the application to delete")):
+async def delete_application(
+    user: user_dependency, db: db_dependency, id: str = Query(..., description="ID of the application to delete")
+):
     # Ensure user['id'] is a string
     user_id_str = str(user['id'])
     
@@ -186,11 +188,22 @@ async def delete_application(user: user_dependency, db: db_dependency, id: str =
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
     # Query the Application associated with the user_id and application id
-    application_to_delete = db.query(Application).filter(Application.user_id == user_id_str, Application.id == id).first()
+    application_to_delete = (
+        db.query(Application)
+        .filter(Application.user_id == user_id_str, Application.id == id)
+        .first()
+    )
     if not application_to_delete:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
     
+    # Delete associated Emails
+    emails_deleted = db.query(Email).filter(Email.app == id).delete(synchronize_session="fetch")
+    
+    # Delete the Application
     db.delete(application_to_delete)
     db.commit()
     
-    return {"message": "Application deleted successfully"}
+    return {
+        "message": "Application deleted successfully",
+        "emails_deleted": emails_deleted  # Optional: return the number of deleted emails
+    }
