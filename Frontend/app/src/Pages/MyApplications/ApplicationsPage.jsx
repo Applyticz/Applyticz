@@ -1138,7 +1138,7 @@ function Applications() {
                 </h1>
               </Flex>
 
-              {applications
+              {/* {applications
                   .filter((application) => application.status === "Interviewing")
                   .map((application) => (
                     <Card
@@ -1170,13 +1170,13 @@ function Applications() {
                         </CardFooter>
                       </Stack>
                     </Card>
-                  ))}
+                  ))} */}
               
 
 
               {/* IF DONT GET WORKING IN TIME JUST USE THE BELOW CODE AS PLACEHOLDER FOR DEMO */}
               
-              {/* <Card
+              <Card
                 direction={{ base: "column", sm: "row" }}
                 overflow="hidden"
                 variant="outline"
@@ -1204,7 +1204,7 @@ function Applications() {
                     </Button>
                   </CardFooter>
                 </Stack>
-              </Card> */}
+              </Card>
             </TabPanel>
 
             {/* INTERVIEWING */}
@@ -1248,7 +1248,7 @@ function Applications() {
                   ))}
               </Box>
            
-              {/* <br></br>
+              <br></br>
               <Divider />
               <Accordion allowToggle>
                 <AccordionItem>
@@ -1270,7 +1270,7 @@ function Applications() {
                   </h2>
                   <AccordionPanel pb={4}></AccordionPanel>
                 </AccordionItem>
-              </Accordion> */}
+              </Accordion>
             </TabPanel>
 
             {/* REJECTED */}
