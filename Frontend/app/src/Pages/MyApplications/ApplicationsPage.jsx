@@ -74,10 +74,8 @@ function Applications() {
         applicationData.status || "Awaiting Response",
       ],
       applied_date: isManualEntry
-        ? new Date().toISOString().split("T")[0]
-        : applicationData.applied
-        ? new Date(applicationData.applied_date).toISOString().split("T")[0]
-        : "",
+              ? new Date().toISOString().split('T')[0]
+              : applicationData.applied_date ? new Date(applicationData.applied_date).toISOString().split('T')[0] : "",
       last_update: applicationData.last_update
         ? new Date(applicationData.last_update).toISOString().split("T")[0]
         : new Date().toISOString().split("T")[0],
