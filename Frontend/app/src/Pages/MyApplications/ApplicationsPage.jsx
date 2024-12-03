@@ -1190,9 +1190,9 @@ function Applications() {
 
                 <Stack>
                   <CardBody>
-                    <Heading size="md">Company</Heading>
+                    <Heading size="md">Amazon</Heading>
 
-                    <Text py="2">Trailing off email body...</Text>
+                    <Text py="2">We recieved your application and you are invited to an interview!</Text>
                   </CardBody>
 
                   <CardFooter>
